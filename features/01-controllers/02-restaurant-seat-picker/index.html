@@ -1,0 +1,186 @@
+<!doctype html>
+<!--
+  Controllers · 02 · Restaurant seat picker
+
+  Teaches:
+  - One controller class can back any number of elements. Each table below
+    has data-controller="dining-table", so the page holds seven independent
+    instances of the same class.
+  - Instance state lives on the instance (set up in initialize()), never at
+    module level, where it would be shared by every table.
+  - An action only reaches the instance whose element contains it: clicking
+    a seat at Booth 3 calls toggleSeat() on Booth 3's instance and no other.
+  - Targets are per instance too. this.seatTargets on Window 1 holds two
+    seats; on the chef's counter it holds six.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Restaurant seat picker · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .floor-plan { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 1rem; }
+      .dining-table { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.75rem 1rem; }
+      .dining-table h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+      .seat-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
+      .seat-row button { min-width: 3.2rem; background: #fffdf8; border-color: #cfc6b3; color: inherit; font-weight: 500; }
+      .seat-row button[aria-pressed="true"] { background: var(--capsule-amber, #e8912d); border-color: var(--capsule-amber-deep, #b5651d); font-weight: 700; }
+      .seat-row button.booked, .seat-row button:disabled { background: #ece7dc; color: #8a8478; text-decoration: line-through; cursor: not-allowed; }
+      .table-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+      .table-summary { font-size: 0.9rem; min-height: 2.6em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DiningTableController from "./dining_table_controller.js"
+
+      const application = Application.start()
+      application.register("dining-table", DiningTableController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>02 · Restaurant seat picker</span>
+      </nav>
+      <h1>Restaurant seat picker</h1>
+      <p class="lede">
+        Saturday dinner at Osteria Marlowe, 7:30 PM seating. Every table is its
+        own <code>dining-table</code> controller instance with its own held
+        seats, so holding seats at one table never disturbs another.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>Floor plan · Saturday 7:30 PM</h2>
+        <p class="muted">Pick seats at any table, then book them. Online holds stop at four seats per table.</p>
+
+        <div class="floor-plan">
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Window 1</h3>
+            <div class="seat-row">
+              <button type="button" value="W1-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat">A</button>
+              <button type="button" value="W1-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat">B</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Window 2</h3>
+            <div class="seat-row">
+              <button type="button" value="W2-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat" disabled class="booked">A</button>
+              <button type="button" value="W2-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat" disabled class="booked">B</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Booth 3</h3>
+            <div class="seat-row">
+              <button type="button" value="B3-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat">A</button>
+              <button type="button" value="B3-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat">B</button>
+              <button type="button" value="B3-C" data-dining-table-target="seat" data-action="dining-table#toggleSeat">C</button>
+              <button type="button" value="B3-D" data-dining-table-target="seat" data-action="dining-table#toggleSeat">D</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Booth 4</h3>
+            <div class="seat-row">
+              <button type="button" value="B4-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat" disabled class="booked">A</button>
+              <button type="button" value="B4-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat">B</button>
+              <button type="button" value="B4-C" data-dining-table-target="seat" data-action="dining-table#toggleSeat">C</button>
+              <button type="button" value="B4-D" data-dining-table-target="seat" data-action="dining-table#toggleSeat">D</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Patio 5</h3>
+            <div class="seat-row">
+              <button type="button" value="P5-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat">A</button>
+              <button type="button" value="P5-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat">B</button>
+              <button type="button" value="P5-C" data-dining-table-target="seat" data-action="dining-table#toggleSeat">C</button>
+              <button type="button" value="P5-D" data-dining-table-target="seat" data-action="dining-table#toggleSeat">D</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Chef's counter</h3>
+            <div class="seat-row">
+              <button type="button" value="C-1" data-dining-table-target="seat" data-action="dining-table#toggleSeat">1</button>
+              <button type="button" value="C-2" data-dining-table-target="seat" data-action="dining-table#toggleSeat" disabled class="booked">2</button>
+              <button type="button" value="C-3" data-dining-table-target="seat" data-action="dining-table#toggleSeat" disabled class="booked">3</button>
+              <button type="button" value="C-4" data-dining-table-target="seat" data-action="dining-table#toggleSeat">4</button>
+              <button type="button" value="C-5" data-dining-table-target="seat" data-action="dining-table#toggleSeat">5</button>
+              <button type="button" value="C-6" data-dining-table-target="seat" data-action="dining-table#toggleSeat">6</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+
+          <article class="dining-table" data-controller="dining-table">
+            <h3 data-dining-table-target="tableName">Round 7</h3>
+            <div class="seat-row">
+              <button type="button" value="R7-A" data-dining-table-target="seat" data-action="dining-table#toggleSeat">A</button>
+              <button type="button" value="R7-B" data-dining-table-target="seat" data-action="dining-table#toggleSeat">B</button>
+              <button type="button" value="R7-C" data-dining-table-target="seat" data-action="dining-table#toggleSeat">C</button>
+              <button type="button" value="R7-D" data-dining-table-target="seat" data-action="dining-table#toggleSeat">D</button>
+              <button type="button" value="R7-E" data-dining-table-target="seat" data-action="dining-table#toggleSeat">E</button>
+              <button type="button" value="R7-F" data-dining-table-target="seat" data-action="dining-table#toggleSeat">F</button>
+            </div>
+            <p class="table-summary" data-dining-table-target="summary" aria-live="polite"></p>
+            <div class="table-actions">
+              <button type="button" data-dining-table-target="bookButton" data-action="dining-table#bookHeldSeats">Book</button>
+              <button type="button" class="quiet" data-dining-table-target="releaseButton" data-action="dining-table#releaseHeldSeats">Release</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dining_table_controller.js"><code>dining_table_controller.js</code></a> — one instance per table; holds and books that table's seats</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
