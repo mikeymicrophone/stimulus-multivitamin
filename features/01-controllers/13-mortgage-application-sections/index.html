@@ -1,0 +1,361 @@
+<!doctype html>
+<!--
+  Controllers · 13 · Mortgage application sections
+
+  Teaches:
+  - A capstone that combines the Controllers feature's techniques on one
+    realistic form.
+  - Namespaced identifiers from folders: mortgage/application_controller.js
+    is "mortgage--application", shared/currency_field_controller.js is
+    "shared--currency-field".
+  - Inheritance across a namespace: five section identifiers, one
+    SectionController base class. The declarations section uses the base
+    directly; the rest subclass it.
+  - Finding controllers by class: the application filters
+    this.application.controllers with instanceof SectionController, so it
+    never needs a list of identifiers.
+  - Several controllers per element and nested scopes: each currency <input>
+    is a section's target and also hosts its own shared--currency-field
+    controller.
+  - Dynamic sections: "Add a co-borrower" clones a <template> holding two more
+    sections, which connect and report in; removing them disconnects them and
+    the totals drop back.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Mortgage application sections · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .application-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(15rem, 1.3fr); gap: 1.25rem; align-items: start; }
+      @media (max-width: 50rem) { .application-layout { grid-template-columns: 1fr; } }
+      .application-section { border: 1px solid var(--rule, #ddd); border-left: 6px solid var(--capsule-amber, #e8912d); border-radius: 10px; padding: 0.6rem 1rem 0.9rem; margin: 0 0 1rem; }
+      .application-section[data-section-state="complete"] { border-left-color: var(--bottle-green, #1f3d2b); }
+      .application-section legend { font-weight: 700; color: var(--bottle-green, #1f3d2b); padding: 0 0.3rem; }
+      .section-status { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.6rem 1rem; }
+      .field-grid label { display: grid; gap: 0.2rem; font-size: 0.9rem; }
+      .field-grid .wide { grid-column: 1 / -1; }
+      .field-grid select { padding: 0.35rem; }
+      .check-row { display: flex !important; gap: 0.5rem; align-items: center; }
+      input[aria-invalid="true"] { border-color: #b3261e !important; background: #fbe9e6 !important; }
+      .co-borrower { border: 2px dashed var(--rule, #ddd); border-radius: 12px; padding: 0.6rem 0.8rem 0.1rem; margin-bottom: 1rem; }
+      .co-borrower-heading { display: flex; justify-content: space-between; align-items: center; }
+      .co-borrower-heading h3 { margin: 0.2rem 0 0.6rem; font-size: 1rem; }
+      .application-summary { position: sticky; top: 1rem; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.7rem 1rem; }
+      .application-summary h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+      .application-summary ul { padding-left: 1.1rem; margin: 0 0 0.75rem; font-size: 0.88rem; }
+      .application-summary li[data-section-state="incomplete"] { color: #8c1d18; }
+      .application-summary dl { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.75rem; margin: 0 0 0.75rem; }
+      .application-summary dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+      .application-decision { font-size: 0.9rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MortgageApplicationController from "./mortgage/application_controller.js"
+      import MortgageSectionController from "./mortgage/section_controller.js"
+      import MortgageBorrowerSectionController from "./mortgage/borrower_section_controller.js"
+      import MortgageIncomeSectionController from "./mortgage/income_section_controller.js"
+      import MortgageDebtsSectionController from "./mortgage/debts_section_controller.js"
+      import MortgageLoanSectionController from "./mortgage/loan_section_controller.js"
+      import SharedCurrencyFieldController from "./shared/currency_field_controller.js"
+
+      const application = Application.start()
+      application.register("mortgage--application", MortgageApplicationController)
+      application.register("mortgage--section", MortgageSectionController)
+      application.register("mortgage--borrower-section", MortgageBorrowerSectionController)
+      application.register("mortgage--income-section", MortgageIncomeSectionController)
+      application.register("mortgage--debts-section", MortgageDebtsSectionController)
+      application.register("mortgage--loan-section", MortgageLoanSectionController)
+      application.register("shared--currency-field", SharedCurrencyFieldController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>13 · Mortgage application sections</span>
+      </nav>
+      <h1>Mortgage application sections</h1>
+      <p class="lede">
+        A first-time buyer's online loan application. Every section is a
+        namespaced subclass of one section controller, every dollar field has
+        its own small controller, and the application controller finds them all
+        by class to work out the debt-to-income ratio.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="mortgage--application"
+            data-mortgage--application-application-number-value="MTG-2026-0412"
+            data-action="mortgage--application#submitApplication">
+        <h2>Riverbend Home Loans · Application MTG-2026-0412</h2>
+
+        <div class="application-layout">
+          <div>
+            <fieldset class="application-section" data-controller="mortgage--borrower-section"
+                      data-mortgage--borrower-section-title-value="Borrower"
+                      data-action="input->mortgage--borrower-section#validate">
+              <legend>Borrower</legend>
+              <p class="section-status" data-mortgage--borrower-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Full legal name
+                  <input type="text" name="borrower[full_name]" value="Jordan Avery" data-field-label="Full legal name"
+                         data-mortgage--borrower-section-target="requiredField fullName">
+                </label>
+                <label>Email
+                  <input type="text" name="borrower[email]" inputmode="email" value="jordan.avery@fastmail.com" data-field-label="Email"
+                         data-mortgage--borrower-section-target="requiredField email">
+                </label>
+                <label>Phone
+                  <input type="text" name="borrower[phone]" inputmode="tel" value="(503) 555-0148" data-field-label="Phone"
+                         data-mortgage--borrower-section-target="requiredField">
+                </label>
+                <label>Years at current address
+                  <input type="number" name="borrower[years_at_address]" min="0" step="0.5" value="1.5" data-field-label="Years at address"
+                         data-mortgage--borrower-section-target="requiredField yearsAtAddress">
+                </label>
+                <label class="wide">Current address
+                  <input type="text" name="borrower[current_address]" value="2210 SE Clinton St, Apt 4, Portland, OR 97202" data-field-label="Current address"
+                         data-mortgage--borrower-section-target="requiredField">
+                </label>
+                <label class="wide" data-mortgage--borrower-section-target="previousAddressRow">Previous address
+                  <input type="text" name="borrower[previous_address]" data-mortgage--borrower-section-target="previousAddress">
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="application-section" data-controller="mortgage--income-section"
+                      data-mortgage--income-section-title-value="Income"
+                      data-action="input->mortgage--income-section#validate">
+              <legend>Income</legend>
+              <p class="section-status" data-mortgage--income-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Employer
+                  <input type="text" name="income[employer]" value="Harbor Logistics" data-field-label="Employer"
+                         data-mortgage--income-section-target="requiredField">
+                </label>
+                <label>Position
+                  <input type="text" name="income[position]" value="Dispatch supervisor">
+                </label>
+                <label>Base monthly income ($)
+                  <input type="text" name="income[base_monthly]" inputmode="decimal" value="7450" data-field-label="Base monthly income"
+                         data-mortgage--income-section-target="requiredField baseMonthlyIncome"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Other monthly income ($)
+                  <input type="text" name="income[other_monthly]" inputmode="decimal" placeholder="Bonus, alimony, rental"
+                         data-mortgage--income-section-target="otherMonthlyIncome"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+              </div>
+            </fieldset>
+
+            <div data-mortgage--application-target="coBorrowerSlot"></div>
+            <p>
+              <button type="button" class="quiet" data-mortgage--application-target="addCoBorrowerButton" data-action="mortgage--application#addCoBorrower">Add a co-borrower</button>
+            </p>
+
+            <fieldset class="application-section" data-controller="mortgage--debts-section"
+                      data-mortgage--debts-section-title-value="Monthly debts"
+                      data-action="input->mortgage--debts-section#validate change->mortgage--debts-section#validate">
+              <legend>Monthly debts</legend>
+              <p class="section-status" data-mortgage--debts-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Auto loan ($/mo)
+                  <input type="text" name="debts[auto_loan]" inputmode="decimal" value="385" data-mortgage--debts-section-target="payment"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Student loans ($/mo)
+                  <input type="text" name="debts[student_loans]" inputmode="decimal" value="210" data-mortgage--debts-section-target="payment"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Credit card minimums ($/mo)
+                  <input type="text" name="debts[credit_cards]" inputmode="decimal" value="95" data-mortgage--debts-section-target="payment"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Other payments ($/mo)
+                  <input type="text" name="debts[other]" inputmode="decimal" placeholder="Child support, personal loans" data-mortgage--debts-section-target="payment"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label class="wide check-row">
+                  <input type="checkbox" name="debts[confirmed]" data-field-label="Confirmation that every debt is listed"
+                         data-mortgage--debts-section-target="requiredField">
+                  I have listed every recurring monthly payment.
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="application-section" data-controller="mortgage--loan-section"
+                      data-mortgage--loan-section-title-value="Property and loan"
+                      data-action="input->mortgage--loan-section#validate change->mortgage--loan-section#validate">
+              <legend>Property and loan</legend>
+              <p class="section-status" data-mortgage--loan-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Purchase price ($)
+                  <input type="text" name="loan[purchase_price]" inputmode="decimal" value="425000" data-field-label="Purchase price"
+                         data-mortgage--loan-section-target="requiredField purchasePrice"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Down payment ($)
+                  <input type="text" name="loan[down_payment]" inputmode="decimal" value="42500" data-field-label="Down payment"
+                         data-mortgage--loan-section-target="requiredField downPayment"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Interest rate (%)
+                  <input type="number" name="loan[interest_rate]" min="0" step="0.125" value="6.375" data-field-label="Interest rate"
+                         data-mortgage--loan-section-target="requiredField interestRate">
+                </label>
+                <label>Term
+                  <select name="loan[term_years]" data-mortgage--loan-section-target="termYears">
+                    <option value="30" selected>30-year fixed</option>
+                    <option value="20">20-year fixed</option>
+                    <option value="15">15-year fixed</option>
+                  </select>
+                </label>
+                <label>Annual property tax ($)
+                  <input type="text" name="loan[annual_property_tax]" inputmode="decimal" value="5100" data-field-label="Annual property tax"
+                         data-mortgage--loan-section-target="requiredField annualPropertyTax"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Annual homeowners insurance ($)
+                  <input type="text" name="loan[annual_insurance]" inputmode="decimal" value="1680" data-field-label="Annual homeowners insurance"
+                         data-mortgage--loan-section-target="requiredField annualInsurance"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="application-section" data-controller="mortgage--section"
+                      data-mortgage--section-title-value="Declarations"
+                      data-action="input->mortgage--section#validate change->mortgage--section#validate">
+              <legend>Declarations</legend>
+              <p class="section-status" data-mortgage--section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label class="wide">How will you use the property?
+                  <select name="declarations[occupancy]" data-field-label="Property use" data-mortgage--section-target="requiredField">
+                    <option value="">Choose one</option>
+                    <option value="primary_residence">Primary residence</option>
+                    <option value="second_home">Second home</option>
+                    <option value="investment">Investment property</option>
+                  </select>
+                </label>
+                <label class="wide check-row">
+                  <input type="checkbox" name="declarations[credit_authorization]" data-field-label="Credit check authorization"
+                         data-mortgage--section-target="requiredField">
+                  I authorize Riverbend Home Loans to pull my credit report.
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <aside class="application-summary" aria-live="polite">
+            <h3>Application summary</h3>
+            <ul data-mortgage--application-target="progressList"></ul>
+            <dl>
+              <dt>Monthly housing payment</dt>
+              <dd data-mortgage--application-target="monthlyPayment"></dd>
+              <dt>Housing ratio</dt>
+              <dd data-mortgage--application-target="housingRatio"></dd>
+              <dt>Debt-to-income</dt>
+              <dd data-mortgage--application-target="debtToIncomeRatio"></dd>
+            </dl>
+            <p class="application-decision" data-mortgage--application-target="decision"></p>
+            <button type="submit" data-mortgage--application-target="submitButton">Submit application</button>
+          </aside>
+        </div>
+
+        <template data-mortgage--application-target="coBorrowerTemplate">
+          <div class="co-borrower" data-mortgage--application-target="coBorrower">
+            <div class="co-borrower-heading">
+              <h3>Co-borrower</h3>
+              <button type="button" class="quiet" data-action="mortgage--application#removeCoBorrower">Remove co-borrower</button>
+            </div>
+
+            <fieldset class="application-section" data-controller="mortgage--borrower-section"
+                      data-mortgage--borrower-section-title-value="Co-borrower"
+                      data-action="input->mortgage--borrower-section#validate">
+              <legend>Co-borrower</legend>
+              <p class="section-status" data-mortgage--borrower-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Full legal name
+                  <input type="text" name="co_borrower[full_name]" data-field-label="Full legal name"
+                         data-mortgage--borrower-section-target="requiredField fullName">
+                </label>
+                <label>Email
+                  <input type="text" name="co_borrower[email]" inputmode="email" data-field-label="Email"
+                         data-mortgage--borrower-section-target="requiredField email">
+                </label>
+                <label>Phone
+                  <input type="text" name="co_borrower[phone]" inputmode="tel" data-field-label="Phone"
+                         data-mortgage--borrower-section-target="requiredField">
+                </label>
+                <label>Years at current address
+                  <input type="number" name="co_borrower[years_at_address]" min="0" step="0.5" data-field-label="Years at address"
+                         data-mortgage--borrower-section-target="requiredField yearsAtAddress">
+                </label>
+                <label class="wide">Current address
+                  <input type="text" name="co_borrower[current_address]" data-field-label="Current address"
+                         data-mortgage--borrower-section-target="requiredField">
+                </label>
+                <label class="wide" data-mortgage--borrower-section-target="previousAddressRow">Previous address
+                  <input type="text" name="co_borrower[previous_address]" data-mortgage--borrower-section-target="previousAddress">
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="application-section" data-controller="mortgage--income-section"
+                      data-mortgage--income-section-title-value="Co-borrower income"
+                      data-action="input->mortgage--income-section#validate">
+              <legend>Co-borrower income</legend>
+              <p class="section-status" data-mortgage--income-section-target="status" aria-live="polite"></p>
+              <div class="field-grid">
+                <label>Employer
+                  <input type="text" name="co_borrower_income[employer]" data-field-label="Employer"
+                         data-mortgage--income-section-target="requiredField">
+                </label>
+                <label>Position
+                  <input type="text" name="co_borrower_income[position]">
+                </label>
+                <label>Base monthly income ($)
+                  <input type="text" name="co_borrower_income[base_monthly]" inputmode="decimal" data-field-label="Base monthly income"
+                         data-mortgage--income-section-target="requiredField baseMonthlyIncome"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+                <label>Other monthly income ($)
+                  <input type="text" name="co_borrower_income[other_monthly]" inputmode="decimal" placeholder="Bonus, alimony, rental"
+                         data-mortgage--income-section-target="otherMonthlyIncome"
+                         data-controller="shared--currency-field" data-action="focus->shared--currency-field#unformat blur->shared--currency-field#format">
+                </label>
+              </div>
+            </fieldset>
+          </div>
+        </template>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="mortgage/application_controller.js"><code>mortgage/application_controller.js</code></a> — <code>mortgage--application</code>; finds every section by class and computes the ratios</li>
+          <li><a href="mortgage/section_controller.js"><code>mortgage/section_controller.js</code></a> — <code>mortgage--section</code>; the base class, used directly for declarations</li>
+          <li><a href="mortgage/borrower_section_controller.js"><code>mortgage/borrower_section_controller.js</code></a> — <code>mortgage--borrower-section</code>; residence history rule</li>
+          <li><a href="mortgage/income_section_controller.js"><code>mortgage/income_section_controller.js</code></a> — <code>mortgage--income-section</code>; exposes monthly income</li>
+          <li><a href="mortgage/debts_section_controller.js"><code>mortgage/debts_section_controller.js</code></a> — <code>mortgage--debts-section</code>; sums every payment target</li>
+          <li><a href="mortgage/loan_section_controller.js"><code>mortgage/loan_section_controller.js</code></a> — <code>mortgage--loan-section</code>; down payment rules and the monthly payment</li>
+          <li><a href="shared/currency_field_controller.js"><code>shared/currency_field_controller.js</code></a> — <code>shared--currency-field</code>; formats each dollar input</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
