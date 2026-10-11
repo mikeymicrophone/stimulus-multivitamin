@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 05 · Infinite-scroll product feed
+
+  Teaches:
+  - Target callbacks run before connect(). Stimulus calls
+    sentinelTargetConnected() for targets already in the markup before it
+    calls connect(), on page load and again on every reconnect, so the
+    IntersectionObserver they use is created in initialize().
+  - Observe and unobserve in target callbacks when observed elements come
+    and go. Each page of results is server HTML ending in a new sentinel; the
+    old sentinel is replaced, so it is unobserved and the new one observed.
+  - Teardown order: disconnect() runs first, then each target's
+    disconnected callback. disconnect() only aborts the page request in
+    flight; sentinelTargetDisconnected() unobserves each sentinel.
+  - Switching categories aborts the request in flight, so a late page of
+    tents can never land in the sleeping-bag list.
+  - IntersectionObserver reports every element once when observe() is
+    called, so a short page whose sentinel is already visible loads the next
+    page without any scrolling.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Infinite-scroll product feed · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .category-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; }
+      .category-tabs [aria-selected="false"] { background: transparent; color: var(--muted-ink, #555); border-color: var(--rule, #ddd); }
+      .feed-status { font-size: 0.9rem; color: var(--muted-ink, #555); margin: 0 0 0.5rem; }
+      .feed-viewport { height: 22rem; overflow-y: auto; border: 1px solid var(--rule, #ddd); border-radius: 10px; background: #fffdf8; }
+      .product-grid { list-style: none; margin: 0; padding: 0; }
+      .product-card { display: grid; grid-template-columns: 1fr auto; gap: 0 1rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--rule, #ddd); min-height: 3.4rem; }
+      .product-card h3 { margin: 0; font-size: 1rem; }
+      .product-meta { margin: 0; font-size: 0.85rem; color: var(--muted-ink, #555); grid-column: 1; }
+      .product-price { margin: 0; font-weight: 700; grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+      .feed-sentinel, .feed-end { padding: 1rem; text-align: center; font-size: 0.9rem; color: var(--muted-ink, #555); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ProductFeedController from "./product_feed_controller.js"
+
+      const application = Application.start()
+      application.register("product-feed", ProductFeedController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>05 · Infinite-scroll product feed</span>
+      </nav>
+      <h1>Infinite-scroll product feed</h1>
+      <p class="lede">
+        An outdoor gear shop's category listing. The <code>product-feed</code>
+        controller watches a sentinel at the end of the list and fetches the
+        next page of results when it scrolls into view.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="product-feed">
+        <h2>Switchback Outfitters · Camp &amp; sleep</h2>
+        <div class="category-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected="true" data-product-feed-target="categoryTab" data-action="product-feed#switchCategory"
+                  data-product-feed-first-page-url-param="catalog/tents/page-1.html" data-product-feed-category-name-param="tents">Tents</button>
+          <button type="button" role="tab" aria-selected="false" data-product-feed-target="categoryTab" data-action="product-feed#switchCategory"
+                  data-product-feed-first-page-url-param="catalog/sleeping-bags/page-1.html" data-product-feed-category-name-param="sleeping bags">Sleeping bags</button>
+        </div>
+        <p class="feed-status" data-product-feed-target="status" aria-live="polite"></p>
+        <div class="feed-viewport" data-product-feed-target="viewport">
+          <ul class="product-grid" data-product-feed-target="grid" data-category-name="tents">
+            <li class="product-card" data-product-feed-target="productCard"><h3>Ridgeline 2 Ultralight Tent</h3><p class="product-meta">2-person · 2 lb 14 oz · 3-season</p><p class="product-price">$389</p></li>
+            <li class="product-card" data-product-feed-target="productCard"><h3>Basecamp 4 Family Tent</h3><p class="product-meta">4-person · 11 lb 6 oz · 3-season</p><p class="product-price">$299</p></li>
+            <li class="product-card" data-product-feed-target="productCard"><h3>Talus 1 Bivy Tent</h3><p class="product-meta">1-person · 1 lb 9 oz · 3-season</p><p class="product-price">$249</p></li>
+            <li class="product-card" data-product-feed-target="productCard"><h3>Cirque 3 Mountaineering Tent</h3><p class="product-meta">3-person · 7 lb 2 oz · 4-season</p><p class="product-price">$649</p></li>
+            <li class="product-card" data-product-feed-target="productCard"><h3>Meadowlark 6 Cabin Tent</h3><p class="product-meta">6-person · 18 lb · 3-season</p><p class="product-price">$429</p></li>
+            <li class="product-card" data-product-feed-target="productCard"><h3>Trekking Pole Shelter</h3><p class="product-meta">1-person · 1 lb 2 oz · 3-season</p><p class="product-price">$219</p></li>
+            <li class="feed-sentinel" data-product-feed-target="sentinel" data-next-page-url="catalog/tents/page-2.html">More tents below</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="product_feed_controller.js"><code>product_feed_controller.js</code></a> — observes sentinels as they arrive and leave, and fetches the next page</li>
+          <li><a href="catalog/tents/page-2.html"><code>catalog/tents/page-2.html</code></a> and the other pages — server fragments, each ending in a sentinel or an end marker</li>
+          <li>This page's source — markup with the first page rendered in, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
