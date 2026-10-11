@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 06 · Autosaving draft editor
+
+  Teaches:
+  - initialize() is for work that must happen once per instance. Restoring
+    the saved draft and recording the session's starting word count happen
+    there, because focus mode moves the editor and a move runs connect()
+    again.
+  - disconnect() saves pending changes instead of dropping them. A move, a
+    removal, and a page swap all end in disconnect(), and a debounced save
+    that never fires is lost work.
+  - disconnect() does not run when the tab is closed or reloaded. A
+    pagehide@window action (and visibilitychange@document) saves then too.
+  - disconnect() can't tell why the element went away. After a successful
+    submit, the form controller calls markSubmitted() on each editor before
+    replacing the form, or disconnect() would write the cleared draft back.
+  - connect() can be nearly empty. This controller's real work happens in
+    initialize(), in actions, and in disconnect().
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Autosaving draft editor · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .grant-form { display: grid; gap: 1.25rem; }
+      .draft-section { display: grid; gap: 0.35rem; }
+      .draft-section label { font-weight: 600; color: var(--bottle-green, #1f3d2b); }
+      .draft-section textarea { width: 100%; box-sizing: border-box; min-height: 8rem; padding: 0.5rem 0.6rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; font: inherit; }
+      .draft-meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: center; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .draft-meta button { margin-left: auto; }
+      .restored-notice { margin: 0; font-size: 0.85rem; background: #e7efe6; border-radius: 6px; padding: 0.3rem 0.6rem; }
+      .restored-notice button { font-size: 0.8rem; padding: 0.05rem 0.5rem; }
+      .focus-dialog { width: min(52rem, 92vw); border: 0; border-radius: 12px; padding: 1.25rem 1.5rem; }
+      .focus-dialog::backdrop { background: rgb(31 61 43 / 0.55); }
+      .focus-dialog textarea { min-height: 50vh; }
+      .focus-dialog .open-focus-mode { display: none; }
+      .submit-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: center; }
+      .submission-receipt { text-align: center; padding: 1.5rem 1rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GrantApplicationController from "./grant_application_controller.js"
+      import DraftAutosaveController from "./draft_autosave_controller.js"
+
+      const application = Application.start()
+      application.register("grant-application", GrantApplicationController)
+      application.register("draft-autosave", DraftAutosaveController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>06 · Autosaving draft editor</span>
+      </nav>
+      <h1>Autosaving draft editor</h1>
+      <p class="lede">
+        A community foundation's grant application. Each long-answer section
+        is a <code>draft-autosave</code> controller that saves a draft in this
+        browser a moment after you stop typing. The
+        <code>grant-application</code> controller opens sections in focus mode
+        and submits the application.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="grant-application">
+        <h2>Larkspur Community Foundation · 2027 Neighborhood Grants</h2>
+        <p class="muted">Applicant: Eastside Tool Library · Contact: Theo Marchetti</p>
+
+        <form class="grant-form" data-grant-application-target="form" data-action="grant-application#submitApplication">
+          <div class="draft-section" data-controller="draft-autosave" data-grant-application-target="editor"
+               data-draft-autosave-storage-key-value="larkspur-grant-2027:project-summary"
+               data-action="pagehide@window->draft-autosave#flushPendingSave visibilitychange@document->draft-autosave#flushIfHidden">
+            <label for="project-summary">Project summary</label>
+            <p class="restored-notice" data-draft-autosave-target="restoredNotice" hidden>
+              Restored your draft from <span data-saved-time></span>.
+              <button type="button" class="quiet" data-action="draft-autosave#discardDraft">Discard draft</button>
+            </p>
+            <textarea id="project-summary" name="project_summary" data-draft-autosave-target="field" data-action="draft-autosave#fieldChanged">The Eastside Tool Library lends drills, ladders, sewing machines, and garden tools to neighbors who can't afford to buy them. A Neighborhood Grant would fund a second lending site in the Fulton Avenue branch library.</textarea>
+            <div class="draft-meta">
+              <span data-draft-autosave-target="wordProgress"></span>
+              <span data-draft-autosave-target="saveStatus" aria-live="polite">Autosave is on</span>
+              <button type="button" class="quiet open-focus-mode" data-action="grant-application#openFocusMode">Focus mode</button>
+            </div>
+          </div>
+
+          <div class="draft-section" data-controller="draft-autosave" data-grant-application-target="editor"
+               data-draft-autosave-storage-key-value="larkspur-grant-2027:budget-justification"
+               data-action="pagehide@window->draft-autosave#flushPendingSave visibilitychange@document->draft-autosave#flushIfHidden">
+            <label for="budget-justification">Budget justification</label>
+            <p class="restored-notice" data-draft-autosave-target="restoredNotice" hidden>
+              Restored your draft from <span data-saved-time></span>.
+              <button type="button" class="quiet" data-action="draft-autosave#discardDraft">Discard draft</button>
+            </p>
+            <textarea id="budget-justification" name="budget_justification" data-draft-autosave-target="field" data-action="draft-autosave#fieldChanged"></textarea>
+            <div class="draft-meta">
+              <span data-draft-autosave-target="wordProgress"></span>
+              <span data-draft-autosave-target="saveStatus" aria-live="polite">Autosave is on</span>
+              <button type="button" class="quiet open-focus-mode" data-action="grant-application#openFocusMode">Focus mode</button>
+            </div>
+          </div>
+
+          <div class="submit-row">
+            <button type="submit">Submit application</button>
+            <span class="muted" data-grant-application-target="submitStatus" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <dialog class="focus-dialog" aria-label="Focus mode" data-grant-application-target="focusDialog" data-action="close->grant-application#closeFocusMode">
+          <div data-grant-application-target="focusDialogBody"></div>
+          <form method="dialog"><button type="submit">Done</button></form>
+        </dialog>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="draft_autosave_controller.js"><code>draft_autosave_controller.js</code></a> — restores once, saves after a pause, and saves pending changes on disconnect and pagehide</li>
+          <li><a href="grant_application_controller.js"><code>grant_application_controller.js</code></a> — moves editors in and out of focus mode and submits the application</li>
+          <li><a href="submitted.html"><code>submitted.html</code></a> — the server's confirmation that replaces the form</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
