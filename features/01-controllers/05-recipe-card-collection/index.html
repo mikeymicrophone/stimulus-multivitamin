@@ -1,0 +1,178 @@
+<!doctype html>
+<!--
+  Controllers · 05 · Recipe card collection
+
+  Teaches:
+  - Controllers attach to markup however it arrives. Cards in the fetched
+    community-recipes.html fragment are inserted as an HTML string, and
+    Stimulus connects a recipe-card instance for each one.
+  - data-controller is a live list. recipe-card appends "recipe-editor" to its
+    own element to start editing, and recipe-editor removes its own token to
+    finish. Adding a token connects a new instance; removing it disconnects
+    that instance and leaves the others alone.
+  - disconnect() is where a controller undoes connect(): the editor removes
+    contenteditable, hides its toolbar, and restores the Edit button. When a
+    controller is detached by removing its token, its scope no longer
+    matches during disconnect(), so it keeps references from connect()
+    instead of reading targets.
+  - Actions for an identifier with no connected instance do nothing. The
+    editor toolbar's buttons sit in every card's markup but only respond
+    while that card has a recipe-editor.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Recipe card collection · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }
+      .recipe-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; }
+      .recipe-card.editing { outline: 3px dashed var(--capsule-amber, #e8912d); outline-offset: 2px; }
+      .recipe-card h3 { margin: 0 0 0.3rem; font-size: 1.05rem; }
+      .recipe-card [contenteditable] { background: #fff; box-shadow: inset 0 0 0 1px #cfc6b3; border-radius: 4px; padding: 0 0.2rem; }
+      .servings-row { display: flex; align-items: center; gap: 0.35rem; margin: 0 0 0.4rem; }
+      .servings-row button { padding: 0 0.6rem; }
+      .ingredients { margin: 0 0 0.5rem; padding-left: 1.1rem; font-size: 0.93rem; }
+      .recipe-notes { font-size: 0.9rem; color: var(--muted-ink, #555); }
+      .recipe-toolbar, .card-actions, .box-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+      .box-actions { margin: 0 0 1rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RecipeBoxController from "./recipe_box_controller.js"
+      import RecipeCardController from "./recipe_card_controller.js"
+      import RecipeEditorController from "./recipe_editor_controller.js"
+
+      const application = Application.start()
+      application.register("recipe-box", RecipeBoxController)
+      application.register("recipe-card", RecipeCardController)
+      application.register("recipe-editor", RecipeEditorController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>05 · Recipe card collection</span>
+      </nav>
+      <h1>Recipe card collection</h1>
+      <p class="lede">
+        A home cook's digital recipe box. Every card is a
+        <code>recipe-card</code> controller that scales its own servings. Editing
+        a card attaches a <code>recipe-editor</code> controller to that card
+        only for as long as you are editing.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="recipe-box" data-recipe-box-community-recipes-url-value="community-recipes.html">
+        <h2>Rosa's recipe box</h2>
+        <div class="box-actions">
+          <strong data-recipe-box-target="count" aria-live="polite"></strong>
+          <button type="button" data-recipe-box-target="loadButton" data-action="recipe-box#loadCommunityRecipes">Load community recipes</button>
+          <span class="muted" data-recipe-box-target="loadStatus" aria-live="polite"></span>
+        </div>
+
+        <div class="recipe-grid" data-recipe-box-target="cardList">
+            <article class="recipe-card" data-controller="recipe-card" data-recipe-box-target="card" data-recipe-card-base-servings-value="4">
+              <h3 data-recipe-editor-target="title">Weeknight red lentil dal</h3>
+              <p class="servings-row">
+                Serves <strong data-recipe-card-target="servings">4</strong>
+                <button type="button" class="quiet" data-action="recipe-card#serveFewer" aria-label="Fewer servings">−</button>
+                <button type="button" class="quiet" data-action="recipe-card#serveMore" aria-label="More servings">+</button>
+              </p>
+              <ul class="ingredients">
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> cup red lentils, rinsed</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="3">3</span> cups water</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="0.5">½</span> teaspoon ground turmeric</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> teaspoon cumin seeds</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="2">2</span> tablespoons ghee</li>
+              </ul>
+              <p class="recipe-notes" data-recipe-editor-target="notes">Bloom the cumin in the ghee until it crackles, then pour it over the dal right before serving.</p>
+              <div class="recipe-toolbar" data-recipe-editor-target="toolbar" hidden>
+                <button type="button" data-action="recipe-editor#save">Save changes</button>
+                <button type="button" class="quiet" data-action="recipe-editor#cancel">Cancel</button>
+                <span class="muted" data-recipe-editor-target="message" aria-live="polite"></span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="quiet" data-recipe-editor-target="startButton" data-action="recipe-card#startEditing">Edit</button>
+                <button type="button" class="quiet" data-action="recipe-card#removeFromBox">Remove</button>
+              </div>
+            </article>
+
+            <article class="recipe-card" data-controller="recipe-card" data-recipe-box-target="card" data-recipe-card-base-servings-value="8">
+              <h3 data-recipe-editor-target="title">Brown butter cornbread</h3>
+              <p class="servings-row">
+                Serves <strong data-recipe-card-target="servings">8</strong>
+                <button type="button" class="quiet" data-action="recipe-card#serveFewer" aria-label="Fewer servings">−</button>
+                <button type="button" class="quiet" data-action="recipe-card#serveMore" aria-label="More servings">+</button>
+              </p>
+              <ul class="ingredients">
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> cup coarse cornmeal</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> cup all-purpose flour</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="0.5">½</span> cup brown butter, cooled</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1.25">1 ¼</span> cups buttermilk</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="2">2</span> eggs</li>
+              </ul>
+              <p class="recipe-notes" data-recipe-editor-target="notes">Heat the cast-iron skillet in the oven while it preheats so the edges crisp.</p>
+              <div class="recipe-toolbar" data-recipe-editor-target="toolbar" hidden>
+                <button type="button" data-action="recipe-editor#save">Save changes</button>
+                <button type="button" class="quiet" data-action="recipe-editor#cancel">Cancel</button>
+                <span class="muted" data-recipe-editor-target="message" aria-live="polite"></span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="quiet" data-recipe-editor-target="startButton" data-action="recipe-card#startEditing">Edit</button>
+                <button type="button" class="quiet" data-action="recipe-card#removeFromBox">Remove</button>
+              </div>
+            </article>
+
+            <article class="recipe-card" data-controller="recipe-card" data-recipe-box-target="card" data-recipe-card-base-servings-value="4">
+              <h3 data-recipe-editor-target="title">Charred scallion pancakes</h3>
+              <p class="servings-row">
+                Serves <strong data-recipe-card-target="servings">4</strong>
+                <button type="button" class="quiet" data-action="recipe-card#serveFewer" aria-label="Fewer servings">−</button>
+                <button type="button" class="quiet" data-action="recipe-card#serveMore" aria-label="More servings">+</button>
+              </p>
+              <ul class="ingredients">
+                <li><span data-recipe-card-target="quantity" data-base-quantity="2">2</span> cups all-purpose flour</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="0.75">¾</span> cup just-boiled water</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="6">6</span> scallions, thinly sliced</li>
+                <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> tablespoon toasted sesame oil</li>
+              </ul>
+              <p class="recipe-notes" data-recipe-editor-target="notes">Rest the dough for 30 minutes; it rolls thinner and puffs into flaky layers.</p>
+              <div class="recipe-toolbar" data-recipe-editor-target="toolbar" hidden>
+                <button type="button" data-action="recipe-editor#save">Save changes</button>
+                <button type="button" class="quiet" data-action="recipe-editor#cancel">Cancel</button>
+                <span class="muted" data-recipe-editor-target="message" aria-live="polite"></span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="quiet" data-recipe-editor-target="startButton" data-action="recipe-card#startEditing">Edit</button>
+                <button type="button" class="quiet" data-action="recipe-card#removeFromBox">Remove</button>
+              </div>
+            </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="recipe_box_controller.js"><code>recipe_box_controller.js</code></a> — counts cards and inserts the fetched community fragment</li>
+          <li><a href="recipe_card_controller.js"><code>recipe_card_controller.js</code></a> — one instance per card; scales servings and attaches the editor</li>
+          <li><a href="recipe_editor_controller.js"><code>recipe_editor_controller.js</code></a> — connected only while a card is being edited</li>
+          <li><a href="community-recipes.html"><code>community-recipes.html</code></a> — the server-rendered fragment the box fetches</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
