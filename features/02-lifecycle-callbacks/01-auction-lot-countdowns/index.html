@@ -1,0 +1,188 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 01 · Auction lot countdowns
+
+  Teaches:
+  - initialize() runs once per controller instance; connect() runs every
+    time the element enters the document. Each lot converts "closes in N
+    seconds" to a deadline in initialize(), so hiding and re-showing a lot
+    does not restart its clock.
+  - connect() starts a setInterval and disconnect() clears it. A hidden,
+    withdrawn, or closed lot stops ticking, which the "clocks ticking" count
+    shows.
+  - Re-inserting the same element reconnects the same instance. "Closing
+    within a minute" detaches lots and puts the same elements back, and their
+    instances resume with the right time because each tick reads the
+    deadline.
+  - New HTML gets a new instance. A relisted lot arrives as a server fragment,
+    and initialize() runs again with the server's new closing time.
+  - Once an element is detached, events it dispatches no longer bubble to its
+    ancestors, and closest() can't find them either. Each lot keeps a
+    reference to the catalog element from connect() and dispatches its
+    "clock-stopped" event there.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Auction lot countdowns · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .catalog-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-bottom: 1rem; }
+      .catalog-toolbar [aria-pressed="false"] { background: transparent; color: var(--muted-ink, #555); border-color: var(--rule, #ddd); }
+      .clock-summary { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .lot-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.85rem; }
+      .auction-lot { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; display: grid; gap: 0.35rem; }
+      .auction-lot h3 { margin: 0; font-size: 1rem; }
+      .lot-number { font-size: 0.8rem; color: var(--muted-ink, #555); margin: 0; }
+      .lot-clock { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 0; }
+      .auction-lot.closing-soon .lot-clock { color: #b3261e; }
+      .auction-lot.closed { background: #f3efe6; }
+      .auction-lot.closed .lot-clock { color: var(--muted-ink, #555); }
+      .lot-bid { margin: 0; font-size: 0.93rem; }
+      .lot-status { margin: 0; min-height: 1.4em; font-size: 0.85rem; color: var(--bottle-green, #1f3d2b); }
+      .lot-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .withdrawn-lots { margin-top: 1.5rem; }
+      .withdrawn-lots ul { padding-left: 1.2rem; }
+      .withdrawn-lots li { margin: 0.3rem 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import AuctionCatalogController from "./auction_catalog_controller.js"
+      import LotCountdownController from "./lot_countdown_controller.js"
+
+      const application = Application.start()
+      application.register("auction-catalog", AuctionCatalogController)
+      application.register("lot-countdown", LotCountdownController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>01 · Auction lot countdowns</span>
+      </nav>
+      <h1>Auction lot countdowns</h1>
+      <p class="lede">
+        The clerk's console for an online estate sale. Every lot is a
+        <code>lot-countdown</code> controller with its own clock. The
+        <code>auction-catalog</code> controller around them filters, withdraws,
+        and relists lots.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="auction-catalog"
+               data-action="lot-countdown:clock-started->auction-catalog#clockStarted lot-countdown:clock-stopped->auction-catalog#clockStopped">
+        <h2>Hargrove &amp; Finch · Mid-century furnishings · Session 2</h2>
+
+        <div class="catalog-toolbar">
+          <button type="button" aria-pressed="true" data-auction-catalog-target="allLotsButton" data-action="auction-catalog#showAllLots">All lots</button>
+          <button type="button" aria-pressed="false" data-auction-catalog-target="closingSoonButton" data-action="auction-catalog#showClosingSoon">Closing within a minute</button>
+          <span class="muted" data-auction-catalog-target="filterSummary" aria-live="polite"></span>
+          <span class="clock-summary" data-auction-catalog-target="clockSummary" aria-live="polite"></span>
+        </div>
+
+        <ol class="lot-list" data-auction-catalog-target="lotList">
+          <li class="auction-lot" id="lot-101" data-controller="lot-countdown" data-auction-catalog-target="lot"
+              data-lot-countdown-lot-number-value="101" data-lot-countdown-closes-in-seconds-value="75"
+              data-lot-countdown-current-bid-value="1450" data-lot-countdown-bid-increment-value="50" data-lot-countdown-bid-count-value="9">
+            <p class="lot-number">Lot 101</p>
+            <h3>Danish teak sideboard, 1962</h3>
+            <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+            <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+            <p class="lot-status" data-lot-countdown-target="status" aria-live="polite"></p>
+            <div class="lot-actions">
+              <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+              <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+            </div>
+          </li>
+          <li class="auction-lot" id="lot-102" data-controller="lot-countdown" data-auction-catalog-target="lot"
+              data-lot-countdown-lot-number-value="102" data-lot-countdown-closes-in-seconds-value="130"
+              data-lot-countdown-current-bid-value="2300" data-lot-countdown-bid-increment-value="100" data-lot-countdown-bid-count-value="14">
+            <p class="lot-number">Lot 102</p>
+            <h3>Walnut lounge chair and ottoman</h3>
+            <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+            <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+            <p class="lot-status" data-lot-countdown-target="status" aria-live="polite"></p>
+            <div class="lot-actions">
+              <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+              <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+            </div>
+          </li>
+          <li class="auction-lot" id="lot-103" data-controller="lot-countdown" data-auction-catalog-target="lot"
+              data-lot-countdown-lot-number-value="103" data-lot-countdown-closes-in-seconds-value="20"
+              data-lot-countdown-current-bid-value="640" data-lot-countdown-bid-increment-value="20" data-lot-countdown-bid-count-value="6">
+            <p class="lot-number">Lot 103</p>
+            <h3>Brass sputnik chandelier</h3>
+            <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+            <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+            <p class="lot-status" data-lot-countdown-target="status" aria-live="polite"></p>
+            <div class="lot-actions">
+              <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+              <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+            </div>
+          </li>
+          <li class="auction-lot" id="lot-104" data-controller="lot-countdown" data-auction-catalog-target="lot"
+              data-lot-countdown-lot-number-value="104" data-lot-countdown-closes-in-seconds-value="300"
+              data-lot-countdown-current-bid-value="520" data-lot-countdown-bid-increment-value="20" data-lot-countdown-bid-count-value="3">
+            <p class="lot-number">Lot 104</p>
+            <h3>Rosewood drinks trolley</h3>
+            <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+            <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+            <p class="lot-status" data-lot-countdown-target="status" aria-live="polite"></p>
+            <div class="lot-actions">
+              <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+              <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+            </div>
+          </li>
+          <li class="auction-lot" id="lot-105" data-controller="lot-countdown" data-auction-catalog-target="lot"
+              data-lot-countdown-lot-number-value="105" data-lot-countdown-closes-in-seconds-value="45"
+              data-lot-countdown-current-bid-value="180" data-lot-countdown-bid-increment-value="10" data-lot-countdown-bid-count-value="0">
+            <p class="lot-number">Lot 105</p>
+            <h3>Pair of ceramic table lamps</h3>
+            <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+            <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+            <p class="lot-status" data-lot-countdown-target="status" aria-live="polite"></p>
+            <div class="lot-actions">
+              <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+              <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+            </div>
+          </li>
+        </ol>
+
+        <section class="withdrawn-lots">
+          <h3>Withdrawn by the consignor</h3>
+          <ul data-auction-catalog-target="withdrawnList"></ul>
+        </section>
+
+        <template data-auction-catalog-target="withdrawnLotTemplate">
+          <li>
+            <span data-lot-heading></span>
+            <button type="button" class="quiet" data-action="auction-catalog#relistLot">Relist</button>
+            <span class="muted" data-relist-error></span>
+          </li>
+        </template>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lot_countdown_controller.js"><code>lot_countdown_controller.js</code></a> — one instance per lot; sets the deadline once, ticks while connected</li>
+          <li><a href="auction_catalog_controller.js"><code>auction_catalog_controller.js</code></a> — filters, withdraws, and relists lots; counts running clocks</li>
+          <li><a href="relisted/lot-101.html"><code>relisted/lot-101.html</code></a> and its siblings — server fragments for relisted lots</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

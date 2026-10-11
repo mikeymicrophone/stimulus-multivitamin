@@ -1,0 +1,13 @@
+<li class="auction-lot" id="lot-101" data-controller="lot-countdown" data-auction-catalog-target="lot"
+    data-lot-countdown-lot-number-value="101" data-lot-countdown-closes-in-seconds-value="240"
+    data-lot-countdown-current-bid-value="1200" data-lot-countdown-bid-increment-value="50" data-lot-countdown-bid-count-value="0">
+  <p class="lot-number">Lot 101 · Relisted</p>
+  <h3>Danish teak sideboard, 1962</h3>
+  <p class="lot-clock" data-lot-countdown-target="timeRemaining"></p>
+  <p class="lot-bid"><strong data-lot-countdown-target="currentBid"></strong> · <span data-lot-countdown-target="bidCount"></span></p>
+  <p class="lot-status" data-lot-countdown-target="status" aria-live="polite">Relisted with a lower opening bid.</p>
+  <div class="lot-actions">
+    <button type="button" data-lot-countdown-target="placeBidButton" data-action="lot-countdown#placeBid"></button>
+    <button type="button" class="quiet" data-action="auction-catalog#withdrawLot">Withdraw</button>
+  </div>
+</li>
