@@ -1,0 +1,163 @@
+<!doctype html>
+<!--
+  Controllers · 06 · Phone plan comparison table
+
+  Teaches:
+  - Controllers in subfolders get namespaced identifiers.
+    plans/comparison_controller.js is "plans--comparison",
+    plans/usage_estimator_controller.js is "plans--usage-estimator", and
+    billing/autopay_discount_controller.js is "billing--autopay-discount".
+  - "--" stands for the folder separator and "-" for underscores, the same
+    mapping Rails and stimulus-loading use. With explicit register() calls
+    you choose the identifier, so follow the file path to keep them
+    predictable.
+  - Every attribute spells the full identifier: targets
+    (data-plans--usage-estimator-target), actions
+    (plans--usage-estimator#estimate), and values
+    (data-billing--autopay-discount-per-line-value).
+  - Controllers from different namespaces still cooperate: both nested
+    controllers find the surrounding plans--comparison instance and hand it
+    their numbers.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Phone plan comparison table · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .plan-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+      .plan-table th, .plan-table td { padding: 0.5rem; border-bottom: 1px solid var(--rule, #ddd); text-align: center; }
+      .plan-table tbody th { text-align: left; font-weight: 500; color: var(--muted-ink, #555); }
+      .plan-table .recommended { background: #fdf0d9; box-shadow: inset 0 3px 0 var(--capsule-amber, #e8912d); }
+      .plan-table tfoot td { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .plan-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .plan-tools fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.75rem 1rem; }
+      .plan-tools label { display: block; margin: 0.35rem 0; }
+      .plan-tools input[type="number"] { max-width: 7rem; }
+      .identifier-map td, .identifier-map th { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--rule, #ddd); text-align: left; font-size: 0.9rem; }
+      .identifier-map { border-collapse: collapse; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PlansComparisonController from "./plans/comparison_controller.js"
+      import PlansUsageEstimatorController from "./plans/usage_estimator_controller.js"
+      import BillingAutopayDiscountController from "./billing/autopay_discount_controller.js"
+
+      const application = Application.start()
+      application.register("plans--comparison", PlansComparisonController)
+      application.register("plans--usage-estimator", PlansUsageEstimatorController)
+      application.register("billing--autopay-discount", BillingAutopayDiscountController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>06 · Phone plan comparison table</span>
+      </nav>
+      <h1>Phone plan comparison table</h1>
+      <p class="lede">
+        A wireless carrier's plan picker. The table is a
+        <code>plans--comparison</code> controller; the usage estimator and the
+        autopay toggle come from other folders and carry namespaced
+        identifiers of their own.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="plans--comparison">
+        <h2>Northline Wireless · Compare plans</h2>
+
+        <label for="line-count">Lines on the account</label>
+        <select id="line-count" name="line_count" data-plans--comparison-target="lineCount" data-action="plans--comparison#recalculate">
+          <option value="1">1 line</option>
+          <option value="2" selected>2 lines</option>
+          <option value="3">3 lines</option>
+          <option value="4">4 lines</option>
+          <option value="5">5 lines</option>
+        </select>
+
+        <table class="plan-table">
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col" data-plans--comparison-target="plan" data-plan-key="basic" data-plan-name="Basic 5G"
+                  data-first-line-price="40" data-additional-line-price="30" data-premium-gigabytes="15" data-hotspot-gigabytes="0">Basic 5G</th>
+              <th scope="col" data-plans--comparison-target="plan" data-plan-key="everyday" data-plan-name="Unlimited Everyday"
+                  data-first-line-price="60" data-additional-line-price="45" data-premium-gigabytes="50" data-hotspot-gigabytes="10">Unlimited Everyday</th>
+              <th scope="col" data-plans--comparison-target="plan" data-plan-key="premium" data-plan-name="Unlimited Premium"
+                  data-first-line-price="80" data-additional-line-price="60" data-premium-gigabytes="Infinity" data-hotspot-gigabytes="50">Unlimited Premium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">First line</th><td>$40</td><td>$60</td><td>$80</td></tr>
+            <tr><th scope="row">Each additional line</th><td>$30</td><td>$45</td><td>$60</td></tr>
+            <tr><th scope="row">Premium 5G data</th><td>15 GB</td><td>50 GB</td><td>Unlimited</td></tr>
+            <tr><th scope="row">Mobile hotspot</th><td>None</td><td>10 GB</td><td>50 GB</td></tr>
+            <tr><th scope="row">Streaming</th><td>480p</td><td>720p</td><td>4K UHD</td></tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Your monthly total</th>
+              <td data-plans--comparison-target="monthlyTotal" data-plan-key="basic"></td>
+              <td data-plans--comparison-target="monthlyTotal" data-plan-key="everyday"></td>
+              <td data-plans--comparison-target="monthlyTotal" data-plan-key="premium"></td>
+            </tr>
+          </tfoot>
+        </table>
+        <p data-plans--comparison-target="recommendation" aria-live="polite"></p>
+
+        <div class="plan-tools">
+          <fieldset data-controller="plans--usage-estimator">
+            <legend>What do you use in a month?</legend>
+            <label>
+              Data (GB)
+              <input type="number" name="premium_gigabytes" min="0" step="1" value="22"
+                     data-plans--usage-estimator-target="premiumGigabytes" data-action="input->plans--usage-estimator#estimate">
+            </label>
+            <label>
+              Hotspot (GB)
+              <input type="number" name="hotspot_gigabytes" min="0" step="1" value="5"
+                     data-plans--usage-estimator-target="hotspotGigabytes" data-action="input->plans--usage-estimator#estimate">
+            </label>
+            <p class="muted" data-plans--usage-estimator-target="result" aria-live="polite"></p>
+          </fieldset>
+
+          <fieldset data-controller="billing--autopay-discount" data-billing--autopay-discount-per-line-value="5">
+            <legend>Autopay</legend>
+            <label>
+              <input type="checkbox" name="autopay" data-billing--autopay-discount-target="enrollment" data-action="billing--autopay-discount#applyEnrollment">
+              Pay automatically from checking
+            </label>
+            <p class="muted" data-billing--autopay-discount-target="note" aria-live="polite"></p>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <table class="identifier-map">
+          <thead>
+            <tr><th scope="col">File</th><th scope="col">Identifier</th><th scope="col">Target attribute</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><a href="plans/comparison_controller.js"><code>plans/comparison_controller.js</code></a></td><td><code>plans--comparison</code></td><td><code>data-plans--comparison-target</code></td></tr>
+            <tr><td><a href="plans/usage_estimator_controller.js"><code>plans/usage_estimator_controller.js</code></a></td><td><code>plans--usage-estimator</code></td><td><code>data-plans--usage-estimator-target</code></td></tr>
+            <tr><td><a href="billing/autopay_discount_controller.js"><code>billing/autopay_discount_controller.js</code></a></td><td><code>billing--autopay-discount</code></td><td><code>data-billing--autopay-discount-target</code></td></tr>
+          </tbody>
+        </table>
+        <p>This page's source holds the markup, importmap, and controller registration.</p>
+      </section>
+    </main>
+  </body>
+</html>
