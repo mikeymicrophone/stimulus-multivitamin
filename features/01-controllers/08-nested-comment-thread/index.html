@@ -1,0 +1,236 @@
+<!doctype html>
+<!--
+  Controllers · 08 · Nested comment thread
+
+  Teaches:
+  - A controller can nest inside itself. Every comment at every depth is a
+    "comment" instance, and each instance's scope ends at the nested
+    comments inside it: this.repliesTarget is this comment's own replies
+    container, never a grandchild's.
+  - Actions respect that boundary. Every comment has a
+    data-action="comment#toggleReplyForm" button, and clicking one runs only
+    the innermost comment that contains it.
+  - The same elements look different from another scope. Each comment is
+    also a comment-thread target, and the thread (not nested in itself)
+    sees all of them at once.
+  - A comment finds its parent instance with
+    application.getControllerForElementAndIdentifier() and reports reply
+    counts up the chain as replies connect and disconnect.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Nested comment thread · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .original-post { border-bottom: 1px solid var(--rule, #ddd); padding-bottom: 0.75rem; margin-bottom: 1rem; }
+      .comment { margin-top: 0.75rem; }
+      .comment-meta { font-size: 0.9rem; }
+      .comment-body { margin: 0.2rem 0 0.3rem; }
+      .comment-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .comment-actions button { font-size: 0.82rem; padding: 0.1rem 0.6rem; }
+      .replies { margin-left: 0.6rem; padding-left: 0.9rem; border-left: 2px solid var(--rule, #ddd); }
+      .reply-form, .new-comment-form { margin: 0.5rem 0; display: grid; gap: 0.4rem; max-width: 36rem; }
+      .reply-form textarea, .new-comment-form textarea { width: 100%; box-sizing: border-box; padding: 0.4rem; border: 1px solid #cfc6b3; border-radius: 6px; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CommentThreadController from "./comment_thread_controller.js"
+      import CommentController from "./comment_controller.js"
+
+      const application = Application.start()
+      application.register("comment-thread", CommentThreadController)
+      application.register("comment", CommentController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>08 · Nested comment thread</span>
+      </nav>
+      <h1>Nested comment thread</h1>
+      <p class="lede">
+        A community garden's discussion board. Every comment, reply, and reply
+        to a reply is its own <code>comment</code> controller nested inside its
+        parent's; the <code>comment-thread</code> controller around them sees
+        them all.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="comment-thread" data-comment-thread-viewer-name-value="Marisol (plot 22)">
+        <div class="original-post">
+          <h2>Tomatoes splitting after heavy rain. What am I doing wrong?</h2>
+          <p class="muted">Posted by Marisol (plot 22) in Allotment Commons · Vegetables · <span data-comment-thread-target="commentCount" aria-live="polite"></span></p>
+          <p>Every time we get a big storm, half my Early Girls crack open around the stem the next morning. I water every evening. Is it the soil, the variety, or me?</p>
+        </div>
+
+        <div data-comment-thread-target="commentList">
+          <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+            <header class="comment-meta"><strong data-comment-target="author">Hollis (plot 12)</strong> <span class="muted">· 5h ago</span></header>
+            <p class="comment-body">Splitting after a downpour is almost always uneven watering. The fruit swells faster than the skin can stretch. Mulch heavily and water deeply twice a week instead of a little every day.</p>
+            <div class="comment-actions">
+              <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+              <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+            </div>
+            <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+              <textarea name="reply" rows="2" aria-label="Your reply to Hollis (plot 12)" data-comment-target="replyText"></textarea>
+              <div class="comment-actions">
+                <button type="submit">Post reply</button>
+                <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+              </div>
+            </form>
+            <div class="replies" data-comment-target="replies">
+              <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+                <header class="comment-meta"><strong data-comment-target="author">Beatriz (plot 7)</strong> <span class="muted">· 4h ago</span></header>
+                <p class="comment-body">Seconding the mulch. I switched to straw last summer and my Brandywines stopped cracking almost completely.</p>
+                <div class="comment-actions">
+                  <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+                  <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+                </div>
+                <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+                  <textarea name="reply" rows="2" aria-label="Your reply to Beatriz (plot 7)" data-comment-target="replyText"></textarea>
+                  <div class="comment-actions">
+                    <button type="submit">Post reply</button>
+                    <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+                  </div>
+                </form>
+                <div class="replies" data-comment-target="replies">
+                  <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+                    <header class="comment-meta"><strong data-comment-target="author">Hollis (plot 12)</strong> <span class="muted">· 4h ago</span></header>
+                    <p class="comment-body">Straw is great as long as it is seed-free. Wheat straw from the feed store sprouted all over mine one year.</p>
+                    <div class="comment-actions">
+                      <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+                      <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+                    </div>
+                    <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+                      <textarea name="reply" rows="2" aria-label="Your reply to Hollis (plot 12)" data-comment-target="replyText"></textarea>
+                      <div class="comment-actions">
+                        <button type="submit">Post reply</button>
+                        <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+                      </div>
+                    </form>
+                    <div class="replies" data-comment-target="replies">
+                      <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+                        <header class="comment-meta"><strong data-comment-target="author">Beatriz (plot 7)</strong> <span class="muted">· 3h ago</span></header>
+                        <p class="comment-body">Good tip. I buy the bagged stuff labeled weed-free now.</p>
+                        <div class="comment-actions">
+                          <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+                          <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+                        </div>
+                        <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+                          <textarea name="reply" rows="2" aria-label="Your reply to Beatriz (plot 7)" data-comment-target="replyText"></textarea>
+                          <div class="comment-actions">
+                            <button type="submit">Post reply</button>
+                            <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+                          </div>
+                        </form>
+                        <div class="replies" data-comment-target="replies"></div>
+                      </article>
+                    </div>
+                  </article>
+                </div>
+              </article>
+              <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+                <header class="comment-meta"><strong data-comment-target="author">Dev (plot 3)</strong> <span class="muted">· 3h ago</span></header>
+                <p class="comment-body">Also worth picking anything that is blushing before a big storm. They finish ripening fine on the windowsill.</p>
+                <div class="comment-actions">
+                  <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+                  <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+                </div>
+                <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+                  <textarea name="reply" rows="2" aria-label="Your reply to Dev (plot 3)" data-comment-target="replyText"></textarea>
+                  <div class="comment-actions">
+                    <button type="submit">Post reply</button>
+                    <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+                  </div>
+                </form>
+                <div class="replies" data-comment-target="replies"></div>
+              </article>
+            </div>
+          </article>
+
+          <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+            <header class="comment-meta"><strong data-comment-target="author">Old Tom (plot 1)</strong> <span class="muted">· 2h ago</span></header>
+            <p class="comment-body">Variety matters too. Sun Gold and the other cherry types split if you look at them wrong. Try Juliet or Mountain Merit next year; both are crack-resistant.</p>
+            <div class="comment-actions">
+              <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+              <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+            </div>
+            <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+              <textarea name="reply" rows="2" aria-label="Your reply to Old Tom (plot 1)" data-comment-target="replyText"></textarea>
+              <div class="comment-actions">
+                <button type="submit">Post reply</button>
+                <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+              </div>
+            </form>
+            <div class="replies" data-comment-target="replies">
+              <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+                <header class="comment-meta"><strong data-comment-target="author">Ana (plot 19)</strong> <span class="muted">· 1h ago</span></header>
+                <p class="comment-body">Juliet has been bulletproof for me, even through the August storms.</p>
+                <div class="comment-actions">
+                  <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+                  <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+                </div>
+                <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+                  <textarea name="reply" rows="2" aria-label="Your reply to Ana (plot 19)" data-comment-target="replyText"></textarea>
+                  <div class="comment-actions">
+                    <button type="submit">Post reply</button>
+                    <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+                  </div>
+                </form>
+                <div class="replies" data-comment-target="replies"></div>
+              </article>
+            </div>
+          </article>
+        </div>
+
+        <form class="new-comment-form" data-action="comment-thread#postComment">
+          <label for="new-comment">Add a comment as Marisol (plot 22)</label>
+          <textarea id="new-comment" name="comment" rows="3" data-comment-thread-target="newCommentText"></textarea>
+          <div><button type="submit">Post comment</button></div>
+        </form>
+
+        <template data-comment-thread-target="commentTemplate">
+          <article class="comment" data-controller="comment" data-comment-thread-target="comment">
+            <header class="comment-meta"><strong data-comment-target="author"></strong> <span class="muted">· just now</span></header>
+            <p class="comment-body"></p>
+            <div class="comment-actions">
+              <button type="button" class="quiet" data-action="comment#toggleReplyForm">Reply</button>
+              <button type="button" class="quiet" data-comment-target="repliesToggle" data-action="comment#toggleReplies" hidden></button>
+              <button type="button" class="quiet" data-action="comment#deleteComment">Delete</button>
+            </div>
+            <form class="reply-form" data-comment-target="replyForm" data-action="comment#submitReply" hidden>
+              <textarea name="reply" rows="2" aria-label="Your reply" data-comment-target="replyText"></textarea>
+              <div class="comment-actions">
+                <button type="submit">Post reply</button>
+                <button type="button" class="quiet" data-action="comment#toggleReplyForm">Cancel</button>
+              </div>
+            </form>
+            <div class="replies" data-comment-target="replies"></div>
+          </article>
+        </template>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="comment_thread_controller.js"><code>comment_thread_controller.js</code></a> — sees every comment, counts them, and builds new ones from the template</li>
+          <li><a href="comment_controller.js"><code>comment_controller.js</code></a> — one instance per comment at every depth; replies, collapses, and counts its own branch</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
