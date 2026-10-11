@@ -1,0 +1,12 @@
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Local tooling (examples need none, but contributors may install a server)
+node_modules/
+npm-debug.log*
+.env
