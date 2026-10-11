@@ -1,0 +1,129 @@
+<!doctype html>
+<!--
+  Controllers · 03 · Listing description editor
+
+  Teaches:
+  - One element can carry several controllers:
+    data-controller="listing-draft character-budget fair-housing-check".
+    Each identifier gets its own independent instance on that element.
+  - Targets, values, and actions are namespaced by identifier, so the same
+    <textarea> can be a target of all three controllers at once, and its
+    data-action list sends one input event to each of them.
+  - Controllers on the same element connect in the order their identifiers
+    appear in data-controller. listing-draft comes first so a restored draft
+    is in place before the others read the field.
+  - Small single-purpose controllers mix and match. The showing
+    instructions field is for agents only, so it skips the fair-housing check.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Listing description editor · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .listing-field { margin-bottom: 1.5rem; }
+      .listing-field label { display: block; font-weight: 600; margin-bottom: 0.3rem; }
+      .listing-field textarea { width: 100%; box-sizing: border-box; padding: 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .listing-field[data-character-budget-state="over"] textarea { border-color: #b3261e; }
+      .listing-field[data-fair-housing-check-state="flagged"] textarea { background: #fff6e5; }
+      .field-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: center; font-size: 0.9rem; margin-top: 0.35rem; }
+      .compliance-findings { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem 0.5rem 1.75rem; border-left: 4px solid var(--capsule-amber, #e8912d); background: #fdf4e4; font-size: 0.9rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ListingDraftController from "./listing_draft_controller.js"
+      import CharacterBudgetController from "./character_budget_controller.js"
+      import FairHousingCheckController from "./fair_housing_check_controller.js"
+
+      const application = Application.start()
+      application.register("listing-draft", ListingDraftController)
+      application.register("character-budget", CharacterBudgetController)
+      application.register("fair-housing-check", FairHousingCheckController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>03 · Listing description editor</span>
+      </nav>
+      <h1>Listing description editor</h1>
+      <p class="lede">
+        A listing agent rewrites the copy for a house going on the market. Each
+        field wraps three small controllers on one element: a draft saver, a
+        character budget, and a fair-housing wording check.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>MLS #4471-208 · 1187 Larkspur Lane, Ashford</h2>
+        <p class="muted">3 bed · 2 bath · 1,640 sq ft · listed by Dana Whitlock, Fernbrook Realty</p>
+
+        <div class="listing-field" data-controller="listing-draft character-budget fair-housing-check"
+             data-listing-draft-storage-key-value="mls-4471-208-headline"
+             data-character-budget-limit-value="80">
+          <label for="listing-headline">Headline</label>
+          <textarea id="listing-headline" name="listing[headline]" rows="2"
+                    data-listing-draft-target="field" data-character-budget-target="field" data-fair-housing-check-target="field"
+                    data-action="input->listing-draft#save input->character-budget#update input->fair-housing-check#scan">Family-friendly craftsman with a new roof and a fenced yard</textarea>
+          <div class="field-meta">
+            <span data-character-budget-target="remaining" aria-live="polite"></span>
+            <span class="muted" data-listing-draft-target="status" aria-live="polite"></span>
+            <button type="button" class="quiet" data-listing-draft-target="discardButton" data-action="listing-draft#discard">Discard draft</button>
+          </div>
+          <ul class="compliance-findings" data-fair-housing-check-target="findings" aria-live="polite" hidden></ul>
+        </div>
+
+        <div class="listing-field" data-controller="listing-draft character-budget fair-housing-check"
+             data-listing-draft-storage-key-value="mls-4471-208-public-remarks"
+             data-character-budget-limit-value="500">
+          <label for="listing-public-remarks">Public remarks</label>
+          <textarea id="listing-public-remarks" name="listing[public_remarks]" rows="6"
+                    data-listing-draft-target="field" data-character-budget-target="field" data-fair-housing-check-target="field"
+                    data-action="input->listing-draft#save input->character-budget#update input->fair-housing-check#scan">Sunlit 1924 craftsman on a quiet, tree-lined street. The master bedroom has a walk-in closet and a window seat overlooking the garden. Original fir floors, a renovated kitchen with quartz counters, and a detached studio with its own heat pump. Walking distance to the Ashford farmers market.</textarea>
+          <div class="field-meta">
+            <span data-character-budget-target="remaining" aria-live="polite"></span>
+            <span class="muted" data-listing-draft-target="status" aria-live="polite"></span>
+            <button type="button" class="quiet" data-listing-draft-target="discardButton" data-action="listing-draft#discard">Discard draft</button>
+          </div>
+          <ul class="compliance-findings" data-fair-housing-check-target="findings" aria-live="polite" hidden></ul>
+        </div>
+
+        <div class="listing-field" data-controller="listing-draft character-budget"
+             data-listing-draft-storage-key-value="mls-4471-208-showing-instructions"
+             data-character-budget-limit-value="160">
+          <label for="listing-showing-instructions">Showing instructions (agents only)</label>
+          <textarea id="listing-showing-instructions" name="listing[showing_instructions]" rows="3"
+                    data-listing-draft-target="field" data-character-budget-target="field"
+                    data-action="input->listing-draft#save input->character-budget#update">Lockbox on the side gate, code via ShowingTime. Two cats; keep the studio door closed. Sellers away weekends.</textarea>
+          <div class="field-meta">
+            <span data-character-budget-target="remaining" aria-live="polite"></span>
+            <span class="muted" data-listing-draft-target="status" aria-live="polite"></span>
+            <button type="button" class="quiet" data-listing-draft-target="discardButton" data-action="listing-draft#discard">Discard draft</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="listing_draft_controller.js"><code>listing_draft_controller.js</code></a> — saves and restores each field's draft; listed first so it connects first</li>
+          <li><a href="character_budget_controller.js"><code>character_budget_controller.js</code></a> — counts characters against each field's limit</li>
+          <li><a href="fair_housing_check_controller.js"><code>fair_housing_check_controller.js</code></a> — flags wording the compliance team rejects</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

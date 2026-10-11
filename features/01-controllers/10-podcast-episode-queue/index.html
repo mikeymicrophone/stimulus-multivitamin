@@ -1,0 +1,193 @@
+<!doctype html>
+<!--
+  Controllers · 10 · Podcast episode queue
+
+  Teaches:
+  - A controller is a plain JavaScript class, and a controller instance is
+    an object other code can hold. The queue stores episode controller
+    instances and hands them to the player.
+  - Design a public surface on purpose. Methods and getters other
+    controllers call (play, enqueue, takeNext, title, durationSeconds) are
+    public; timers, counters, and render helpers are #private, so no other
+    controller can depend on them.
+  - data-action can only reach public methods. Every action handler is a
+    public method, even when the buttons that call it are rendered by the
+    controller itself.
+  - Stimulus reads only its own static fields (targets, values, classes,
+    outlets). Other statics, like the player's skip lengths and playback
+    rates, are ordinary class configuration read through this.constructor.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Podcast episode queue · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .podcast-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(14rem, 2fr); gap: 1.25rem; align-items: start; }
+      @media (max-width: 44rem) { .podcast-layout { grid-template-columns: 1fr; } }
+      .episode-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+      .episode { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.55rem 0.8rem; }
+      .episode[data-playback-state="playing"] { border-color: var(--capsule-amber-deep, #b5651d); box-shadow: inset 4px 0 0 var(--capsule-amber, #e8912d); }
+      .episode[data-playback-state="played"] .episode-title { color: var(--muted-ink, #555); }
+      .episode p { margin: 0; }
+      .episode-show { font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .episode-title { font-weight: 600; }
+      .episode-status { font-size: 0.8rem; color: var(--bottle-green, #1f3d2b); font-weight: 600; }
+      .episode-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
+      .episode-queue { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; }
+      .episode-queue h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+      .episode-queue ol { padding-left: 1.2rem; margin: 0.5rem 0; }
+      .episode-queue li { margin-bottom: 0.4rem; }
+      .episode-queue li button { font-size: 0.75rem; padding: 0 0.5rem; margin-left: 0.25rem; }
+      .now-playing { position: sticky; bottom: 0; margin-top: 1.25rem; background: #14261b; color: #f5f1e6; border-radius: 10px; padding: 0.7rem 1rem; display: grid; gap: 0.35rem; }
+      .now-playing p { margin: 0; }
+      .now-playing-title { font-weight: 700; }
+      .now-playing-show { font-size: 0.85rem; opacity: 0.8; }
+      .now-playing progress { width: 100%; }
+      .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-variant-numeric: tabular-nums; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EpisodeController from "./episode_controller.js"
+      import EpisodeQueueController from "./episode_queue_controller.js"
+      import NowPlayingController from "./now_playing_controller.js"
+
+      const application = Application.start()
+      application.register("episode", EpisodeController)
+      application.register("episode-queue", EpisodeQueueController)
+      application.register("now-playing", NowPlayingController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>10 · Podcast episode queue</span>
+      </nav>
+      <h1>Podcast episode queue</h1>
+      <p class="lede">
+        A podcast app's library, Up Next queue, and player bar. Each episode is
+        an <code>episode</code> controller; the <code>episode-queue</code> and
+        <code>now-playing</code> controllers pass episode instances between
+        them through small public APIs and keep everything else private.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>Your subscriptions</h2>
+        <div class="podcast-layout">
+          <ol class="episode-list">
+            <li class="episode" data-controller="episode" data-episode-show-value="Field Notes from the Coast" data-episode-duration-seconds-value="2460">
+              <div>
+                <p class="episode-show">Field Notes from the Coast · 41 min</p>
+                <p class="episode-title" data-episode-target="title">Ep. 112 · The kelp forests are coming back</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+            <li class="episode" data-controller="episode" data-episode-show-value="Field Notes from the Coast" data-episode-duration-seconds-value="240">
+              <div>
+                <p class="episode-show">Field Notes from the Coast · 4 min</p>
+                <p class="episode-title" data-episode-target="title">Listener mail: what to do with a stranded seal pup</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+            <li class="episode" data-controller="episode" data-episode-show-value="Slow Bread" data-episode-duration-seconds-value="1680">
+              <div>
+                <p class="episode-show">Slow Bread · 28 min</p>
+                <p class="episode-title" data-episode-target="title">Rye, the grain that refuses to behave</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+            <li class="episode" data-controller="episode" data-episode-show-value="Slow Bread" data-episode-duration-seconds-value="3300">
+              <div>
+                <p class="episode-show">Slow Bread · 55 min</p>
+                <p class="episode-title" data-episode-target="title">Starter troubleshooting with Maura Kincaid</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+            <li class="episode" data-controller="episode" data-episode-show-value="Ledger Lines" data-episode-duration-seconds-value="1980">
+              <div>
+                <p class="episode-show">Ledger Lines · 33 min</p>
+                <p class="episode-title" data-episode-target="title">Sinking funds for irregular expenses</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+            <li class="episode" data-controller="episode" data-episode-show-value="Ledger Lines" data-episode-duration-seconds-value="720">
+              <div>
+                <p class="episode-show">Ledger Lines · 12 min</p>
+                <p class="episode-title" data-episode-target="title">Quick take: reading your first pay stub</p>
+                <span class="episode-status" data-episode-target="status"></span>
+              </div>
+              <div class="episode-actions">
+                <button type="button" data-episode-target="playButton" data-action="episode#playNow">Play</button>
+                <button type="button" class="quiet" data-action="episode#addToQueue">Add to queue</button>
+              </div>
+            </li>
+          </ol>
+
+          <aside class="episode-queue" id="episode-queue" data-controller="episode-queue">
+            <h3>Up next</h3>
+            <p class="muted" data-episode-queue-target="summary"></p>
+            <ol data-episode-queue-target="list"></ol>
+            <p class="muted" data-episode-queue-target="notice" aria-live="polite"></p>
+          </aside>
+        </div>
+
+        <div class="now-playing" id="now-playing" data-controller="now-playing">
+          <p class="now-playing-title" data-now-playing-target="title" aria-live="polite"></p>
+          <p class="now-playing-show" data-now-playing-target="show"></p>
+          <progress data-now-playing-target="progress" value="0" max="1" aria-label="Episode progress"></progress>
+          <div class="transport">
+            <span data-now-playing-target="elapsed"></span>
+            <button type="button" class="quiet" data-now-playing-target="seekButton" data-action="now-playing#skipBack">Back 15s</button>
+            <button type="button" data-now-playing-target="playPauseButton" data-action="now-playing#togglePlayback">Play queue</button>
+            <button type="button" class="quiet" data-now-playing-target="seekButton" data-action="now-playing#skipForward">Forward 30s</button>
+            <button type="button" class="quiet" data-now-playing-target="rateButton" data-action="now-playing#cyclePlaybackRate" aria-label="Playback speed"></button>
+            <span data-now-playing-target="remaining"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="episode_controller.js"><code>episode_controller.js</code></a> — one instance per episode; exposes title, show, and duration</li>
+          <li><a href="episode_queue_controller.js"><code>episode_queue_controller.js</code></a> — holds episode instances in a private array; enqueue() and takeNext()</li>
+          <li><a href="now_playing_controller.js"><code>now_playing_controller.js</code></a> — the player bar; public play(), private timer and render</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

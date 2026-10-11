@@ -1,0 +1,189 @@
+<!doctype html>
+<!--
+  Controllers · 07 · Shipment tracking timeline
+
+  Teaches:
+  - Controllers are classes, so they share behavior through inheritance.
+    tracking-timeline is a complete controller that also exports its class
+    as a base for others.
+  - parcel-tracking and freight-tracking extend it. international-tracking
+    extends parcel-tracking, two levels down.
+  - Static targets and values are merged up the class chain: each subclass
+    keeps the base's timeline, status, and scans and adds its own. The
+    attributes always use the subclass's identifier, so the international
+    package's timeline is data-international-tracking-target="timeline".
+  - Subclasses override small hook methods (describeScan, renderDetails,
+    canAdvance) and call super, rather than copying the base's render().
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Shipment tracking timeline · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .shipments { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1rem; }
+      .shipment { border: 1px solid var(--rule, #ddd); border-left: 6px solid #9aa39b; border-radius: 10px; padding: 0.75rem 1rem; }
+      .shipment[data-shipment-status="delivered"] { border-left-color: var(--bottle-green, #1f3d2b); }
+      .shipment[data-shipment-status="customs_hold"], .shipment.short-shipment { border-left-color: #b3261e; }
+      .shipment h3 { margin: 0; font-size: 1rem; }
+      .shipment .carrier { margin: 0.1rem 0 0.5rem; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .shipment-status { font-weight: 700; margin: 0.25rem 0; }
+      .shipment-details { margin: 0.25rem 0 0.5rem; font-size: 0.9rem; }
+      .scan-history { list-style: none; margin: 0.5rem 0; padding: 0 0 0 0.75rem; border-left: 2px solid var(--rule, #ddd); font-size: 0.87rem; }
+      .scan-history li { margin-bottom: 0.3rem; }
+      .scan-history time { color: var(--muted-ink, #555); display: block; font-size: 0.8rem; }
+      .shipment-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TrackingTimelineController from "./tracking_timeline_controller.js"
+      import ParcelTrackingController from "./parcel_tracking_controller.js"
+      import InternationalTrackingController from "./international_tracking_controller.js"
+      import FreightTrackingController from "./freight_tracking_controller.js"
+
+      const application = Application.start()
+      application.register("tracking-timeline", TrackingTimelineController)
+      application.register("parcel-tracking", ParcelTrackingController)
+      application.register("international-tracking", InternationalTrackingController)
+      application.register("freight-tracking", FreightTrackingController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>07 · Shipment tracking timeline</span>
+      </nav>
+      <h1>Shipment tracking timeline</h1>
+      <p class="lede">
+        A small home-goods shop tracks everything it has in transit. Every
+        shipment shares one timeline base class; parcels, international
+        packages, and freight each extend it with their own details.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>Hearth &amp; Kiln · Shipments in transit</h2>
+        <p class="muted">"Next scan" plays back the carrier's next tracking update for that shipment.</p>
+
+        <div class="shipments">
+          <article class="shipment" data-controller="tracking-timeline"
+                   data-tracking-timeline-scans-value='[
+                     {"at": "2026-10-06T09:14", "code": "accepted", "description": "Accepted at the post office", "location": "Dayton, OH"},
+                     {"at": "2026-10-06T21:40", "code": "in_transit", "description": "Processed at regional facility", "location": "Columbus, OH"}
+                   ]'
+                   data-tracking-timeline-upcoming-scans-value='[
+                     {"at": "2026-10-07T08:05", "code": "out_for_delivery", "description": "Out for delivery", "location": "Cincinnati, OH"},
+                     {"at": "2026-10-07T13:22", "code": "delivered", "description": "Delivered, signed for by L. Ortega", "location": "Cincinnati, OH"}
+                   ]'>
+            <h3>Wholesale agreement for Ortega Market</h3>
+            <p class="carrier">Certified mail · 9407 1118 9876 5400 1923 07</p>
+            <p class="shipment-status" data-tracking-timeline-target="status" aria-live="polite"></p>
+            <ol class="scan-history" data-tracking-timeline-target="timeline"></ol>
+            <div class="shipment-actions">
+              <button type="button" class="quiet" data-tracking-timeline-target="nextScanButton" data-action="tracking-timeline#receiveNextScan">Next scan</button>
+            </div>
+          </article>
+
+          <article class="shipment" data-controller="parcel-tracking"
+                   data-parcel-tracking-delivery-window-value="2 PM and 6 PM"
+                   data-parcel-tracking-scans-value='[
+                     {"at": "2026-10-05T16:30", "code": "label_created", "description": "Label created", "location": "Asheville, NC"},
+                     {"at": "2026-10-06T10:02", "code": "picked_up", "description": "Picked up", "location": "Asheville, NC"},
+                     {"at": "2026-10-06T23:48", "code": "in_transit", "description": "Departed sort hub", "location": "Charlotte, NC"}
+                   ]'
+                   data-parcel-tracking-upcoming-scans-value='[
+                     {"at": "2026-10-07T05:15", "code": "in_transit", "description": "Arrived at local delivery station", "location": "Richmond, VA"},
+                     {"at": "2026-10-07T09:40", "code": "out_for_delivery", "description": "Out for delivery", "location": "Richmond, VA"},
+                     {"at": "2026-10-07T15:11", "code": "delivered", "description": "Delivered", "location": "Richmond, VA", "handoff": "handed to resident"}
+                   ]'>
+            <h3>Enameled dutch oven, 5.5 qt</h3>
+            <p class="carrier">Ground parcel · order HK-10482 to Priya Raman</p>
+            <p class="shipment-status" data-parcel-tracking-target="status" aria-live="polite"></p>
+            <p class="shipment-details" data-parcel-tracking-target="deliveryWindow"></p>
+            <ol class="scan-history" data-parcel-tracking-target="timeline"></ol>
+            <div class="shipment-actions">
+              <button type="button" class="quiet" data-parcel-tracking-target="nextScanButton" data-action="parcel-tracking#receiveNextScan">Next scan</button>
+            </div>
+          </article>
+
+          <article class="shipment" data-controller="international-tracking"
+                   data-international-tracking-delivery-window-value="10 AM and 2 PM"
+                   data-international-tracking-duties-owed-value="38.40"
+                   data-international-tracking-scans-value='[
+                     {"at": "2026-10-03T11:20", "code": "picked_up", "description": "Picked up from supplier", "location": "Reykjavik, Iceland"},
+                     {"at": "2026-10-04T07:55", "code": "in_transit", "description": "Departed international gateway", "location": "Keflavik, Iceland"}
+                   ]'
+                   data-international-tracking-upcoming-scans-value='[
+                     {"at": "2026-10-04T19:30", "code": "customs_hold", "description": "Held at customs", "location": "Jamaica, NY"},
+                     {"at": "2026-10-06T08:10", "code": "customs_released", "description": "Released by customs", "location": "Jamaica, NY"},
+                     {"at": "2026-10-07T08:45", "code": "out_for_delivery", "description": "Out for delivery", "location": "Brooklyn, NY"},
+                     {"at": "2026-10-07T12:03", "code": "delivered", "description": "Delivered", "location": "Brooklyn, NY", "handoff": "left with the building concierge"}
+                   ]'>
+            <h3>Hand-knit lopapeysa sweaters, case of 12</h3>
+            <p class="carrier">International express · inbound stock from Ullarvinnslan</p>
+            <p class="shipment-status" data-international-tracking-target="status" aria-live="polite"></p>
+            <p class="shipment-details" data-international-tracking-target="customsStatus"></p>
+            <p class="shipment-details" data-international-tracking-target="deliveryWindow"></p>
+            <ol class="scan-history" data-international-tracking-target="timeline"></ol>
+            <div class="shipment-actions">
+              <button type="button" class="quiet" data-international-tracking-target="nextScanButton" data-action="international-tracking#receiveNextScan">Next scan</button>
+              <button type="button" data-international-tracking-target="payDutiesButton" data-action="international-tracking#payDuties" hidden>Pay import duties</button>
+            </div>
+          </article>
+
+          <article class="shipment" data-controller="freight-tracking"
+                   data-freight-tracking-pallet-count-value="6"
+                   data-freight-tracking-scans-value='[
+                     {"at": "2026-10-02T14:00", "code": "picked_up", "description": "Picked up at the kiln yard", "location": "Sanford, NC", "palletsScanned": 6},
+                     {"at": "2026-10-03T06:30", "code": "in_transit", "description": "Linehaul departed", "location": "Greensboro, NC"}
+                   ]'
+                   data-freight-tracking-upcoming-scans-value='[
+                     {"at": "2026-10-05T17:20", "code": "arrived_at_terminal", "description": "Arrived at destination terminal", "location": "Columbus, OH", "palletsScanned": 6},
+                     {"at": "2026-10-06T07:10", "code": "out_for_delivery", "description": "Loaded for delivery", "location": "Columbus, OH"},
+                     {"at": "2026-10-06T10:42", "code": "delivered", "description": "Delivered to receiving", "location": "Columbus, OH", "palletsScanned": 5}
+                   ]'>
+            <h3>Stoneware dinner plates, wholesale order</h3>
+            <p class="carrier">LTL freight · PRO 0583-221947 to Brightwater Provisions</p>
+            <p class="shipment-status" data-freight-tracking-target="status" aria-live="polite"></p>
+            <p class="shipment-details" data-freight-tracking-target="dockAppointment"></p>
+            <label class="shipment-details">
+              Dock appointment
+              <select name="dock_appointment" data-freight-tracking-target="appointmentChoice" data-action="freight-tracking#rescheduleDockAppointment">
+                <option>Tue Oct 6, 10:00 AM, door 4</option>
+                <option>Tue Oct 6, 1:30 PM, door 2</option>
+                <option>Wed Oct 7, 8:00 AM, door 4</option>
+              </select>
+            </label>
+            <ol class="scan-history" data-freight-tracking-target="timeline"></ol>
+            <div class="shipment-actions">
+              <button type="button" class="quiet" data-freight-tracking-target="nextScanButton" data-action="freight-tracking#receiveNextScan">Next scan</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tracking_timeline_controller.js"><code>tracking_timeline_controller.js</code></a> — the base class, also used directly for certified mail</li>
+          <li><a href="parcel_tracking_controller.js"><code>parcel_tracking_controller.js</code></a> — extends the base with a delivery window</li>
+          <li><a href="international_tracking_controller.js"><code>international_tracking_controller.js</code></a> — extends the parcel controller with a customs hold</li>
+          <li><a href="freight_tracking_controller.js"><code>freight_tracking_controller.js</code></a> — extends the base with pallet counts and a dock appointment</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

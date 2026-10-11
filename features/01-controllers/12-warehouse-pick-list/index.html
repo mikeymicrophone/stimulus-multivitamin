@@ -1,0 +1,206 @@
+<!doctype html>
+<!--
+  Controllers · 12 · Warehouse pick list
+
+  Teaches:
+  - Composing a realistic page from small controllers: a pick list, a
+    barcode scanner, one pick line per order line, and a tote.
+  - Two controllers can split one job on one element.
+    data-controller="pick-list barcode-scanner" puts both on the same
+    <section>; the scanner finds its partner with
+    application.getControllerForElementAndIdentifier(this.element, "pick-list").
+  - An element can be a target of one controller and the host of another:
+    the tote is data-pick-list-target="tote" and data-controller="tote".
+  - Each controller keeps to its own job and its own markup. The scanner
+    knows how codes arrive, the pick list knows the warehouse rules, each
+    line knows its count, and the tote knows its weight. They talk only
+    through public methods.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Warehouse pick list · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .pick-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(15rem, 1fr); gap: 1.25rem; align-items: start; }
+      @media (max-width: 48rem) { .pick-layout { grid-template-columns: 1fr; } }
+      .pick-table { width: 100%; border-collapse: collapse; }
+      .pick-table th, .pick-table td { padding: 0.45rem; border-bottom: 1px solid var(--rule, #ddd); text-align: left; vertical-align: top; }
+      .pick-table .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+      .pick-table tr[data-line-state="active"] { background: #fdf0d9; box-shadow: inset 4px 0 0 var(--capsule-amber, #e8912d); }
+      .pick-table tr[data-line-result="picked"] { color: var(--bottle-green, #1f3d2b); }
+      .pick-table tr[data-line-result="short"] { background: #fbe9e6; }
+      .bin-code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; white-space: nowrap; }
+      .upc { font-size: 0.8rem; font-family: ui-monospace, Menlo, monospace; }
+      .scan-form { display: flex; gap: 0.5rem; margin: 0.25rem 0 0.5rem; }
+      .scan-form input { font-family: ui-monospace, Menlo, monospace; }
+      .scan-feedback { min-height: 1.5em; font-weight: 600; margin: 0 0 1rem; }
+      .scan-feedback[data-scan-outcome="accepted"] { color: var(--bottle-green, #1f3d2b); }
+      .scan-feedback[data-scan-outcome="location"] { color: var(--capsule-amber-deep, #b5651d); }
+      .scan-feedback[data-scan-outcome="rejected"] { color: #b3261e; }
+      .scanner-simulator { font-size: 0.85rem; }
+      .scanner-simulator ul { list-style: none; padding: 0; display: grid; gap: 0.3rem; }
+      .scanner-simulator button { font-size: 0.78rem; padding: 0.1rem 0.5rem; font-family: ui-monospace, Menlo, monospace; }
+      .tote { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.6rem 0.8rem; margin-bottom: 1rem; }
+      .tote[data-tote-load="over"] { border-color: #b3261e; }
+      .tote h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+      .tote p { margin: 0.15rem 0; }
+      .pick-completion { font-weight: 700; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PickListController from "./pick_list_controller.js"
+      import BarcodeScannerController from "./barcode_scanner_controller.js"
+      import PickLineController from "./pick_line_controller.js"
+      import ToteController from "./tote_controller.js"
+
+      const application = Application.start()
+      application.register("pick-list", PickListController)
+      application.register("barcode-scanner", BarcodeScannerController)
+      application.register("pick-line", PickLineController)
+      application.register("tote", ToteController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>12 · Warehouse pick list</span>
+      </nav>
+      <h1>Warehouse pick list</h1>
+      <p class="lede">
+        A picker's handheld screen at an outdoor-gear fulfillment center. Scan
+        a bin label to confirm the location, then scan each item into the
+        tote. Four kinds of controller share the page, two of them on the same
+        element.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="pick-list barcode-scanner"
+               data-pick-list-order-number-value="SO-55821" data-pick-list-pack-station-value="3">
+        <h2>Order SO-55821 · Cedar &amp; Pine Outfitters · Picker: Luis M.</h2>
+        <p class="muted" data-pick-list-target="progress" aria-live="polite"></p>
+
+        <div class="pick-layout">
+          <div>
+            <form class="scan-form" data-action="barcode-scanner#submitScan">
+              <label class="visually-hidden" for="scan-input">Scan or type a barcode</label>
+              <input id="scan-input" type="text" name="barcode" autocomplete="off" placeholder="Scan or type a barcode, then press Enter" data-barcode-scanner-target="scanInput">
+              <button type="submit">Enter</button>
+            </form>
+            <p class="scan-feedback" data-barcode-scanner-target="feedback" aria-live="assertive"></p>
+
+            <table class="pick-table">
+              <thead>
+                <tr>
+                  <th scope="col">Bin</th>
+                  <th scope="col">Item</th>
+                  <th scope="col" class="numeric">Picked</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span class="visually-hidden">Short pick</span></th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr data-controller="pick-line" data-pick-list-target="line"
+                  data-pick-line-bin-code-value="A-03-2" data-pick-line-upc-value="084271003318"
+                  data-pick-line-quantity-value="3" data-pick-line-unit-weight-grams-value="180">
+                <td class="bin-code">A-03-2</td>
+                <td><span data-pick-line-target="description">Merino hiking socks, medium, 3-pack</span><br><span class="muted upc">UPC 084271003318</span></td>
+                <td class="numeric" data-pick-line-target="pickedCount"></td>
+                <td data-pick-line-target="status"></td>
+                <td><button type="button" class="quiet" data-pick-line-target="shortButton" data-action="pick-line#markShort">Short pick</button></td>
+              </tr>
+              <tr data-controller="pick-line" data-pick-list-target="line"
+                  data-pick-line-bin-code-value="A-07-1" data-pick-line-upc-value="714532009915"
+                  data-pick-line-quantity-value="2" data-pick-line-unit-weight-grams-value="420">
+                <td class="bin-code">A-07-1</td>
+                <td><span data-pick-line-target="description">Insulated water bottle, 750 ml, slate</span><br><span class="muted upc">UPC 714532009915</span></td>
+                <td class="numeric" data-pick-line-target="pickedCount"></td>
+                <td data-pick-line-target="status"></td>
+                <td><button type="button" class="quiet" data-pick-line-target="shortButton" data-action="pick-line#markShort">Short pick</button></td>
+              </tr>
+              <tr data-controller="pick-line" data-pick-list-target="line"
+                  data-pick-line-bin-code-value="B-01-4" data-pick-line-upc-value="039800145267"
+                  data-pick-line-quantity-value="1" data-pick-line-unit-weight-grams-value="95">
+                <td class="bin-code">B-01-4</td>
+                <td><span data-pick-line-target="description">Rechargeable headlamp, 400 lumen</span><br><span class="muted upc">UPC 039800145267</span></td>
+                <td class="numeric" data-pick-line-target="pickedCount"></td>
+                <td data-pick-line-target="status"></td>
+                <td><button type="button" class="quiet" data-pick-line-target="shortButton" data-action="pick-line#markShort">Short pick</button></td>
+              </tr>
+              <tr data-controller="pick-line" data-pick-list-target="line"
+                  data-pick-line-bin-code-value="C-12-3" data-pick-line-upc-value="811067020434"
+                  data-pick-line-quantity-value="2" data-pick-line-unit-weight-grams-value="610">
+                <td class="bin-code">C-12-3</td>
+                <td><span data-pick-line-target="description">Carbon trekking poles, pair</span><br><span class="muted upc">UPC 811067020434</span></td>
+                <td class="numeric" data-pick-line-target="pickedCount"></td>
+                <td data-pick-line-target="status"></td>
+                <td><button type="button" class="quiet" data-pick-line-target="shortButton" data-action="pick-line#markShort">Short pick</button></td>
+              </tr>
+              <tr data-controller="pick-line" data-pick-list-target="line"
+                  data-pick-line-bin-code-value="D-02-1" data-pick-line-upc-value="850003517729"
+                  data-pick-line-quantity-value="4" data-pick-line-unit-weight-grams-value="260">
+                <td class="bin-code">D-02-1</td>
+                <td><span data-pick-line-target="description">Enamel camp mug, 12 oz</span><br><span class="muted upc">UPC 850003517729</span></td>
+                <td class="numeric" data-pick-line-target="pickedCount"></td>
+                <td data-pick-line-target="status"></td>
+                <td><button type="button" class="quiet" data-pick-line-target="shortButton" data-action="pick-line#markShort">Short pick</button></td>
+              </tr>
+              </tbody>
+            </table>
+            <p class="pick-completion" data-pick-list-target="completion" aria-live="polite" hidden></p>
+          </div>
+
+          <aside>
+            <div class="tote" data-pick-list-target="tote" data-controller="tote" data-tote-capacity-grams-value="3500">
+              <h3>Tote T-37</h3>
+              <p data-tote-target="itemCount"></p>
+              <p data-tote-target="weight"></p>
+              <p data-tote-target="warning" hidden>Over the 3.5 kg tote limit. Split into a second tote at the pack station.</p>
+            </div>
+
+            <div class="scanner-simulator">
+              <h3>Scanner simulator</h3>
+              <p class="muted">Each button sends a code the way the handheld would.</p>
+              <ul>
+                <li><button type="button" class="quiet" value="A-03-2" data-action="barcode-scanner#simulateScan">Bin A-03-2</button>
+                    <button type="button" class="quiet" value="084271003318" data-action="barcode-scanner#simulateScan">Item 084271003318</button></li>
+                <li><button type="button" class="quiet" value="A-07-1" data-action="barcode-scanner#simulateScan">Bin A-07-1</button>
+                    <button type="button" class="quiet" value="714532009915" data-action="barcode-scanner#simulateScan">Item 714532009915</button></li>
+                <li><button type="button" class="quiet" value="B-01-4" data-action="barcode-scanner#simulateScan">Bin B-01-4</button>
+                    <button type="button" class="quiet" value="039800145267" data-action="barcode-scanner#simulateScan">Item 039800145267</button></li>
+                <li><button type="button" class="quiet" value="C-12-3" data-action="barcode-scanner#simulateScan">Bin C-12-3</button>
+                    <button type="button" class="quiet" value="811067020434" data-action="barcode-scanner#simulateScan">Item 811067020434</button></li>
+                <li><button type="button" class="quiet" value="D-02-1" data-action="barcode-scanner#simulateScan">Bin D-02-1</button>
+                    <button type="button" class="quiet" value="850003517729" data-action="barcode-scanner#simulateScan">Item 850003517729</button></li>
+                <li><button type="button" class="quiet" value="094922417113" data-action="barcode-scanner#simulateScan">Item 094922417113 (shelved next to the mugs)</button></li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pick_list_controller.js"><code>pick_list_controller.js</code></a> — the hub; enforces bin-then-item scanning and tracks progress</li>
+          <li><a href="barcode_scanner_controller.js"><code>barcode_scanner_controller.js</code></a> — shares the pick list's element; turns keyboard-wedge input into scans</li>
+          <li><a href="pick_line_controller.js"><code>pick_line_controller.js</code></a> — one instance per order line; counts picks and handles short picks</li>
+          <li><a href="tote_controller.js"><code>tote_controller.js</code></a> — a pick-list target that is also its own controller; tracks weight</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

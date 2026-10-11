@@ -1,0 +1,57 @@
+<!--
+  community-recipes.html — a server-rendered fragment, not a page.
+  recipe_box_controller.js fetches it and inserts it into the recipe grid.
+  The cards carry data-controller="recipe-card", so Stimulus connects them
+  as soon as they land in the document.
+-->
+<article class="recipe-card" data-controller="recipe-card" data-recipe-box-target="card" data-recipe-card-base-servings-value="10">
+  <h3 data-recipe-editor-target="title">Oma Ilse’s plum cake</h3>
+  <p class="servings-row">
+    Serves <strong data-recipe-card-target="servings">10</strong>
+    <button type="button" class="quiet" data-action="recipe-card#serveFewer" aria-label="Fewer servings">−</button>
+    <button type="button" class="quiet" data-action="recipe-card#serveMore" aria-label="More servings">+</button>
+  </p>
+  <ul class="ingredients">
+    <li><span data-recipe-card-target="quantity" data-base-quantity="2">2</span> pounds Italian prune plums, halved</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="1.5">1 ½</span> cups all-purpose flour</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="0.5">½</span> cup sugar</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="0.5">½</span> cup cold butter</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> teaspoon cinnamon</li>
+  </ul>
+  <p class="recipe-notes" data-recipe-editor-target="notes">Shared by Greta in Milwaukee. Pack the plums upright and tight; they shrink as they bake.</p>
+  <div class="recipe-toolbar" data-recipe-editor-target="toolbar" hidden>
+    <button type="button" data-action="recipe-editor#save">Save changes</button>
+    <button type="button" class="quiet" data-action="recipe-editor#cancel">Cancel</button>
+    <span class="muted" data-recipe-editor-target="message" aria-live="polite"></span>
+  </div>
+  <div class="card-actions">
+    <button type="button" class="quiet" data-recipe-editor-target="startButton" data-action="recipe-card#startEditing">Edit</button>
+    <button type="button" class="quiet" data-action="recipe-card#removeFromBox">Remove</button>
+  </div>
+</article>
+
+<article class="recipe-card" data-controller="recipe-card" data-recipe-box-target="card" data-recipe-card-base-servings-value="6">
+  <h3 data-recipe-editor-target="title">Smoky black bean chili</h3>
+  <p class="servings-row">
+    Serves <strong data-recipe-card-target="servings">6</strong>
+    <button type="button" class="quiet" data-action="recipe-card#serveFewer" aria-label="Fewer servings">−</button>
+    <button type="button" class="quiet" data-action="recipe-card#serveMore" aria-label="More servings">+</button>
+  </p>
+  <ul class="ingredients">
+    <li><span data-recipe-card-target="quantity" data-base-quantity="2">2</span> cans black beans, drained</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> chipotle in adobo, minced</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="1">1</span> can fire-roasted tomatoes</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="1.5">1 ½</span> teaspoons smoked paprika</li>
+    <li><span data-recipe-card-target="quantity" data-base-quantity="0.25">¼</span> cup chopped cilantro</li>
+  </ul>
+  <p class="recipe-notes" data-recipe-editor-target="notes">Shared by Ramón in Tucson. Better on day two; it freezes for three months.</p>
+  <div class="recipe-toolbar" data-recipe-editor-target="toolbar" hidden>
+    <button type="button" data-action="recipe-editor#save">Save changes</button>
+    <button type="button" class="quiet" data-action="recipe-editor#cancel">Cancel</button>
+    <span class="muted" data-recipe-editor-target="message" aria-live="polite"></span>
+  </div>
+  <div class="card-actions">
+    <button type="button" class="quiet" data-recipe-editor-target="startButton" data-action="recipe-card#startEditing">Edit</button>
+    <button type="button" class="quiet" data-action="recipe-card#removeFromBox">Remove</button>
+  </div>
+</article>

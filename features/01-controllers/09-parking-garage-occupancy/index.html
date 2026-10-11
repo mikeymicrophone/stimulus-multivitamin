@@ -1,0 +1,280 @@
+<!doctype html>
+<!--
+  Controllers · 09 · Parking garage occupancy panel
+
+  Teaches:
+  - The application object is the registry of every connected controller.
+    The same object is this.application inside a controller, the value
+    returned by Application.start(), and window.Stimulus on this page.
+  - Code outside Stimulus can drive controllers through it. sensor_feed.js
+    is plain JavaScript that finds a level's element by id and calls
+    application.getControllerForElementAndIdentifier() to reach its
+    "parking-level" instance.
+  - Controllers that are siblings, not nested, can still find each other:
+    garage-overview filters this.application.controllers by identifier to
+    total up every parking-level on the page.
+  - A controller can expose a deliberate public API (recordSensorReading,
+    openSpaceCount, isClosed) for those callers, and keep its state in the
+    DOM so every caller sees the same truth.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Parking garage occupancy panel · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .entrance-sign { background: #14261b; color: #f5f1e6; border-radius: 10px; padding: 0.8rem 1.1rem; margin-bottom: 1.25rem; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1.5rem; align-items: center; }
+      .entrance-sign h2 { color: #f5f1e6; margin: 0; grid-column: 1 / -1; font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      .entrance-sign .open-total { font-size: 2.6rem; font-weight: 800; color: #7ee29a; font-variant-numeric: tabular-nums; }
+      .entrance-sign[data-garage-full="true"] .open-total { color: #ff8a80; }
+      .entrance-sign ul { margin: 0; padding-left: 1.1rem; }
+      .full-notice { grid-column: 1 / -1; margin: 0; font-weight: 800; color: #ff8a80; }
+      .levels { display: grid; gap: 1rem; }
+      .parking-level { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.6rem 0.9rem; }
+      .parking-level[data-level-closed="true"] { opacity: 0.55; }
+      .level-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; }
+      .level-heading h3 { margin: 0; font-size: 1rem; }
+      .space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(3.4rem, 1fr)); gap: 0.35rem; margin: 0.5rem 0; }
+      .parking-space { border-radius: 6px; padding: 0.35rem 0; font-variant-numeric: tabular-nums; }
+      .parking-space[data-occupancy="open"] { background: #d9f2df; border-color: #4b8a5c; }
+      .parking-space[data-occupancy="occupied"] { background: #e9e4da; border-color: #b9b1a1; color: #6c665b; }
+      .parking-space[data-occupancy="held"] { background: #fde7b8; border-color: var(--capsule-amber-deep, #b5651d); }
+      .parking-space[data-space-kind="accessible"] { text-decoration: underline; }
+      .parking-space[data-space-kind="EV charger"] { font-style: italic; }
+      .level-reading { margin: 0; font-size: 0.85rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GarageOverviewController from "./garage_overview_controller.js"
+      import ParkingLevelController from "./parking_level_controller.js"
+      import { startSensorFeed } from "./sensor_feed.js"
+
+      const application = Application.start()
+      application.register("garage-overview", GarageOverviewController)
+      application.register("parking-level", ParkingLevelController)
+
+      // Exposed for poking at controllers from the browser console.
+      window.Stimulus = application
+      startSensorFeed(application, document.getElementById("sensor-feed-toggle"))
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>09 · Parking garage occupancy panel</span>
+      </nav>
+      <h1>Parking garage occupancy panel</h1>
+      <p class="lede">
+        The attendant's panel for a downtown municipal garage. Each level is a
+        <code>parking-level</code> controller fed by a plain-JavaScript sensor
+        gateway. The entrance sign is a separate <code>garage-overview</code>
+        controller that totals every level.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <aside class="entrance-sign" data-controller="garage-overview" aria-live="polite">
+          <h2>Elm Street Garage · Spaces available</h2>
+          <span class="open-total" data-garage-overview-target="totalOpen"></span>
+          <ul data-garage-overview-target="levelList"></ul>
+          <span>Accessible open: <strong data-garage-overview-target="accessibleOpen"></strong></span>
+          <span>EV chargers open: <strong data-garage-overview-target="evChargerOpen"></strong></span>
+          <p class="full-notice" data-garage-overview-target="fullNotice" hidden>GARAGE FULL. Overflow parking at the Library lot on 4th Street.</p>
+        </aside>
+
+        <p>
+          <button type="button" id="sensor-feed-toggle" class="quiet">Pause sensor feed</button>
+          <span class="muted">Click an open space to hold it for valet or maintenance. Held spaces ignore their sensor.</span>
+        </p>
+
+        <div class="levels">
+          <section class="parking-level" id="level-p1" data-controller="parking-level">
+            <header class="level-heading">
+              <h3 data-parking-level-target="levelName">P1 · Street level</h3>
+              <strong data-parking-level-target="openCount" aria-live="polite"></strong>
+              <button type="button" class="quiet" data-parking-level-target="closeButton" data-action="parking-level#toggleClosed">Close level</button>
+            </header>
+            <div class="space-grid">
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="101" data-space-kind="accessible" data-occupancy="occupied">101</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="102" data-space-kind="accessible" data-occupancy="occupied">102</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="103" data-space-kind="accessible" data-occupancy="occupied">103</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="104" data-space-kind="standard" data-occupancy="occupied">104</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="105" data-space-kind="standard" data-occupancy="occupied">105</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="106" data-space-kind="standard" data-occupancy="occupied">106</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="107" data-space-kind="standard" data-occupancy="occupied">107</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="108" data-space-kind="standard" data-occupancy="occupied">108</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="109" data-space-kind="standard" data-occupancy="occupied">109</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="110" data-space-kind="standard" data-occupancy="occupied">110</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="111" data-space-kind="standard" data-occupancy="occupied">111</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="112" data-space-kind="standard" data-occupancy="occupied">112</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="113" data-space-kind="standard" data-occupancy="occupied">113</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="114" data-space-kind="standard" data-occupancy="open">114</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="115" data-space-kind="standard" data-occupancy="occupied">115</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="116" data-space-kind="standard" data-occupancy="occupied">116</button>
+            </div>
+            <p class="muted level-reading" data-parking-level-target="lastReading" aria-live="polite">Waiting for sensors</p>
+          </section>
+
+          <section class="parking-level" id="level-p2" data-controller="parking-level">
+            <header class="level-heading">
+              <h3 data-parking-level-target="levelName">P2</h3>
+              <strong data-parking-level-target="openCount" aria-live="polite"></strong>
+              <button type="button" class="quiet" data-parking-level-target="closeButton" data-action="parking-level#toggleClosed">Close level</button>
+            </header>
+            <div class="space-grid">
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="201" data-space-kind="EV charger" data-occupancy="occupied">201</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="202" data-space-kind="EV charger" data-occupancy="open">202</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="203" data-space-kind="EV charger" data-occupancy="occupied">203</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="204" data-space-kind="EV charger" data-occupancy="occupied">204</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="205" data-space-kind="standard" data-occupancy="open">205</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="206" data-space-kind="standard" data-occupancy="occupied">206</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="207" data-space-kind="standard" data-occupancy="open">207</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="208" data-space-kind="standard" data-occupancy="occupied">208</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="209" data-space-kind="standard" data-occupancy="occupied">209</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="210" data-space-kind="standard" data-occupancy="occupied">210</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="211" data-space-kind="standard" data-occupancy="occupied">211</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="212" data-space-kind="standard" data-occupancy="open">212</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="213" data-space-kind="standard" data-occupancy="occupied">213</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="214" data-space-kind="standard" data-occupancy="occupied">214</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="215" data-space-kind="standard" data-occupancy="occupied">215</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="216" data-space-kind="standard" data-occupancy="occupied">216</button>
+            </div>
+            <p class="muted level-reading" data-parking-level-target="lastReading" aria-live="polite">Waiting for sensors</p>
+          </section>
+
+          <section class="parking-level" id="level-p3" data-controller="parking-level">
+            <header class="level-heading">
+              <h3 data-parking-level-target="levelName">P3</h3>
+              <strong data-parking-level-target="openCount" aria-live="polite"></strong>
+              <button type="button" class="quiet" data-parking-level-target="closeButton" data-action="parking-level#toggleClosed">Close level</button>
+            </header>
+            <div class="space-grid">
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="301" data-space-kind="standard" data-occupancy="occupied">301</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="302" data-space-kind="standard" data-occupancy="occupied">302</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="303" data-space-kind="standard" data-occupancy="occupied">303</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="304" data-space-kind="standard" data-occupancy="occupied">304</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="305" data-space-kind="standard" data-occupancy="occupied">305</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="306" data-space-kind="standard" data-occupancy="occupied">306</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="307" data-space-kind="standard" data-occupancy="occupied">307</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="308" data-space-kind="standard" data-occupancy="occupied">308</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="309" data-space-kind="standard" data-occupancy="occupied">309</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="310" data-space-kind="standard" data-occupancy="occupied">310</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="311" data-space-kind="standard" data-occupancy="open">311</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="312" data-space-kind="standard" data-occupancy="occupied">312</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="313" data-space-kind="standard" data-occupancy="occupied">313</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="314" data-space-kind="standard" data-occupancy="occupied">314</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="315" data-space-kind="standard" data-occupancy="occupied">315</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="316" data-space-kind="standard" data-occupancy="open">316</button>
+            </div>
+            <p class="muted level-reading" data-parking-level-target="lastReading" aria-live="polite">Waiting for sensors</p>
+          </section>
+
+          <section class="parking-level" id="level-roof" data-controller="parking-level">
+            <header class="level-heading">
+              <h3 data-parking-level-target="levelName">Roof</h3>
+              <strong data-parking-level-target="openCount" aria-live="polite"></strong>
+              <button type="button" class="quiet" data-parking-level-target="closeButton" data-action="parking-level#toggleClosed">Close level</button>
+            </header>
+            <div class="space-grid">
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="401" data-space-kind="standard" data-occupancy="open">401</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="402" data-space-kind="standard" data-occupancy="occupied">402</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="403" data-space-kind="standard" data-occupancy="open">403</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="404" data-space-kind="standard" data-occupancy="occupied">404</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="405" data-space-kind="standard" data-occupancy="occupied">405</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="406" data-space-kind="standard" data-occupancy="open">406</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="407" data-space-kind="standard" data-occupancy="occupied">407</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="408" data-space-kind="standard" data-occupancy="occupied">408</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="409" data-space-kind="standard" data-occupancy="occupied">409</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="410" data-space-kind="standard" data-occupancy="occupied">410</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="411" data-space-kind="standard" data-occupancy="open">411</button>
+              <button type="button" class="parking-space" data-parking-level-target="space" data-action="parking-level#toggleHold"
+                      data-space-number="412" data-space-kind="standard" data-occupancy="occupied">412</button>
+            </div>
+            <p class="muted level-reading" data-parking-level-target="lastReading" aria-live="polite">Waiting for sensors</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="garage_overview_controller.js"><code>garage_overview_controller.js</code></a> — the entrance sign; finds every level through <code>this.application.controllers</code></li>
+          <li><a href="parking_level_controller.js"><code>parking_level_controller.js</code></a> — one instance per level; exposes a small public API</li>
+          <li><a href="sensor_feed.js"><code>sensor_feed.js</code></a> — plain JavaScript that reaches level controllers through the application</li>
+          <li>This page's source — markup, importmap, controller registration, and <code>window.Stimulus</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
