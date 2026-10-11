@@ -1,0 +1,146 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 03 · Live scoreboard poller
+
+  Teaches:
+  - connect() starts polling; disconnect() clears the pending timer and
+    aborts the fetch in flight with an AbortController, so a late reply
+    never writes into a tile that is gone.
+  - Poll with a setTimeout chain, not setInterval: each poll schedules the
+    next one only when it finishes, so slow replies never overlap.
+  - Moving an element disconnects and reconnects the same instance. Pinning a
+    game moves its tile; the in-flight poll is aborted and a new one starts
+    from the cursor kept since initialize(), not from the first update.
+  - A visibilitychange@document action pauses polling while the tab is
+    hidden. Stimulus adds and removes that global listener with the
+    controller, so disconnect() doesn't have to.
+  - connect() checks state before starting work: a finished game never polls
+    again.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Live scoreboard poller · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .scoreboard-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+      .game-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.85rem; }
+      .game-tile { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fffdf8; }
+      .game-tile.pinned { border-color: var(--capsule-amber, #e8912d); box-shadow: inset 0 3px 0 var(--capsule-amber, #e8912d); }
+      .game-tile.final { background: #f3efe6; }
+      .game-tile header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+      .game-tile h3 { margin: 0; font-size: 1rem; }
+      .game-period { font-size: 0.85rem; font-weight: 600; color: #8c1d18; white-space: nowrap; }
+      .game-tile.final .game-period { color: var(--muted-ink, #555); }
+      .score-lines { display: grid; grid-template-columns: 1fr auto; margin: 0.5rem 0; font-size: 1.05rem; }
+      .score-lines dt, .score-lines dd { margin: 0; padding: 0.1rem 0; }
+      .score-lines dd { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+      .last-play { font-size: 0.88rem; margin: 0 0 0.25rem; min-height: 2.6em; }
+      .freshness { font-size: 0.8rem; color: var(--muted-ink, #555); margin: 0 0 0.5rem; }
+      .tile-actions { display: flex; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ScoreboardController from "./scoreboard_controller.js"
+      import ScorePollerController from "./score_poller_controller.js"
+
+      const application = Application.start()
+      application.register("scoreboard", ScoreboardController)
+      application.register("score-poller", ScorePollerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>03 · Live scoreboard poller</span>
+      </nav>
+      <h1>Live scoreboard poller</h1>
+      <p class="lede">
+        A county league's Friday-night scores. Every game tile is a
+        <code>score-poller</code> controller that asks the league feed for the
+        next update every ten seconds while it is on the page. The
+        <code>scoreboard</code> controller pins and unfollows games.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="scoreboard">
+        <div class="scoreboard-heading">
+          <h2>Tri-County Girls Basketball · Friday</h2>
+          <span class="muted" data-scoreboard-target="followingSummary" aria-live="polite"></span>
+        </div>
+
+        <div class="game-list" data-scoreboard-target="gameList">
+          <article class="game-tile" id="game-lakeside-at-north-ridge" data-controller="score-poller" data-scoreboard-target="game"
+                   data-score-poller-feed-url-value="feeds/lakeside-at-north-ridge/1.json"
+                   data-action="visibilitychange@document->score-poller#visibilityChanged">
+            <header><h3>Lakeside at North Ridge</h3><span class="game-period" data-score-poller-target="period">Loading…</span></header>
+            <dl class="score-lines">
+              <dt>Lakeside Lakers</dt><dd data-score-poller-target="awayScore">–</dd>
+              <dt>North Ridge Rams</dt><dd data-score-poller-target="homeScore">–</dd>
+            </dl>
+            <p class="last-play" data-score-poller-target="lastPlay"></p>
+            <p class="freshness" data-score-poller-target="freshness" aria-live="polite"></p>
+            <div class="tile-actions">
+              <button type="button" class="quiet" data-action="scoreboard#pinGame">Pin to top</button>
+              <button type="button" class="quiet" data-action="scoreboard#unfollowGame">Unfollow</button>
+            </div>
+          </article>
+
+          <article class="game-tile" id="game-st-brigid-at-hollins-prep" data-controller="score-poller" data-scoreboard-target="game"
+                   data-score-poller-feed-url-value="feeds/st-brigid-at-hollins-prep/1.json"
+                   data-action="visibilitychange@document->score-poller#visibilityChanged">
+            <header><h3>St. Brigid at Hollins Prep</h3><span class="game-period" data-score-poller-target="period">Loading…</span></header>
+            <dl class="score-lines">
+              <dt>St. Brigid Saints</dt><dd data-score-poller-target="awayScore">–</dd>
+              <dt>Hollins Prep Herons</dt><dd data-score-poller-target="homeScore">–</dd>
+            </dl>
+            <p class="last-play" data-score-poller-target="lastPlay"></p>
+            <p class="freshness" data-score-poller-target="freshness" aria-live="polite"></p>
+            <div class="tile-actions">
+              <button type="button" class="quiet" data-action="scoreboard#pinGame">Pin to top</button>
+              <button type="button" class="quiet" data-action="scoreboard#unfollowGame">Unfollow</button>
+            </div>
+          </article>
+
+          <article class="game-tile" id="game-westfield-at-cedar-grove" data-controller="score-poller" data-scoreboard-target="game"
+                   data-score-poller-feed-url-value="feeds/westfield-at-cedar-grove/1.json"
+                   data-action="visibilitychange@document->score-poller#visibilityChanged">
+            <header><h3>Westfield at Cedar Grove</h3><span class="game-period" data-score-poller-target="period">Loading…</span></header>
+            <dl class="score-lines">
+              <dt>Westfield Wildcats</dt><dd data-score-poller-target="awayScore">–</dd>
+              <dt>Cedar Grove Comets</dt><dd data-score-poller-target="homeScore">–</dd>
+            </dl>
+            <p class="last-play" data-score-poller-target="lastPlay"></p>
+            <p class="freshness" data-score-poller-target="freshness" aria-live="polite"></p>
+            <div class="tile-actions">
+              <button type="button" class="quiet" data-action="scoreboard#pinGame">Pin to top</button>
+              <button type="button" class="quiet" data-action="scoreboard#unfollowGame">Unfollow</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="score_poller_controller.js"><code>score_poller_controller.js</code></a> — one instance per game; polls while connected and aborts on disconnect</li>
+          <li><a href="scoreboard_controller.js"><code>scoreboard_controller.js</code></a> — pins and unfollows games</li>
+          <li><a href="feeds/lakeside-at-north-ridge/1.json"><code>feeds/lakeside-at-north-ridge/1.json</code></a> and the other feed files — each update names the next one to ask for</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
