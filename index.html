@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Stimulus Multivitamin</title>
+    <meta name="description" content="Thirteen samples of healthy code for each feature of the Stimulus JavaScript library.">
+    <link rel="stylesheet" href="assets/multivitamin.css">
+  </head>
+  <body>
+    <header class="masthead">
+      <h1>Stimulus Multivitamin</h1>
+      <p class="lede">
+        Thirteen samples of healthy code for each feature of the
+        <a href="https://stimulus.hotwired.dev">Stimulus</a> JavaScript library.
+        Every scenario is a realistic interface with real names: no placeholder
+        controllers, no counters that only count.
+      </p>
+    </header>
+
+    <main>
+      <section class="supplement-facts" aria-labelledby="supplement-facts-heading">
+        <h2 id="supplement-facts-heading">Supplement Facts</h2>
+        <dl>
+          <dt>Serving size</dt><dd>1 scenario</dd>
+          <dt>Servings per feature</dt><dd>13</dd>
+          <dt>Features</dt><dd>15</dd>
+          <dt>Active ingredient</dt><dd>Stimulus 3.2.2</dd>
+          <dt>Build step</dt><dd>0 mg</dd>
+        </dl>
+      </section>
+
+      <h2>Features</h2>
+      <p class="muted">Linked titles are ready to run. The rest are planned slots.</p>
+      <ol class="feature-shelf">
+        <li class="feature-bottle" id="controllers">
+          <h3>01 · Controllers</h3>
+          <span class="dose-count">1 of 13 bottled</span>
+          <p>Controller classes, identifiers and naming conventions, controller scope, many instances of one controller, nesting, and reaching other controllers through the application. <a href="https://stimulus.hotwired.dev/reference/controllers">Reference</a></p>
+          <ol>
+            <li><a href="features/01-controllers/01-invoice-line-items/">Invoice line-item editor</a></li>
+            <li class="planned">Restaurant seat picker</li>
+            <li class="planned">Multi-currency price board</li>
+            <li class="planned">Kanban board with independent columns</li>
+            <li class="planned">Recipe card collection</li>
+            <li class="planned">Phone plan comparison table</li>
+            <li class="planned">Shipment tracking timeline</li>
+            <li class="planned">Nested comment thread</li>
+            <li class="planned">Parking garage occupancy panel</li>
+            <li class="planned">Podcast episode queue</li>
+            <li class="planned">Classroom attendance roster</li>
+            <li class="planned">Warehouse pick list</li>
+            <li class="planned">Mortgage application sections</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="lifecycle-callbacks">
+          <h3>02 · Lifecycle callbacks</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>initialize(), connect(), and disconnect(): setting up and tearing down timers, observers, sockets, and third-party widgets, and surviving elements that move around the page. <a href="https://stimulus.hotwired.dev/reference/lifecycle-callbacks">Reference</a></p>
+          <ol>
+            <li class="planned">Auction countdown timer</li>
+            <li class="planned">Session timeout warning</li>
+            <li class="planned">Live scoreboard poller</li>
+            <li class="planned">Infinite-scroll product feed</li>
+            <li class="planned">Autosaving draft editor</li>
+            <li class="planned">Resizable dashboard tile</li>
+            <li class="planned">Stock ticker over a WebSocket</li>
+            <li class="planned">Store locator map embed</li>
+            <li class="planned">Support ticket age clock</li>
+            <li class="planned">Carousel that pauses offscreen</li>
+            <li class="planned">Photo upload progress</li>
+            <li class="planned">Audiobook player that remembers position</li>
+            <li class="planned">Reordered playlist that survives moves</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="actions">
+          <h3>03 · Actions</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>data-action descriptors, default events per element, several actions on one element, global @window and @document listeners, and working with the event object. <a href="https://stimulus.hotwired.dev/reference/actions">Reference</a></p>
+          <ol>
+            <li class="planned">Pizza order builder</li>
+            <li class="planned">Newsletter signup with live validation</li>
+            <li class="planned">Photo lightbox</li>
+            <li class="planned">Cart quantity steppers</li>
+            <li class="planned">Responsive navigation drawer</li>
+            <li class="planned">Unsaved-changes guard</li>
+            <li class="planned">API token copy button</li>
+            <li class="planned">Product star rating</li>
+            <li class="planned">Menu that closes on outside click</li>
+            <li class="planned">Hotel booking date range</li>
+            <li class="planned">Offline connection banner</li>
+            <li class="planned">Branching customer survey</li>
+            <li class="planned">Spreadsheet-style cell editing</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="keyboard-filters">
+          <h3>04 · Keyboard filters</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>keydown.enter, keydown.esc, arrow keys, modifier combinations like ctrl+s and meta+k, and custom key names added through the schema&#x27;s keyMappings. <a href="https://stimulus.hotwired.dev/reference/actions#keyboardevent-filter">Reference</a></p>
+          <ol>
+            <li class="planned">Command palette</li>
+            <li class="planned">Chat composer that sends on Enter</li>
+            <li class="planned">Dialog that closes on Escape</li>
+            <li class="planned">Arrow-key photo gallery</li>
+            <li class="planned">Spreadsheet grid navigation</li>
+            <li class="planned">Save shortcut in a snippet editor</li>
+            <li class="planned">Tag input with comma and Enter</li>
+            <li class="planned">Music player shortcuts</li>
+            <li class="planned">Calendar date picker navigation</li>
+            <li class="planned">Quiz answers by number key</li>
+            <li class="planned">Kanban card moves with Alt+arrows</li>
+            <li class="planned">Point-of-sale keypad with custom key mappings</li>
+            <li class="planned">Accessible tabs with Home and End</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="action-options">
+          <h3>05 · Action options</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>The built-in :once, :prevent, :stop, :passive, :capture, and :self options, and custom options registered with application.registerActionOption(). <a href="https://stimulus.hotwired.dev/reference/actions#options">Reference</a></p>
+          <ol>
+            <li class="planned">Checkout button that charges once</li>
+            <li class="planned">Clickable cards with nested links</li>
+            <li class="planned">Passive reading-progress bar</li>
+            <li class="planned">Dialog backdrop click to dismiss</li>
+            <li class="planned">Capture-phase click analytics</li>
+            <li class="planned">One-time cookie consent</li>
+            <li class="planned">FAQ disclosure with a custom :open option</li>
+            <li class="planned">Destructive actions with a custom :confirmed option</li>
+            <li class="planned">Save buttons with a custom :online option</li>
+            <li class="planned">Map pins with a custom :primary-button option</li>
+            <li class="planned">Live chat with a custom :business-hours option</li>
+            <li class="planned">File uploader mixing built-in and custom options</li>
+            <li class="planned">Video controls with a custom :visible option</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="action-parameters">
+          <h3>06 · Action parameters</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>data-[identifier]-[name]-param attributes, automatic typecasting to numbers, booleans, objects, and strings, and reading them from event.params. <a href="https://stimulus.hotwired.dev/reference/actions#action-parameters">Reference</a></p>
+          <ol>
+            <li class="planned">Concert seat picker</li>
+            <li class="planned">Product variant selector</li>
+            <li class="planned">Shoe size converter</li>
+            <li class="planned">Bulk email actions</li>
+            <li class="planned">Tip calculator presets</li>
+            <li class="planned">Podcast chapter jumps</li>
+            <li class="planned">Pagination controls</li>
+            <li class="planned">Meeting room booking on a floor plan</li>
+            <li class="planned">Font pairing previewer</li>
+            <li class="planned">Theme switcher with object params</li>
+            <li class="planned">Inventory restock buttons</li>
+            <li class="planned">Post reactions</li>
+            <li class="planned">Chess move input</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="targets">
+          <h3>07 · Targets</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>static targets, the singular, plural, and has-existence properties, optional targets, and targets shared between controllers on the same element. <a href="https://stimulus.hotwired.dev/reference/targets">Reference</a></p>
+          <ol>
+            <li class="planned">Password strength meter</li>
+            <li class="planned">Social post composer with a character limit</li>
+            <li class="planned">Filterable contact list</li>
+            <li class="planned">FAQ accordion</li>
+            <li class="planned">Tabbed product details</li>
+            <li class="planned">Signup wizard steps</li>
+            <li class="planned">Packing checklist with select-all</li>
+            <li class="planned">Avatar crop preview</li>
+            <li class="planned">Order summary panel</li>
+            <li class="planned">Library catalog search-as-you-type</li>
+            <li class="planned">Optional promo code field</li>
+            <li class="planned">Before-and-after photo slider</li>
+            <li class="planned">Teacher gradebook</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="target-callbacks">
+          <h3>08 · Target callbacks</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>[name]TargetConnected() and [name]TargetDisconnected(): reacting when targets are added to or removed from the DOM, including by server-rendered streams. <a href="https://stimulus.hotwired.dev/reference/targets#connected-and-disconnected-callbacks">Reference</a></p>
+          <ol>
+            <li class="planned">Live chat that autoscrolls new messages</li>
+            <li class="planned">Notification inbox unread badge</li>
+            <li class="planned">Streamed comment thread</li>
+            <li class="planned">Cart line-count badge</li>
+            <li class="planned">File upload queue</li>
+            <li class="planned">Shared grocery list</li>
+            <li class="planned">Lazy image placeholders</li>
+            <li class="planned">Sortable itinerary renumbering</li>
+            <li class="planned">Form error summary</li>
+            <li class="planned">Dashboard widget registry</li>
+            <li class="planned">Duplicate tag detection</li>
+            <li class="planned">Map pins for search results</li>
+            <li class="planned">Game lobby roster</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="values">
+          <h3>09 · Values</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>static values with Array, Boolean, Number, Object, and String types, defaults, has[Name]Value, and writing values back to data attributes. <a href="https://stimulus.hotwired.dev/reference/values">Reference</a></p>
+          <ol>
+            <li class="planned">Recipe scaler</li>
+            <li class="planned">Loan amortization calculator</li>
+            <li class="planned">Pomodoro focus timer</li>
+            <li class="planned">Cooking unit converter</li>
+            <li class="planned">Gallery current-photo index</li>
+            <li class="planned">Fitness goals as an object value</li>
+            <li class="planned">Bicycle configurator</li>
+            <li class="planned">Reading list sort order</li>
+            <li class="planned">Account feature toggles</li>
+            <li class="planned">API rate-limit meter</li>
+            <li class="planned">Weather widget units</li>
+            <li class="planned">Sprint burndown chart</li>
+            <li class="planned">Board game score keeper</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="value-change-callbacks">
+          <h3>10 · Value change callbacks</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>[name]ValueChanged(value, previousValue): when it fires, the initial call on connect, and deriving the whole UI from a single source of truth. <a href="https://stimulus.hotwired.dev/reference/values#change-callbacks">Reference</a></p>
+          <ol>
+            <li class="planned">Smart thermostat setpoint</li>
+            <li class="planned">Checkout progress steps</li>
+            <li class="planned">Volume slider with mute restore</li>
+            <li class="planned">Dark mode preference</li>
+            <li class="planned">Search filters synced to the URL</li>
+            <li class="planned">Concert doors countdown</li>
+            <li class="planned">Low stock warning</li>
+            <li class="planned">Map zoom level</li>
+            <li class="planned">Form dirty tracking</li>
+            <li class="planned">Lecture video chapters</li>
+            <li class="planned">Language switcher</li>
+            <li class="planned">Parking meter</li>
+            <li class="planned">Elevator floor indicator</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="css-classes">
+          <h3>11 · CSS classes</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>static classes, [name]Class, [name]Classes, and has[Name]Class: letting markup decide which class names a controller applies. <a href="https://stimulus.hotwired.dev/reference/css-classes">Reference</a></p>
+          <ol>
+            <li class="planned">Form field validation states</li>
+            <li class="planned">Toast notifications by severity</li>
+            <li class="planned">Theater seat availability</li>
+            <li class="planned">Sticky header on scroll</li>
+            <li class="planned">Themeable progress bar</li>
+            <li class="planned">Kanban work-in-progress limits</li>
+            <li class="planned">Loading skeletons</li>
+            <li class="planned">Calendar day states</li>
+            <li class="planned">Houseplant watering schedule</li>
+            <li class="planned">Highlighted search matches</li>
+            <li class="planned">Build status badges</li>
+            <li class="planned">Password rule checklist</li>
+            <li class="planned">Pricing toggle with utility classes</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="outlets">
+          <h3>12 · Outlets</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>static outlets, [name]Outlet, [name]Outlets, has[Name]Outlet, and outlet connected/disconnected callbacks for controllers that coordinate without nesting. <a href="https://stimulus.hotwired.dev/reference/outlets">Reference</a></p>
+          <ol>
+            <li class="planned">Shopping cart and product cards</li>
+            <li class="planned">Video player and transcript</li>
+            <li class="planned">Store map and location list</li>
+            <li class="planned">Filter panel and results grid</li>
+            <li class="planned">Bulk-select toolbar and table rows</li>
+            <li class="planned">Chat room and presence list</li>
+            <li class="planned">Playlist and now-playing bar</li>
+            <li class="planned">Form wizard and progress panel</li>
+            <li class="planned">Order form and shipping estimator</li>
+            <li class="planned">Notification bell and inbox</li>
+            <li class="planned">Spreadsheet and formula bar</li>
+            <li class="planned">Seat map and order summary</li>
+            <li class="planned">Theme picker and live preview</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="dispatching-events">
+          <h3>13 · Dispatching custom events</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>this.dispatch() with detail, prefix, target, bubbles, and cancelable, and listening for those events from other controllers and plain JavaScript. <a href="https://stimulus.hotwired.dev/reference/controllers#cross-controller-coordination-with-events">Reference</a></p>
+          <ol>
+            <li class="planned">Date picker that announces a selection</li>
+            <li class="planned">Uploader progress events</li>
+            <li class="planned">Cancelable delete confirmation</li>
+            <li class="planned">Cart badge that hears cart updates</li>
+            <li class="planned">Address autocomplete selection</li>
+            <li class="planned">Onboarding step changes</li>
+            <li class="planned">Editor word count</li>
+            <li class="planned">Analytics listener in plain JavaScript</li>
+            <li class="planned">Dialog open and close notifications</li>
+            <li class="planned">Inline edit save and cancel</li>
+            <li class="planned">Live poll vote broadcast</li>
+            <li class="planned">Coupon applied to pricing</li>
+            <li class="planned">Trivia game round results</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="application-setup">
+          <h3>14 · Application setup and registration</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>Application.start(), register(), the static shouldLoad and afterLoad hooks, application.debug, schema customization, and loading controllers lazily. <a href="https://stimulus.hotwired.dev/handbook/installing">Reference</a></p>
+          <ol>
+            <li class="planned">Feature-flagged controllers with shouldLoad</li>
+            <li class="planned">Clipboard support check with shouldLoad</li>
+            <li class="planned">Analytics wiring in afterLoad</li>
+            <li class="planned">Debug logging from a query string</li>
+            <li class="planned">Custom schema attribute names</li>
+            <li class="planned">Lazy-loaded reporting chart</li>
+            <li class="planned">Embeddable support widget with its own application</li>
+            <li class="planned">Registration from a controller manifest</li>
+            <li class="planned">Application scoped to one root element</li>
+            <li class="planned">Staging versus production configuration</li>
+            <li class="planned">Seeding defaults in afterLoad</li>
+            <li class="planned">Plugin-style registration helper</li>
+            <li class="planned">Stopping and restarting the application</li>
+          </ol>
+        </li>
+        <li class="feature-bottle" id="error-handling">
+          <h3>15 · Error handling</h3>
+          <span class="dose-count">0 of 13 bottled</span>
+          <p>Overriding application.handleError() to report, display, and recover from errors thrown in callbacks and actions, and what it does not catch. <a href="https://stimulus.hotwired.dev/handbook/installing#error-handling">Reference</a></p>
+          <ol>
+            <li class="planned">Reporting errors to a monitoring service</li>
+            <li class="planned">Friendly fallback for a payment widget</li>
+            <li class="planned">Retrying a failed price lookup</li>
+            <li class="planned">Error context with identifier and element</li>
+            <li class="planned">Developer overlay in debug mode</li>
+            <li class="planned">Recovering from malformed JSON values</li>
+            <li class="planned">Explaining missing-target errors</li>
+            <li class="planned">Isolating a broken third-party embed</li>
+            <li class="planned">Throttled error reports</li>
+            <li class="planned">Offline queue for failed saves</li>
+            <li class="planned">Grouped console diagnostics</li>
+            <li class="planned">Async action failures handleError never sees</li>
+            <li class="planned">Fallback markup for a failed dashboard tile</li>
+          </ol>
+        </li>
+      </ol>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  Controllers · 01 · Invoice line-item editor
+
+  Teaches:
+  - A controller is a class registered under an identifier. The file
+    line_item_controller.js is registered as "line-item"; data-controller
+    attributes refer to that identifier, never to the class.
+  - Every element with data-controller="line-item" gets its own controller
+    instance, so each invoice row keeps its own state.
+  - Controllers nest. The "invoice" controller wraps the rows and asks each
+    row's controller for its subtotal instead of reading the row's inputs.
+  - Controllers can find each other's instances with
+    application.getControllerForElementAndIdentifier(). Parents connect
+    before their children, so each row tells the invoice to recalculate
+    when it connects, changes, and disconnects.
+  - Elements added after page load (rows cloned from the <template>) are
+    connected to a new controller instance automatically, and removed rows
+    are disconnected.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Invoice line-item editor · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import InvoiceController from "./invoice_controller.js"
+      import LineItemController from "./line_item_controller.js"
+
+      const application = Application.start()
+      application.register("invoice", InvoiceController)
+      application.register("line-item", LineItemController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>01 · Invoice line-item editor</span>
+      </nav>
+      <h1>Invoice line-item editor</h1>
+      <p class="lede">
+        A freelance designer bills a client. Each row is its own
+        <code>line-item</code> controller; the surrounding <code>invoice</code>
+        controller adds rows and totals them up.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="invoice">
+        <h2>Invoice INV-2041 · Juniper &amp; Rye Bakery</h2>
+
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th scope="col">Description</th>
+              <th scope="col" class="numeric">Qty</th>
+              <th scope="col" class="numeric">Unit price ($)</th>
+              <th scope="col" class="numeric">Subtotal</th>
+              <th scope="col"><span class="visually-hidden">Remove</span></th>
+            </tr>
+          </thead>
+          <tbody data-invoice-target="lineItemList">
+            <tr data-controller="line-item" data-invoice-target="lineItem" data-action="input->line-item#recalculate">
+              <td><input type="text" name="description[]" value="Logo refresh" aria-label="Description"></td>
+              <td class="numeric"><input type="number" name="quantity[]" value="1" min="0" step="1" aria-label="Quantity" data-line-item-target="quantity"></td>
+              <td class="numeric"><input type="number" name="unit_price[]" value="1200.00" min="0" step="0.01" aria-label="Unit price" data-line-item-target="unitPrice"></td>
+              <td class="numeric" data-line-item-target="subtotal"></td>
+              <td><button type="button" class="quiet" data-action="line-item#remove">Remove</button></td>
+            </tr>
+            <tr data-controller="line-item" data-invoice-target="lineItem" data-action="input->line-item#recalculate">
+              <td><input type="text" name="description[]" value="Menu board layouts" aria-label="Description"></td>
+              <td class="numeric"><input type="number" name="quantity[]" value="3" min="0" step="1" aria-label="Quantity" data-line-item-target="quantity"></td>
+              <td class="numeric"><input type="number" name="unit_price[]" value="275.00" min="0" step="0.01" aria-label="Unit price" data-line-item-target="unitPrice"></td>
+              <td class="numeric" data-line-item-target="subtotal"></td>
+              <td><button type="button" class="quiet" data-action="line-item#remove">Remove</button></td>
+            </tr>
+            <tr data-controller="line-item" data-invoice-target="lineItem" data-action="input->line-item#recalculate">
+              <td><input type="text" name="description[]" value="Print-ready file prep (hours)" aria-label="Description"></td>
+              <td class="numeric"><input type="number" name="quantity[]" value="4" min="0" step="1" aria-label="Quantity" data-line-item-target="quantity"></td>
+              <td class="numeric"><input type="number" name="unit_price[]" value="85.00" min="0" step="0.01" aria-label="Unit price" data-line-item-target="unitPrice"></td>
+              <td class="numeric" data-line-item-target="subtotal"></td>
+              <td><button type="button" class="quiet" data-action="line-item#remove">Remove</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <template data-invoice-target="lineItemTemplate">
+          <tr data-controller="line-item" data-invoice-target="lineItem" data-action="input->line-item#recalculate">
+            <td><input type="text" name="description[]" placeholder="What did you deliver?" aria-label="Description"></td>
+            <td class="numeric"><input type="number" name="quantity[]" value="1" min="0" step="1" aria-label="Quantity" data-line-item-target="quantity"></td>
+            <td class="numeric"><input type="number" name="unit_price[]" min="0" step="0.01" placeholder="0.00" aria-label="Unit price" data-line-item-target="unitPrice"></td>
+            <td class="numeric" data-line-item-target="subtotal"></td>
+            <td><button type="button" class="quiet" data-action="line-item#remove">Remove</button></td>
+          </tr>
+        </template>
+
+        <div class="ledger-footer">
+          <button type="button" data-action="invoice#addLineItem">Add line item</button>
+          <span class="muted" data-invoice-target="lineItemCount" aria-live="polite"></span>
+        </div>
+
+        <dl class="totals">
+          <dt>Subtotal</dt>
+          <dd data-invoice-target="subtotal"></dd>
+
+          <dt><label for="tax-rate">Sales tax (%)</label></dt>
+          <dd><input id="tax-rate" type="number" name="tax_rate" value="8.25" min="0" step="0.01" data-invoice-target="taxRate" data-action="invoice#recalculate"></dd>
+
+          <dt>Tax</dt>
+          <dd data-invoice-target="tax"></dd>
+
+          <dt class="grand">Total due</dt>
+          <dd class="grand" data-invoice-target="total"></dd>
+        </dl>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="invoice_controller.js"><code>invoice_controller.js</code></a> — owns the invoice, adds rows, totals the invoice</li>
+          <li><a href="line_item_controller.js"><code>line_item_controller.js</code></a> — one instance per row, computes that row's subtotal</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
