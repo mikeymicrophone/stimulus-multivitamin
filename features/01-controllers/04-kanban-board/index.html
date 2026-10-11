@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+  Controllers · 04 · Kanban board with independent columns
+
+  Teaches:
+  - Controllers nest. The kanban-board element contains four kanban-column
+    elements, and each column is an independent instance with its own count
+    and work-in-progress limit.
+  - Scope follows the DOM, live. A card's column is whichever column element
+    it sits in, so moving the element is all it takes to move the card from
+    one column's targets to another's.
+  - Scope stops at a nested element with the same identifier. The "Blocked"
+    lane inside "In progress" is also a kanban-column: its cards, list, and
+    count belong to the lane, not to the column around it.
+  - One element can be a target of two controllers. Every card is both a
+    kanban-board card (the board sees all of them) and a kanban-column card
+    (each column sees only its own).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Kanban board with independent columns · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .kanban-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.85rem; align-items: start; }
+      .kanban-column { background: #f7f2e7; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.6rem 0.7rem; }
+      .kanban-column.over-limit { border-color: #b3261e; box-shadow: inset 0 3px 0 #b3261e; }
+      .column-heading { display: flex; justify-content: space-between; align-items: baseline; }
+      .column-heading h3, .column-heading h4 { margin: 0.2rem 0 0.4rem; font-size: 1rem; }
+      .column-heading span { font-variant-numeric: tabular-nums; font-weight: 600; }
+      .card-list { list-style: none; margin: 0; padding: 0; min-height: 2.5rem; display: grid; gap: 0.5rem; }
+      .kanban-card { background: var(--card, #fff); border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.5rem 0.6rem; }
+      .card-title { margin: 0; font-weight: 600; font-size: 0.93rem; }
+      .card-meta { margin: 0.15rem 0 0.4rem; font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .card-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+      .card-actions button { font-size: 0.8rem; padding: 0.1rem 0.55rem; }
+      .blocked-lane { margin-top: 0.7rem; background: #fbe9e6; border-style: dashed; }
+      .limit-notice { margin: 0 0 0.5rem; font-size: 0.85rem; color: #8c1d18; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import KanbanBoardController from "./kanban_board_controller.js"
+      import KanbanColumnController from "./kanban_column_controller.js"
+
+      const application = Application.start()
+      application.register("kanban-board", KanbanBoardController)
+      application.register("kanban-column", KanbanColumnController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>04 · Kanban board with independent columns</span>
+      </nav>
+      <h1>Kanban board with independent columns</h1>
+      <p class="lede">
+        The Cyclepath bike-share app team's sprint board. The board is one
+        <code>kanban-board</code> controller; every column, and the blocked
+        lane nested inside "In progress", is its own <code>kanban-column</code>
+        instance with its own count and limit.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="kanban-board">
+        <h2>Sprint 14 · Rider app</h2>
+        <p class="muted" data-kanban-board-target="summary" aria-live="polite"></p>
+
+        <div class="kanban-columns">
+          <section class="kanban-column" data-controller="kanban-column" data-kanban-board-target="column">
+            <header class="column-heading"><h3>Backlog</h3><span data-kanban-column-target="count"></span></header>
+            <ol class="card-list" data-kanban-column-target="list">
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Show dock distance in the station list</p>
+                <p class="card-meta">CYC-318 · Mateo</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Refund flow for stuck rentals</p>
+                <p class="card-meta">CYC-322 · Priya</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Dark map tiles for night riding</p>
+                <p class="card-meta">CYC-327 · Unassigned</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+            </ol>
+          </section>
+
+          <section class="kanban-column" data-controller="kanban-column" data-kanban-board-target="column" data-kanban-column-wip-limit-value="2">
+            <header class="column-heading"><h3>In progress</h3><span data-kanban-column-target="count"></span></header>
+            <p class="limit-notice" data-kanban-column-target="limitNotice" hidden>Over the work-in-progress limit. Finish or block something before starting more.</p>
+            <ol class="card-list" data-kanban-column-target="list">
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Cluster dock pins at low zoom</p>
+                <p class="card-meta">CYC-311 · Priya</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Apple Pay for day passes</p>
+                <p class="card-meta">CYC-305 · Jun</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+            </ol>
+
+            <section class="kanban-column blocked-lane" data-controller="kanban-column" data-kanban-board-target="blockedLane">
+              <header class="column-heading"><h4>Blocked</h4><span data-kanban-column-target="count"></span></header>
+              <ol class="card-list" data-kanban-column-target="list">
+                <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                  <p class="card-title">E-bike battery level on dock detail</p>
+                  <p class="card-meta">CYC-309 · Mateo · waiting on firmware API</p>
+                  <div class="card-actions">
+                    <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                    <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                    <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                  </div>
+                </li>
+              </ol>
+            </section>
+          </section>
+
+          <section class="kanban-column" data-controller="kanban-column" data-kanban-board-target="column" data-kanban-column-wip-limit-value="2">
+            <header class="column-heading"><h3>In review</h3><span data-kanban-column-target="count"></span></header>
+            <p class="limit-notice" data-kanban-column-target="limitNotice" hidden>Review is backed up. Pair on a review before moving more work here.</p>
+            <ol class="card-list" data-kanban-column-target="list">
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Ride receipt emails</p>
+                <p class="card-meta">CYC-298 · Jun</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Accessibility labels on the unlock screen</p>
+                <p class="card-meta">CYC-301 · Aisha</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+            </ol>
+          </section>
+
+          <section class="kanban-column" data-controller="kanban-column" data-kanban-board-target="column">
+            <header class="column-heading"><h3>Done</h3><span data-kanban-column-target="count"></span></header>
+            <ol class="card-list" data-kanban-column-target="list">
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Station outage banner</p>
+                <p class="card-meta">CYC-290 · Aisha</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+              <li class="kanban-card" data-kanban-board-target="card" data-kanban-column-target="card">
+                <p class="card-title">Rider onboarding carousel copy</p>
+                <p class="card-meta">CYC-287 · Mateo</p>
+                <div class="card-actions">
+                  <button type="button" class="quiet" data-kanban-board-target="backButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="-1">Back</button>
+                  <button type="button" class="quiet" data-kanban-board-target="blockButton" data-action="kanban-board#toggleBlocked">Block</button>
+                  <button type="button" class="quiet" data-kanban-board-target="forwardButton" data-action="kanban-board#moveCard" data-kanban-board-offset-param="1">Forward</button>
+                </div>
+              </li>
+            </ol>
+          </section>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="kanban_board_controller.js"><code>kanban_board_controller.js</code></a> — sees every card, moves cards between column instances</li>
+          <li><a href="kanban_column_controller.js"><code>kanban_column_controller.js</code></a> — one instance per column and per nested lane; counts its own cards</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
