@@ -1,0 +1,113 @@
+<!doctype html>
+<!--
+  Controllers · 11 · Classroom attendance roster
+
+  Teaches:
+  - Controllers come and go with their elements. Choosing a class period
+    swaps in that period's rows from a fetched HTML fragment, so every
+    student-attendance instance is disconnected and a new one is connected
+    for each new row, the way a Turbo Frame or server-rendered partial does.
+  - Instances are disposable, so state that must survive goes on a
+    controller whose element stays put. attendance-roster keeps every
+    period's marks; each row reports to it and restores from it on connect.
+  - Switching back to a period builds new instances for new rows. They are
+    not the old instances revived; they only look the same because the
+    roster gives them their marks back.
+  - A long-lived controller can act on whichever child instances exist right
+    now: "Mark everyone else present" and "Submit" reach the current rows
+    through application.getControllerForElementAndIdentifier().
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Classroom attendance roster · Controllers · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .roster-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+      .roster-table { width: 100%; border-collapse: collapse; }
+      .roster-table th, .roster-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--rule, #ddd); text-align: left; }
+      .roster-table tbody th { font-weight: 500; }
+      .roster-table tr[data-attendance-mark="unmarked"] th::after { content: " ·"; color: var(--capsule-amber-deep, #b5651d); }
+      .roster-table tr[data-attendance-mark="absent"] { background: #fbe9e6; }
+      .roster-table tr[data-attendance-mark="tardy"] { background: #fdf4e4; }
+      .mark-options { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+      .roster-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+      .roster-tally { font-weight: 600; font-variant-numeric: tabular-nums; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import AttendanceRosterController from "./attendance_roster_controller.js"
+      import StudentAttendanceController from "./student_attendance_controller.js"
+
+      const application = Application.start()
+      application.register("attendance-roster", AttendanceRosterController)
+      application.register("student-attendance", StudentAttendanceController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#controllers">Controllers</a> /
+        <span>11 · Classroom attendance roster</span>
+      </nav>
+      <h1>Classroom attendance roster</h1>
+      <p class="lede">
+        A science teacher takes attendance for three class periods. Each
+        period's rows are fetched from the server and get fresh
+        <code>student-attendance</code> controllers. The
+        <code>attendance-roster</code> controller around them stays put and
+        remembers every mark.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="attendance-roster">
+        <h2>Ms. Abernathy · Room 214 · Thursday</h2>
+
+        <div class="roster-controls">
+          <label for="period-choice">Class period</label>
+          <select id="period-choice" name="period" data-attendance-roster-target="periodChoice" data-action="attendance-roster#loadPeriod">
+            <option value="periods/period-1.html">Period 1 · Biology</option>
+            <option value="periods/period-2.html">Period 2 · Earth Science</option>
+            <option value="periods/period-3.html">Period 3 · Chemistry</option>
+          </select>
+          <span class="muted" data-attendance-roster-target="loadStatus" aria-live="polite"></span>
+        </div>
+
+        <table class="roster-table">
+          <thead>
+            <tr><th scope="col">Student</th><th scope="col">Attendance</th></tr>
+          </thead>
+          <tbody data-attendance-roster-target="rosterRows"></tbody>
+        </table>
+
+        <div class="roster-footer">
+          <span class="roster-tally" data-attendance-roster-target="tally" aria-live="polite"></span>
+          <button type="button" class="quiet" data-action="attendance-roster#markRemainingPresent">Mark everyone else present</button>
+          <button type="button" data-action="attendance-roster#submitAttendance">Submit to front office</button>
+          <span data-attendance-roster-target="submitStatus" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="attendance_roster_controller.js"><code>attendance_roster_controller.js</code></a> — long-lived; swaps in each period's rows and keeps every period's marks</li>
+          <li><a href="student_attendance_controller.js"><code>student_attendance_controller.js</code></a> — one disposable instance per row; restores its mark from the roster</li>
+          <li><a href="periods/period-1.html"><code>periods/period-1.html</code></a>, <a href="periods/period-2.html"><code>period-2.html</code></a>, <a href="periods/period-3.html"><code>period-3.html</code></a> — server-rendered roster rows</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
