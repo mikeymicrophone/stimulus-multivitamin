@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 02 · Session timeout warning
+
+  Teaches:
+  - Listeners you add yourself are yours to remove. The activity listeners
+    sit on document, outside the controller's element, so Stimulus never
+    sees them. They are added with an AbortController's signal, and
+    disconnect() calls abort() to remove every one of them at once.
+  - An AbortController aborts only once. addEventListener() with an
+    already-aborted signal silently attaches nothing, so the controller makes
+    a new AbortController each time it starts listening: on connect and
+    after "Stay signed in".
+  - Global listeners declared in data-action (focus@window,
+    visibilitychange@document) are removed by Stimulus when the controller
+    disconnects. You don't clean those up.
+  - disconnect() clears every timer. Signing out swaps in server HTML, and a
+    timer left running would show a warning or sign out a second time.
+  - Signing back in inserts new HTML, so a new instance starts a new session.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Session timeout warning · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .session-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule, #ddd); margin-bottom: 1rem; }
+      .session-bar button { margin-left: auto; }
+      .timeout-warning { border: 2px solid #b3261e; background: #fbe9e6; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
+      .timeout-warning h3 { margin: 0 0 0.35rem; color: #8c1d18; }
+      .timeout-warning strong { font-variant-numeric: tabular-nums; }
+      .account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .account-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.75rem 1rem; }
+      .account-card h3 { margin: 0; font-size: 1rem; }
+      .balance { font-size: 1.6rem; font-weight: 700; margin: 0.25rem 0 0.5rem; }
+      .transactions { list-style: none; margin: 0; padding: 0; font-size: 0.9rem; }
+      .transactions li { display: flex; justify-content: space-between; border-top: 1px solid var(--rule, #ddd); padding: 0.3rem 0; }
+      .transfer-form { margin-top: 1.25rem; display: grid; gap: 0.5rem; max-width: 24rem; }
+      .transfer-form h3 { margin: 0; font-size: 1rem; }
+      .transfer-form label { display: grid; gap: 0.2rem; font-size: 0.9rem; }
+      .signed-out { text-align: center; padding: 2rem 1rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import OnlineBankingController from "./online_banking_controller.js"
+      import SessionTimeoutController from "./session_timeout_controller.js"
+
+      const application = Application.start()
+      application.register("online-banking", OnlineBankingController)
+      application.register("session-timeout", SessionTimeoutController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>02 · Session timeout warning</span>
+      </nav>
+      <h1>Session timeout warning</h1>
+      <p class="lede">
+        A credit union's online banking. The signed-in area carries a
+        <code>session-timeout</code> controller that warns before signing an
+        idle member out. The <code>online-banking</code> controller swaps that
+        area for server HTML when the member signs out or back in. The timeout
+        is shortened to 45 seconds for this page.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="online-banking">
+        <h2>Riverbend Credit Union · Online banking</h2>
+        <div data-online-banking-target="sessionArea">
+          <div class="signed-in" data-controller="session-timeout"
+               data-session-timeout-timeout-seconds-value="45" data-session-timeout-warning-seconds-value="15"
+               data-action="session-timeout:expired->online-banking#signOut visibilitychange@document->session-timeout#checkDeadline focus@window->session-timeout#checkDeadline">
+            <div class="session-bar">
+              <span>Signed in as <strong>Dana Okafor</strong></span>
+              <span class="muted" data-session-timeout-target="idleStatus" aria-live="polite">Signs out after 45 seconds of inactivity.</span>
+              <button type="button" class="quiet" data-action="online-banking#signOut">Sign out</button>
+            </div>
+          
+            <div class="timeout-warning" role="alertdialog" aria-labelledby="timeout-warning-heading" data-session-timeout-target="warning" hidden>
+              <h3 id="timeout-warning-heading">Are you still there?</h3>
+              <p>You'll be signed out in <strong data-session-timeout-target="countdown"></strong>. Typing elsewhere on the page won't keep you signed in.</p>
+              <button type="button" data-action="session-timeout#staySignedIn">Stay signed in</button>
+              <button type="button" class="quiet" data-action="online-banking#signOut">Sign out now</button>
+            </div>
+          
+            <div class="account-grid">
+              <section class="account-card">
+                <h3>Everyday Checking ••4821</h3>
+                <p class="balance">$2,418.77</p>
+                <ul class="transactions">
+                  <li><span>Corner Market</span><span>−$46.12</span></li>
+                  <li><span>Payroll · Bayside Dental</span><span>+$1,982.40</span></li>
+                  <li><span>Lakeview Electric</span><span>−$118.03</span></li>
+                </ul>
+              </section>
+              <section class="account-card">
+                <h3>High-Yield Savings ••9310</h3>
+                <p class="balance">$12,906.40</p>
+                <ul class="transactions">
+                  <li><span>Interest paid</span><span>+$41.27</span></li>
+                  <li><span>Transfer from checking</span><span>+$250.00</span></li>
+                </ul>
+              </section>
+            </div>
+          
+            <form class="transfer-form">
+              <h3>Transfer between accounts</h3>
+              <label>Amount <input type="text" name="transfer_amount" inputmode="decimal" placeholder="0.00"></label>
+              <label>Memo <input type="text" name="transfer_memo" placeholder="Rainy-day fund"></label>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="session_timeout_controller.js"><code>session_timeout_controller.js</code></a> — watches for activity, warns, and signs out; cleans up every listener and timer</li>
+          <li><a href="online_banking_controller.js"><code>online_banking_controller.js</code></a> — swaps the session area for server HTML</li>
+          <li><a href="sessions/signed-in.html"><code>sessions/signed-in.html</code></a> and <a href="sessions/signed-out.html"><code>sessions/signed-out.html</code></a> — server-rendered session areas</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
