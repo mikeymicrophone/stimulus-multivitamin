@@ -4,7 +4,7 @@
  * Teaches: many child instances behind a small interface. Each order line
  * is its own instance with its own picked count. The pick list only uses
  * the getters and the activate(), deactivate(), and recordPick() methods
- * below. The one thing a line does on its own, marking itself short, it
+ * below. The one change a line makes on its own, marking itself short, it
  * reports back with lineChanged().
  */
 import { Controller } from "@hotwired/stimulus"

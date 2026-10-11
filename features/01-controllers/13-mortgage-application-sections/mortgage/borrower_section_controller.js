@@ -22,7 +22,7 @@ export default class extends SectionController {
   additionalProblems() {
     const problems = []
     const email = this.emailTarget.value.trim()
-    if (email !== "" && !EMAIL_PATTERN.test(email)) problems.push("Email address looks incomplete")
+    if (email !== "" && !email.match(EMAIL_PATTERN)) problems.push("Email address looks incomplete")
     if (this.needsPreviousAddress && this.previousAddressTarget.value.trim() === "") {
       problems.push("Previous address needed for less than 2 years at current address")
     }
