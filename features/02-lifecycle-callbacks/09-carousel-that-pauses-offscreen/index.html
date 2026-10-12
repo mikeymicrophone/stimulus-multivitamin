@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 09 · Carousel that pauses offscreen
+
+  Teaches:
+  - One timer, many reasons to stop it. Autoplay runs only while nothing
+    pauses it: off screen (IntersectionObserver), hidden tab
+    (visibilitychange@document), pointer or focus on the photos, reduced
+    motion (a MediaQueryList listener), or the visitor's Pause button.
+  - Each kind of listener is cleaned up in its own way. Stimulus removes the
+    data-action listeners itself. disconnect() unobserves the
+    IntersectionObserver, aborts the MediaQueryList listener (data-action
+    can only reach window and document), and clears the interval.
+  - connect() rebuilds connection-dependent state from scratch. A carousel
+    moved or removed while the pointer is over it may never get pointerleave,
+    so hover and focus pauses are not carried across a reconnect. The
+    visitor's choice and the current photo are, because they live on the
+    instance.
+  - A carousel assumes it is off screen until the observer's first report,
+    which arrives right after observe(), so an offscreen carousel never
+    starts.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Carousel that pauses offscreen · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .photo-carousel { position: relative; border-radius: 10px; overflow: hidden; background: #ece4d3; }
+      .listing-photo { margin: 0; height: 11rem; display: flex; flex-direction: column; justify-content: flex-end; padding: 0.75rem; box-sizing: border-box; background: linear-gradient(160deg, var(--photo-tone, #c9b48f), #3d3428); color: #fff; }
+      .listing-photo[hidden] { display: none; }
+      .main-listing .listing-photo { height: 18rem; }
+      .photo-room { font-size: 1.3rem; font-weight: 700; text-shadow: 0 1px 3px rgb(0 0 0 / 0.5); }
+      .listing-photo figcaption { font-size: 0.85rem; text-shadow: 0 1px 3px rgb(0 0 0 / 0.5); }
+      .carousel-controls { display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.5rem; background: #fffdf8; }
+      .carousel-controls button { font-size: 0.8rem; padding: 0.1rem 0.6rem; }
+      .carousel-position { font-variant-numeric: tabular-nums; font-size: 0.85rem; min-width: 3rem; text-align: center; }
+      .save-home { margin-left: auto; }
+      .autoplay-status { margin: 0; padding: 0 0.6rem 0.4rem; background: #fffdf8; font-size: 0.75rem; color: var(--muted-ink, #555); }
+      .listing-facts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-weight: 600; }
+      .listing-details { margin: 1.5rem 0; max-width: 42rem; min-height: 40rem; }
+      .favorites, .similar-homes { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; }
+      .favorites { min-height: 3rem; padding: 0.75rem; border: 1px dashed var(--rule, #ddd); border-radius: 10px; margin-bottom: 1.5rem; }
+      .favorites-empty { margin: 0; color: var(--muted-ink, #555); font-size: 0.9rem; }
+      .favorites-empty[hidden] { display: none; }
+      .home-card h3 { margin: 0.5rem 0 0; font-size: 1rem; }
+      .home-card p { margin: 0.1rem 0; font-size: 0.9rem; }
+      .home-price { font-weight: 700; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ListingPageController from "./listing_page_controller.js"
+      import PhotoCarouselController from "./photo_carousel_controller.js"
+
+      const application = Application.start()
+      application.register("listing-page", ListingPageController)
+      application.register("photo-carousel", PhotoCarouselController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>09 · Carousel that pauses offscreen</span>
+      </nav>
+      <h1>Carousel that pauses offscreen</h1>
+      <p class="lede">
+        A real-estate listing page. Every photo carousel is a
+        <code>photo-carousel</code> controller that advances on its own only
+        while nothing gives it a reason to stop. The
+        <code>listing-page</code> controller saves similar homes to your
+        favorites and hides the ones you don't want.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="listing-page">
+        <h2>Hearthstone Realty · 214 Orchard Lane, Maplewood</h2>
+
+        <div class="main-listing">
+          <div class="photo-carousel" id="carousel-orchard-lane" data-controller="photo-carousel"
+               data-action="pointerenter->photo-carousel#pointerEntered pointerleave->photo-carousel#pointerLeft focusin->photo-carousel#focusEntered focusout->photo-carousel#focusLeft visibilitychange@document->photo-carousel#tabVisibilityChanged">
+            <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #b98b5e"><span class="photo-room">Front porch</span><figcaption>Covered porch facing the park</figcaption></figure>
+            <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #a7b49a" hidden><span class="photo-room">Living room</span><figcaption>Oak floors and a wood-burning fireplace</figcaption></figure>
+            <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #d1b98d" hidden><span class="photo-room">Kitchen</span><figcaption>Quartz counters and a gas range</figcaption></figure>
+            <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #9aa7b8" hidden><span class="photo-room">Primary bedroom</span><figcaption>Walk-in closet and en-suite bath</figcaption></figure>
+            <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #7f9b6e" hidden><span class="photo-room">Backyard</span><figcaption>Fenced yard with raised garden beds</figcaption></figure>
+            <div class="carousel-controls">
+              <button type="button" class="quiet" aria-label="Previous photo" data-action="photo-carousel#previous">‹</button>
+              <span class="carousel-position" data-photo-carousel-target="position"></span>
+              <button type="button" class="quiet" aria-label="Next photo" data-action="photo-carousel#next">›</button>
+              <button type="button" class="quiet" data-photo-carousel-target="pauseButton" data-action="photo-carousel#togglePause">Pause</button>
+            </div>
+            <p class="autoplay-status" data-photo-carousel-target="autoplayStatus"></p>
+          </div>
+          <p class="listing-facts"><span>$485,000</span><span>3 bd · 2 ba</span><span>1,860 sq ft</span><span>Built 1948</span></p>
+        </div>
+
+        <h3>Your favorites</h3>
+        <div class="favorites" data-listing-page-target="favoritesStrip">
+          <p class="favorites-empty" data-listing-page-target="favoritesEmpty">Save a similar home and it moves up here.</p>
+        </div>
+
+        <div class="listing-details">
+          <h3>About this home</h3>
+          <p>A 1948 brick bungalow on a quiet block across from Linden Park. The
+          original oak floors were refinished last year, and the kitchen was
+          rebuilt in 2021 with quartz counters, a gas range, and a pantry
+          wall.</p>
+          <p>Upstairs, the primary bedroom has a walk-in closet and its own
+          bath. Two more bedrooms share a hall bath with a clawfoot tub. The
+          basement is dry, with a laundry room and space for a workshop.</p>
+          <h3>Neighborhood</h3>
+          <p>Maplewood Elementary is four blocks away. The Route 12 bus stops at
+          the corner of Orchard and Fifth, and the farmers market runs on
+          Saturdays from May through October.</p>
+          <h3>Taxes and fees</h3>
+          <p>Property tax: $6,240 per year. No homeowners association.</p>
+        </div>
+
+        <h3>Similar homes nearby</h3>
+        <div class="similar-homes" data-listing-page-target="similarHomes">
+          <article class="home-card" id="home-birch-street" data-listing-page-target="homeCard">
+            <div class="photo-carousel" data-controller="photo-carousel"
+                 data-action="pointerenter->photo-carousel#pointerEntered pointerleave->photo-carousel#pointerLeft focusin->photo-carousel#focusEntered focusout->photo-carousel#focusLeft visibilitychange@document->photo-carousel#tabVisibilityChanged">
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #c4a07a"><span class="photo-room">Front</span><figcaption>Cape Cod with dormers</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #b5a58f" hidden><span class="photo-room">Living room</span><figcaption>Built-in bookshelves</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #a9b9a0" hidden><span class="photo-room">Kitchen</span><figcaption>Breakfast nook by the window</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #8fa37f" hidden><span class="photo-room">Garden</span><figcaption>Mature maple and a stone patio</figcaption></figure>
+              <div class="carousel-controls">
+                <button type="button" class="quiet" aria-label="Previous photo" data-action="photo-carousel#previous">‹</button>
+                <span class="carousel-position" data-photo-carousel-target="position"></span>
+                <button type="button" class="quiet" aria-label="Next photo" data-action="photo-carousel#next">›</button>
+                <button type="button" class="quiet" data-photo-carousel-target="pauseButton" data-action="photo-carousel#togglePause">Pause</button>
+                <button type="button" class="quiet save-home" aria-pressed="false" data-action="listing-page#saveHome">♡ Save</button>
+              </div>
+              <p class="autoplay-status" data-photo-carousel-target="autoplayStatus"></p>
+            </div>
+            <h3>39 Birch Street</h3>
+            <p>3 bd · 2 ba · 1,640 sq ft</p>
+            <p class="home-price">$459,000</p>
+            <button type="button" class="quiet" data-action="listing-page#hideHome">Hide this home</button>
+          </article>
+
+          <article class="home-card" id="home-kessler-avenue" data-listing-page-target="homeCard">
+            <div class="photo-carousel" data-controller="photo-carousel"
+                 data-action="pointerenter->photo-carousel#pointerEntered pointerleave->photo-carousel#pointerLeft focusin->photo-carousel#focusEntered focusout->photo-carousel#focusLeft visibilitychange@document->photo-carousel#tabVisibilityChanged">
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #9c8c7a"><span class="photo-room">Front</span><figcaption>Craftsman with a deep porch</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #c9b28c" hidden><span class="photo-room">Dining room</span><figcaption>Original wainscoting</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #a3aebb" hidden><span class="photo-room">Kitchen</span><figcaption>Island with seating for four</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #b39a86" hidden><span class="photo-room">Attic studio</span><figcaption>Skylights and pine ceiling</figcaption></figure>
+              <div class="carousel-controls">
+                <button type="button" class="quiet" aria-label="Previous photo" data-action="photo-carousel#previous">‹</button>
+                <span class="carousel-position" data-photo-carousel-target="position"></span>
+                <button type="button" class="quiet" aria-label="Next photo" data-action="photo-carousel#next">›</button>
+                <button type="button" class="quiet" data-photo-carousel-target="pauseButton" data-action="photo-carousel#togglePause">Pause</button>
+                <button type="button" class="quiet save-home" aria-pressed="false" data-action="listing-page#saveHome">♡ Save</button>
+              </div>
+              <p class="autoplay-status" data-photo-carousel-target="autoplayStatus"></p>
+            </div>
+            <h3>1108 Kessler Avenue</h3>
+            <p>4 bd · 2.5 ba · 2,210 sq ft</p>
+            <p class="home-price">$512,000</p>
+            <button type="button" class="quiet" data-action="listing-page#hideHome">Hide this home</button>
+          </article>
+
+          <article class="home-card" id="home-wren-court" data-listing-page-target="homeCard">
+            <div class="photo-carousel" data-controller="photo-carousel"
+                 data-action="pointerenter->photo-carousel#pointerEntered pointerleave->photo-carousel#pointerLeft focusin->photo-carousel#focusEntered focusout->photo-carousel#focusLeft visibilitychange@document->photo-carousel#tabVisibilityChanged">
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #b8a48e"><span class="photo-room">Front</span><figcaption>Split-level on a cul-de-sac</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #a0ab92" hidden><span class="photo-room">Family room</span><figcaption>Sliding doors to the deck</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #c7b79c" hidden><span class="photo-room">Kitchen</span><figcaption>New appliances in 2023</figcaption></figure>
+              <figure class="listing-photo" data-photo-carousel-target="slide" style="--photo-tone: #8d9fa8" hidden><span class="photo-room">Deck</span><figcaption>Cedar deck over a wooded lot</figcaption></figure>
+              <div class="carousel-controls">
+                <button type="button" class="quiet" aria-label="Previous photo" data-action="photo-carousel#previous">‹</button>
+                <span class="carousel-position" data-photo-carousel-target="position"></span>
+                <button type="button" class="quiet" aria-label="Next photo" data-action="photo-carousel#next">›</button>
+                <button type="button" class="quiet" data-photo-carousel-target="pauseButton" data-action="photo-carousel#togglePause">Pause</button>
+                <button type="button" class="quiet save-home" aria-pressed="false" data-action="listing-page#saveHome">♡ Save</button>
+              </div>
+              <p class="autoplay-status" data-photo-carousel-target="autoplayStatus"></p>
+            </div>
+            <h3>7 Wren Court</h3>
+            <p>3 bd · 2 ba · 1,780 sq ft</p>
+            <p class="home-price">$474,900</p>
+            <button type="button" class="quiet" data-action="listing-page#hideHome">Hide this home</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="photo_carousel_controller.js"><code>photo_carousel_controller.js</code></a> — advances photos only while nothing pauses it; cleans up its observer, listener, and timer</li>
+          <li><a href="listing_page_controller.js"><code>listing_page_controller.js</code></a> — moves homes into favorites and hides them</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
