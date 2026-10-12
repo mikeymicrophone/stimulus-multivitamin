@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Action options · 11 · Metro fare FAQ
+
+  Teaches:
+  - application.registerActionOption("open", callback) registers a filter
+    the same way :self is registered. :open and :!open both call that
+    filter; the ! only flips the value argument.
+  - The callback receives { name, value, event, element, controller }.
+    name is "open", value is true for :open and false for :!open, event
+    is the ActionEvent (params included), element is the <details> that
+    declared the action, controller is the fare-guide instance.
+  - Returning false blocks the action. Stimulus uses
+    passes = passes && callback(...), so returning undefined also blocks.
+    This callback returns true only when event.target.open === value, so
+    announceOpen runs on open and announceClosed on close.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Metro fare FAQ · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .fare-layout { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 50rem) { .fare-layout { grid-template-columns: 1fr; } }
+      .fare-guide details { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; margin: 0 0 0.5rem; background: #fffdf8; }
+      .fare-guide summary { cursor: pointer; font-weight: 600; }
+      .payload-log, .action-log { font-size: 0.85rem; min-height: 4rem; }
+      .fare-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FareGuideController from "./fare_guide_controller.js"
+
+      const application = Application.start()
+      application.register("fare-guide", FareGuideController)
+      application.registerActionOption("open", ({ name, value, event, element, controller }) => {
+        controller.recordPayload({
+          name,
+          value: String(value),
+          eventType: event.type,
+          elementId: element.id,
+          identifier: controller.identifier,
+          paramTopic: event.params.topic ?? "",
+        })
+        if (event.type !== "toggle") return true
+        return event.target.open === value
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>11 · Metro fare FAQ</span>
+      </nav>
+      <h1>Metro fare FAQ</h1>
+      <p class="lede">
+        Harbor Metro's fare guide. Each topic is a
+        <code>&lt;details&gt;</code> with
+        <code>toggle-&gt;fare-guide#announceOpen:open</code> and
+        <code>announceClosed:!open</code>. The custom option's callback
+        logs every argument it receives.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="fare-guide">
+        <h2>Harbor Metro · Fares and passes</h2>
+        <div class="fare-layout">
+          <div class="fare-guide">
+            <details id="adult-fares" data-fare-guide-topic-param="adult"
+                     data-action="toggle->fare-guide#announceOpen:open toggle->fare-guide#announceClosed:!open">
+              <summary>Adult fares</summary>
+              <p>A single ride is $2.75. A day pass is $11, sold on the bus or in the Harbor Street kiosk.</p>
+            </details>
+            <details id="youth-fares" data-fare-guide-topic-param="youth"
+                     data-action="toggle->fare-guide#announceOpen:open toggle->fare-guide#announceClosed:!open">
+              <summary>Youth fares</summary>
+              <p>Riders 18 and under ride for $1.25. A school term pass is $70, issued at Millbrook High and Harbor Metro customer service.</p>
+            </details>
+            <details id="reduced-fares" data-fare-guide-topic-param="reduced"
+                     data-action="toggle->fare-guide#announceOpen:open toggle->fare-guide#announceClosed:!open">
+              <summary>Reduced fares</summary>
+              <p>Medicare cards and Harbor Metro reduced-fare IDs pay $1.10. Apply at the customer service window on Harbor Street.</p>
+            </details>
+          </div>
+
+          <aside>
+            <h3>Option callback</h3>
+            <ol class="payload-log" data-fare-guide-target="payloadLog"></ol>
+            <h3>Actions that ran</h3>
+            <ol class="action-log" data-fare-guide-target="actionLog"></ol>
+          </aside>
+        </div>
+        <p class="fare-status" data-fare-guide-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fare_guide_controller.js"><code>fare_guide_controller.js</code></a> — records the callback payload and announces open / close</li>
+          <li>This page's source — <code>registerActionOption("open")</code> and the <code>:open</code> / <code>:!open</code> descriptors</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

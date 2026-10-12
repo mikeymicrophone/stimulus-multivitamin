@@ -1,0 +1,115 @@
+<!doctype html>
+<!--
+  Action options · 02 · Vacation rental cards
+
+  Teaches:
+  - :stop calls event.stopPropagation() before the method. Save and Share
+    sit inside a clickable card; without :stop, their clicks would bubble
+    to the card and open the listing.
+  - The card itself names click->rental-search#openListing. It is a
+    <article>, which has no default event, so the event name is required.
+  - :stop does not call stopImmediatePropagation(). Other actions on the
+    same Save button would still run; only ancestors are hidden from the
+    event.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Vacation rental cards · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.8rem; }
+      .listing-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 0.9rem; background: #fffdf8; cursor: pointer; display: grid; gap: 0.35rem; }
+      .listing-card h3 { margin: 0; }
+      .listing-meta { font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .listing-actions { display: flex; gap: 0.5rem; }
+      .listing-detail { margin-top: 1rem; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fff; }
+      .search-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RentalSearchController from "./rental_search_controller.js"
+
+      const application = Application.start()
+      application.register("rental-search", RentalSearchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>02 · Vacation rental cards</span>
+      </nav>
+      <h1>Vacation rental cards</h1>
+      <p class="lede">
+        Cedar &amp; Tide Stays' search results. Each listing is a
+        clickable card. Save and Share use <code>:stop</code> so they
+        do not open the listing.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="rental-search"
+               data-rental-search-listings-value='{"cedar-loft":{"slug":"cedar-loft","name":"Cedar Loft","summary":"A loft above the cedar mill in Brookhaven. Sleeps four, wood stove, ten minutes to the ferry."},"tide-cottage":{"slug":"tide-cottage","name":"Tide Cottage","summary":"A shingled cottage on the marsh in Brookhaven. Sleeps two, outdoor shower, kayaks on the rack."},"pilot-house":{"slug":"pilot-house","name":"Pilot House","summary":"The old pilot house at the Brookhaven breakwater. Sleeps six, roof deck, foghorn at dawn."}}'>
+        <h2>Cedar &amp; Tide Stays · Brookhaven weekend</h2>
+        <p class="muted">12–14 October 2026 · three places still open</p>
+
+        <div class="listing-grid">
+          <article class="listing-card" data-listing-slug="cedar-loft" data-action="click->rental-search#openListing">
+            <h3>Cedar Loft</h3>
+            <p class="listing-meta">Brookhaven mill · sleeps 4 · $240 a night</p>
+            <div class="listing-actions">
+              <button type="button" data-listing-slug="cedar-loft" data-action="click->rental-search#saveListing:stop">Save</button>
+              <button type="button" class="quiet" data-listing-slug="cedar-loft" data-action="click->rental-search#copyListingLink:stop">Share</button>
+            </div>
+          </article>
+
+          <article class="listing-card" data-listing-slug="tide-cottage" data-action="click->rental-search#openListing">
+            <h3>Tide Cottage</h3>
+            <p class="listing-meta">Brookhaven marsh · sleeps 2 · $175 a night</p>
+            <div class="listing-actions">
+              <button type="button" data-listing-slug="tide-cottage" data-action="click->rental-search#saveListing:stop">Save</button>
+              <button type="button" class="quiet" data-listing-slug="tide-cottage" data-action="click->rental-search#copyListingLink:stop">Share</button>
+            </div>
+          </article>
+
+          <article class="listing-card" data-listing-slug="pilot-house" data-action="click->rental-search#openListing">
+            <h3>Pilot House</h3>
+            <p class="listing-meta">Brookhaven breakwater · sleeps 6 · $310 a night</p>
+            <div class="listing-actions">
+              <button type="button" data-listing-slug="pilot-house" data-action="click->rental-search#saveListing:stop">Save</button>
+              <button type="button" class="quiet" data-listing-slug="pilot-house" data-action="click->rental-search#copyListingLink:stop">Share</button>
+            </div>
+          </article>
+        </div>
+
+        <p class="search-status" data-rental-search-target="status" aria-live="polite">Click a card to open it, or Save / Share without opening it.</p>
+        <p class="muted" data-rental-search-target="savedList"></p>
+
+        <article class="listing-detail" data-rental-search-target="detail" hidden>
+          <h3 data-rental-search-target="detailHeading"></h3>
+          <p data-rental-search-target="detailCopy"></p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="rental_search_controller.js"><code>rental_search_controller.js</code></a> — opens a listing, saves it, or copies a link</li>
+          <li>This page's source — cards with <code>:stop</code> on the inner buttons</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

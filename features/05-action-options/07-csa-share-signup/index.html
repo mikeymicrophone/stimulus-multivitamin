@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  Action options · 07 · CSA share signup
+
+  Teaches:
+  - Several options chain on one descriptor. The join form uses
+    submit->csa-signup#joinShare:prevent:once: the page stays put and a
+    second submit never runs.
+  - Built-in filters run in descriptor order and AND together. On
+    "Hold this share", :prevent:self still preventDefault()s a click on
+    the nested "What's a hold?" link, then :self rejects so holdShare()
+    does not run. On the waitlist card, :self:prevent does the reverse:
+    :self fails on the child, :prevent never runs, and the hash changes.
+  - :prevent, :stop, and :self are Stimulus filters, but they still land
+    in the eventOptions object that keys native listeners. Two actions on
+    the same button whose options differ (one has :prevent, one does not)
+    are different listeners. stopImmediatePropagation() in the first does
+    not skip the second.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>CSA share signup · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .csa-grid { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 50rem) { .csa-grid { grid-template-columns: 1fr; } }
+      .csa-grid fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; margin: 0 0 1rem; padding: 0.6rem 0.9rem 0.8rem; }
+      .share-choices { display: grid; gap: 0.35rem; }
+      .hold-card, .waitlist-card { border: 1px dashed var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; display: grid; gap: 0.35rem; margin: 0 0 0.8rem; }
+      .confirmation { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.7rem; }
+      .csa-status, .hold-status, .waitlist-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); font-size: 0.9rem; }
+      .action-log { font-size: 0.85rem; min-height: 3rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CsaSignupController from "./csa_signup_controller.js"
+
+      const application = Application.start()
+      application.register("csa-signup", CsaSignupController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>07 · CSA share signup</span>
+      </nav>
+      <h1>CSA share signup</h1>
+      <p class="lede">
+        Thornfield Organics' 2026 share list. Join chains
+        <code>:prevent:once</code>. The hold and waitlist cards show that
+        option order is real: <code>:prevent:self</code> is not
+        <code>:self:prevent</code>.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="csa-signup">
+        <h2>Thornfield Organics · 2026 shares</h2>
+        <div class="csa-grid">
+          <form data-action="submit->csa-signup#joinShare:prevent:once" action="joined/">
+            <fieldset>
+              <legend>Share size</legend>
+              <div class="share-choices">
+                <label><input type="radio" name="share" value="small" data-share-label="small" data-season-label="2026" data-csa-signup-target="share" checked> Small · 6 items · $28 a week</label>
+                <label><input type="radio" name="share" value="standard" data-share-label="standard" data-season-label="2026" data-csa-signup-target="share"> Standard · 10 items · $42 a week</label>
+                <label><input type="radio" name="share" value="family" data-share-label="family" data-season-label="2026" data-csa-signup-target="share"> Family · 16 items · $58 a week</label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Pickup</legend>
+              <label for="pickup">Site</label>
+              <select id="pickup" name="pickup" data-csa-signup-target="pickup">
+                <option value="farmstand">Thornfield farmstand, Saturdays 9–1</option>
+                <option value="green">Brookhaven Green market, Saturdays 8–12</option>
+                <option value="mill">Quarry Road mill, Tuesdays 4–6</option>
+              </select>
+            </fieldset>
+            <button type="submit">Join the share list</button>
+            <p class="csa-status" data-csa-signup-target="status"></p>
+            <p class="confirmation" data-csa-signup-target="confirmation" hidden></p>
+          </form>
+
+          <div>
+            <div class="hold-card" data-action="click->csa-signup#holdShare:prevent:self">
+              <strong>Hold this share</strong>
+              <p class="muted">Click the card to hold. The nested link uses the same click.</p>
+              <a id="hold-info" href="#hold-info">What's a hold?</a>
+              <p class="hold-status" data-csa-signup-target="holdStatus">No hold yet.</p>
+            </div>
+
+            <div class="waitlist-card" data-action="click->csa-signup#joinWaitlist:self:prevent">
+              <strong>Winter waitlist</strong>
+              <p class="muted">Click the card to join. The nested link is a child.</p>
+              <a id="waitlist-info" href="#waitlist-info">What's a waitlist?</a>
+              <p class="waitlist-status" data-csa-signup-target="waitlistStatus">Not on the waitlist.</p>
+            </div>
+
+            <p>
+              <button type="button" data-action="click->csa-signup#logValidate:prevent click->csa-signup#logAnnounce">Check the share, then announce</button>
+            </p>
+            <p>
+              <button type="button" data-action="click->csa-signup#logValidate click->csa-signup#logReceipt">Check the share, then print</button>
+            </p>
+            <ol class="action-log" data-csa-signup-target="actionLog"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="csa_signup_controller.js"><code>csa_signup_controller.js</code></a> — joins once, holds, waitlists, and logs action order</li>
+          <li>This page's source — chained options, reversed option order, and mixed listeners</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

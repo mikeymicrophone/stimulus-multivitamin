@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Action options · 06 · Botanical garden map
+
+  Teaches:
+  - :!passive sets { passive: false } on the native listener. The
+    conservatory plan uses wheel->garden-map#zoomPlan:!passive:prevent so
+    :prevent can cancel the wheel and zoom the plan instead of scrolling
+    the page.
+  - Chrome treats wheel (and touchstart / touchmove) listeners on window,
+    document, and body as passive by default. A descriptor that omits
+    :!passive on those targets cannot preventDefault().
+  - :passive on the trail notes is the opposite: the listener may not
+    cancel the event, so the notes keep scrolling. preventDefault() there
+    would be ignored.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Botanical garden map · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .garden-layout { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 46rem) { .garden-layout { grid-template-columns: 1fr; } }
+      .plan-window { overflow: hidden; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; height: 16rem; background: #e7efe6; }
+      .conservatory-plan { width: 100%; height: 100%; transform-origin: 50% 50%; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; padding: 0.8rem; box-sizing: border-box; }
+      .glass-house { background: #fffdf8; border: 1px dashed var(--bottle-green, #1f3d2b); border-radius: 8px; padding: 0.5rem; font-size: 0.85rem; }
+      .trail-notes { max-height: 16rem; overflow: auto; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; }
+      .garden-status, .notes-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); font-size: 0.9rem; }
+      .scale-readout { font-weight: 700; font-variant-numeric: tabular-nums; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GardenMapController from "./garden_map_controller.js"
+
+      const application = Application.start()
+      application.register("garden-map", GardenMapController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>06 · Botanical garden map</span>
+      </nav>
+      <h1>Botanical garden map</h1>
+      <p class="lede">
+        Linnea Conservatory's visitor plan. Wheel over the map zooms it,
+        which only works because the descriptor is
+        <code>wheel-&gt;garden-map#zoomPlan:!passive:prevent</code>. The
+        trail notes beside it keep a <code>:passive</code> wheel listener
+        and cannot cancel the scroll.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="garden-map">
+        <h2>Linnea Conservatory · visitor plan</h2>
+        <p class="muted">Wheel the plan to zoom · scale <span class="scale-readout" data-garden-map-target="scale">1.00×</span></p>
+
+        <div class="garden-layout">
+          <div>
+            <div class="plan-window" data-action="wheel->garden-map#zoomPlan:!passive:prevent">
+              <div class="conservatory-plan" data-garden-map-target="plan">
+                <div class="glass-house"><strong>Palm court</strong><br>Howea and cycads</div>
+                <div class="glass-house"><strong>Fernery</strong><br>Maidenhair along the rill</div>
+                <div class="glass-house"><strong>Orchid house</strong><br>Cattleya bench</div>
+                <div class="glass-house"><strong>Alpine pit</strong><br>Saxifrage and gentian</div>
+              </div>
+            </div>
+            <p class="garden-status" data-garden-map-target="status" aria-live="polite">Wheel the plan. :!passive is what lets :prevent cancel that wheel.</p>
+          </div>
+
+          <aside class="trail-notes" data-action="wheel->garden-map#notePassiveWheel:passive">
+            <h3>Trail notes</h3>
+            <p>The east path from the palm court to the alpine pit is crushed granite and takes a wheelchair. Benches sit under the catalpa at 40 metres.</p>
+            <p>Docent tours leave the lobby at 11:00 and 14:00. Sunday's 14:00 is full.</p>
+            <p>The fernery misting cycle runs at :15 past each hour. The rill is slick then.</p>
+            <p>Lost children go to the kiosk by the orchid house, not the lobby.</p>
+            <p>Tonight the conservatory closes at 17:30 for a members' preview of the gentian trays.</p>
+            <p class="notes-status" data-garden-map-target="notesStatus">Wheel here: the notes scroll because this listener is :passive.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="garden_map_controller.js"><code>garden_map_controller.js</code></a> — zooms the plan and reports <code>defaultPrevented</code></li>
+          <li>This page's source — <code>:!passive:prevent</code> on the plan, <code>:passive</code> on the notes</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

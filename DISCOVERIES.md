@@ -606,6 +606,148 @@ Save dialog does not appear.
 **Seen in:** [Legal brief editor](features/04-keyboard-filters/11-legal-brief-editor/),
 [Hospital command palette](features/04-keyboard-filters/12-hospital-command-palette/).
 
+## Action options
+
+### `:once` is spent by the first event, even when a keyboard filter rejects it
+
+**What happens.** `:once` is `{ once: true }` on the native listener for
+that event name. `keydown.enter@document->…:once` still receives every
+`keydown`. The first key — a letter in a field, Shift, Tab — invokes the
+listener. The keyboard filter then rejects it, the method never runs, and
+the browser has already removed the listener. Later Enter does nothing.
+
+**Why it matters.** A front desk that "encodes on Enter once" silently
+dies as soon as anyone types the guest's name. The page looks fine. The
+button beside it, with `click->…:once`, still works, because that is a
+different event.
+
+**What to do.** Do not put `:once` on a filtered `keydown` / `keyup` /
+`keypress`. Guard the method with an instance flag, or put `:once` on
+`click` / `submit`.
+
+**Seen in:** [Hotel key encoder](features/05-action-options/09-hotel-key-encoder/).
+
+### Built-in filters run in descriptor order and short-circuit
+
+**What happens.** Stimulus walks `Object.entries(eventOptions)` and
+assigns `passes = passes && filter(...)`. `:prevent:self` still calls
+`preventDefault()` on a child click, then `:self` returns false and the
+method does not run. `:self:prevent` fails `:self` on that child first,
+never reaches `:prevent`, and the click's default (a hash change, a
+navigation) goes through.
+
+**Why it matters.** A card that "prevents and only handles self" does not
+do those two things independently. The nested "What's a hold?" link either
+loses its navigation or keeps it, depending on which token is written
+first.
+
+**What to do.** Put filtering options (`:self`, custom options) before
+mutating ones (`:prevent`, `:stop`) when a rejected event should keep its
+default. Put mutating ones first when the default must never happen, even
+if the method will not run.
+
+**Seen in:** [CSA share signup](features/05-action-options/07-csa-share-signup/),
+[Permit photo uploader](features/05-action-options/13-permit-photo-uploader/)
+(an offline drop still `:prevent`s, so the browser does not navigate to
+the file).
+
+### Actions with different option sets are different native listeners
+
+**What happens.** The dispatcher keys listeners by event name plus every
+option, including `:prevent`, `:stop`, `:self`, and custom names. In
+Stimulus 3.2.2 that is not limited to `capture` / `once` / `passive`.
+`click->csa-signup#logValidate:prevent click->csa-signup#logAnnounce` are
+two listeners. `stopImmediatePropagation()` in the first does not skip
+the second. The same pair without `:prevent` shares one listener, so that
+call *does* skip the later method.
+
+**Why it matters.** A "validate, then announce" button that adds `:prevent`
+to the first action only looks like the newsletter-signup pattern. The
+announce still runs after an invalid check.
+
+**What to do.** Give cooperating actions on one element the same option
+set, or do the later work from the first method. Do not rely on
+`stopImmediatePropagation()` across `:prevent` / `:stop` / `:self` /
+custom options.
+
+**Seen in:** [CSA share signup](features/05-action-options/07-csa-share-signup/).
+
+### A custom option that returns `undefined` blocks the action
+
+**What happens.** `registerActionOption` callbacks are AND-ed into
+`passes`. Returning `false` blocks, as the docs say. Returning nothing
+also blocks, because `passes && undefined` is `undefined`. Returning
+`true` is what lets the method run. `:open` yields `value: true`;
+`:!open` yields `value: false` to the same callback.
+
+**Why it matters.** A filter that `return event.target.open === value`
+inside an `if (event.type == "toggle")` and forgets `return true` in the
+`else` will swallow every non-toggle event on that descriptor.
+
+**What to do.** Always return a boolean. Log `{ name, value, event,
+element, controller }` while writing the filter; `element` is the node
+that declared the action, not `event.target`, and `event.params` is
+already filled in.
+
+**Seen in:** [Metro fare FAQ](features/05-action-options/11-metro-fare-faq/),
+[Community solar cancel](features/05-action-options/12-community-solar-cancel/)
+(returning `false` is what keeps `cancelShare()` from running).
+
+### `:!self` does not mean "only children"
+
+**What happens.** The built-in `self` filter returns `element ===
+event.target` when `value` is true, and returns `true` when `value` is
+false. `:!self` therefore never filters. The comparison is to
+`event.target`, not `event.currentTarget` — `currentTarget` is already
+the declaring element for every click inside it.
+
+**Why it matters.** An overlay that tries `:!self` to "handle the scan
+but not the backdrop" handles both. Close has to omit `:self` instead.
+
+**What to do.** Use `:self` for the backdrop. Give child controls their
+own actions without `:self`. There is no built-in inverse.
+
+**Seen in:** [County archives viewer](features/05-action-options/03-county-archives-viewer/).
+
+### Keyboard filters run before action options
+
+**What happens.** `Binding.handleEvent` asks `willBeInvokedByEvent` (the
+key / modifier filter) before `applyEventModifiers` (`:prevent`,
+`:stop`, `:self`, custom options). A key that fails the filter never
+reaches `:prevent`. `keydown.enter->…:prevent` does not cancel
+Shift+Enter.
+
+**Why it matters.** Find-in-minutes that "prevents Enter from submitting
+the form" still lets Shift+Enter through, because that chord is a
+different filter.
+
+**What to do.** Declare each chord you want to cancel. Leave the ones
+you want the browser to keep (Shift+Enter in a field) off the
+descriptor.
+
+**Seen in:** [Clerk minutes editor](features/05-action-options/08-clerk-minutes-editor/).
+
+### `:capture` runs before a child's `:stop`
+
+**What happens.** `:capture` is `{ capture: true }`. That action runs
+while the event is traveling down, before any bubble-phase child.
+`:stop` calls `stopPropagation()` when *its* action runs, in the bubble
+phase unless that child also asked for `:capture`. Capture-phase
+ancestors have already run. Bubble-phase ancestors, `@document`, and
+`@window` never see the event.
+
+**Why it matters.** A directory that logs visits on the way down still
+sees "Text the stall". The same directory's bubble logger, and the
+card's `openStall`, do not.
+
+**What to do.** Put analytics and "I need to see every click" handlers
+in `:capture`. Put "this button owns the click" on the button with
+`:stop`.
+
+**Seen in:** [Farmers market stall analytics](features/05-action-options/05-farmers-market-stall-analytics/),
+[Community radio request](features/05-action-options/10-community-radio-request/)
+(`:stop` hides `@document` / `@window` bubble, not `@window:capture`).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
@@ -906,6 +1048,50 @@ and can `preventDefault()` it. Without that, a kanban that listens for
 **What to do.** `preventDefault()` in the Alt+arrow actions.
 
 **Seen in:** [Newsroom assignment board](features/04-keyboard-filters/10-newsroom-assignment-board/).
+
+### `wheel` on `window`, `document`, and `body` is passive unless you opt out
+
+**What happens.** Chrome (and other engines following the same spec)
+treat `wheel`, `touchstart`, and `touchmove` listeners on `window`,
+`document`, and `body` as `{ passive: true }` by default.
+`preventDefault()` there does nothing. Stimulus `:prevent` is that call.
+`:!passive` is `{ passive: false }` and is what makes `:prevent` work on
+those events.
+
+**Why it matters.** A map that zooms on wheel with
+`wheel@window->…:prevent` still scrolls the page. The same descriptor
+with `:!passive:prevent` zooms and the page stays put.
+
+**What to do.** Write `:!passive:prevent` on `wheel` / `touchmove`
+listeners that must cancel the default, including ones on an inner
+element if you want the guarantee rather than the browser's default.
+
+**Seen in:** [Botanical garden map](features/05-action-options/06-botanical-garden-map/).
+
+**Why this section.** The passive default is the platform; `:!passive`
+is the Stimulus spelling that opts out.
+
+### `preventDefault()` in a `:passive` listener is ignored
+
+**What happens.** `:passive` is `{ passive: true }`. The browser will not
+cancel that event. Chromium logs a console warning if the handler calls
+`preventDefault()` anyway. Stimulus `:prevent` on a `:passive`
+descriptor is that ignored call.
+
+**Why it matters.** A reading-progress bar that only reads `scrollTop`
+is the right use of `:passive`. Pairing it with `:prevent` looks like it
+should freeze the scroll and does not.
+
+**What to do.** Use `:passive` when you will not cancel. Use
+`:!passive:prevent` when you will.
+
+**Seen in:** [Literary essay progress](features/05-action-options/04-literary-essay-progress/),
+[Botanical garden map](features/05-action-options/06-botanical-garden-map/)
+(the trail notes stay `:passive` and keep scrolling).
+
+**Why this section.** Ignoring `preventDefault()` is the Event Listener
+options spec; it shows up here because Stimulus exposes those flags as
+`:passive` / `:prevent`.
 
 ### An already-aborted `AbortSignal` silently adds nothing
 

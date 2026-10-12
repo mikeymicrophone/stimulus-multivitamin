@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  Action options · 01 · Community theater box office
+
+  Teaches:
+  - :prevent calls event.preventDefault() before the method. Charge card
+    is a link to a receipt page; the option keeps the purchase on this
+    page so charge() can write the receipt itself.
+  - :once is passed to addEventListener as { once: true }. The browser
+    removes that listener after the first click, so a second click never
+    reaches charge() even if the link stays enabled.
+  - Options chain: click->box-office#charge:prevent:once. Stimulus applies
+    :prevent, then the method runs, and the native :once option is what
+    stops the next click.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Community theater box office · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .show-grid { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: 1.5rem; align-items: start; }
+      @media (max-width: 46rem) { .show-grid { grid-template-columns: 1fr; } }
+      .show-grid fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; margin: 0 0 1rem; padding: 0.6rem 0.9rem 0.8rem; }
+      .show-grid legend { font-weight: 700; color: var(--bottle-green, #1f3d2b); padding: 0 0.3rem; }
+      .section-choices, .addon-choices { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; }
+      .field-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.4rem; }
+      .ticket-stub { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; position: sticky; top: 1rem; }
+      .ticket-stub h3 { margin: 0 0 0.4rem; }
+      .ticket-total { font-weight: 700; font-size: 1.1rem; margin: 0 0 0.6rem; font-variant-numeric: tabular-nums; }
+      .show-status { min-height: 1.4em; font-size: 0.9rem; color: var(--bottle-green, #1f3d2b); }
+      .receipt-card { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.7rem; }
+      .charge-link { display: inline-block; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BoxOfficeController from "./box_office_controller.js"
+
+      const application = Application.start()
+      application.register("box-office", BoxOfficeController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>01 · Community theater box office</span>
+      </nav>
+      <h1>Community theater box office</h1>
+      <p class="lede">
+        Harbor Lights Players' online window for <cite>Night Heron</cite>.
+        Charge card is a link whose descriptor is
+        <code>click-&gt;box-office#charge:prevent:once</code>, so the
+        first click charges and stays on this page, and a second click
+        does nothing.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="box-office">
+        <h2>Harbor Lights Players · Night Heron</h2>
+        <p class="muted">Saturday 24 October 2026 · 7:30 PM · Lena Voss, directed by Mateo Ruiz</p>
+
+        <div class="show-grid">
+          <div>
+            <fieldset>
+              <legend>Section</legend>
+              <div class="section-choices">
+                <label><input type="radio" name="section" value="orchestra" data-section-label="orchestra" data-price-cents="2800" data-box-office-target="section" data-action="change->box-office#updateTotals" checked> Orchestra · $28</label>
+                <label><input type="radio" name="section" value="balcony" data-section-label="balcony" data-price-cents="1800" data-box-office-target="section" data-action="change->box-office#updateTotals"> Balcony · $18</label>
+                <label><input type="radio" name="section" value="gallery" data-section-label="gallery" data-price-cents="1200" data-box-office-target="section" data-action="change->box-office#updateTotals"> Gallery · $12</label>
+              </div>
+              <div class="field-row">
+                <label for="ticket-quantity">How many</label>
+                <input id="ticket-quantity" name="quantity" type="number" min="1" max="6" value="2" style="width: 5rem"
+                       data-box-office-target="quantity" data-action="input->box-office#updateTotals">
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Add-ons</legend>
+              <div class="addon-choices">
+                <label><input type="checkbox" name="program" data-price-cents="600" data-box-office-target="program" data-action="change->box-office#updateTotals"> Printed program · $6</label>
+                <label><input type="checkbox" name="drink" data-price-cents="900" data-box-office-target="drinkVoucher" data-action="change->box-office#updateTotals"> Intermission drink voucher · $9</label>
+              </div>
+            </fieldset>
+          </div>
+
+          <aside class="ticket-stub" aria-live="polite">
+            <h3>Your tickets</h3>
+            <p class="ticket-total">Due <span data-box-office-target="total"></span></p>
+            <p>
+              <a class="charge-link" href="receipt/" data-action="click->box-office#charge:prevent:once">Charge card</a>
+            </p>
+            <p class="show-status" data-box-office-target="status">Pick a section and charge the card. Double-click the link: the second click never runs.</p>
+            <p class="receipt-card" data-box-office-target="receipt" hidden></p>
+          </aside>
+        </div>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="box_office_controller.js"><code>box_office_controller.js</code></a> — prices the mix and writes the receipt from <code>charge()</code></li>
+          <li>This page's source — the Charge card link with <code>:prevent:once</code>, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

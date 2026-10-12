@@ -1,0 +1,101 @@
+<!doctype html>
+<!--
+  Action options · 09 · Hotel key encoder
+
+  Teaches:
+  - :once is { once: true } on the native listener for that event name.
+    It is not "the first time the keyboard filter matches".
+  - keydown.enter@document->key-encoder#encodeFromEnter:once:prevent still
+    receives every keydown. The first key — a letter in the guest field,
+    Shift, Tab — invokes the listener. The filter then rejects it,
+    encodeFromEnter() never runs, and the browser has already removed the
+    listener. Later Enter does nothing.
+  - click->key-encoder#encodeFromButton:once is a different event, so it
+    still encodes after the keydown listener is gone.
+  - A second action, keydown@document->key-encoder#noteKey, has no :once
+    and keeps logging, which is how the desk can see that the filtered
+    listener was spent by a non-Enter key.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Hotel key encoder · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .desk-form { display: grid; gap: 0.6rem; max-width: 28rem; }
+      .desk-form label { display: grid; gap: 0.15rem; font-weight: 600; font-size: 0.9rem; }
+      .desk-form input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .desk-actions { display: flex; gap: 0.6rem; align-items: center; }
+      .key-log { font-size: 0.85rem; min-height: 4rem; }
+      .desk-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .encoded-pass { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.7rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import KeyEncoderController from "./key_encoder_controller.js"
+
+      const application = Application.start()
+      application.register("key-encoder", KeyEncoderController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>09 · Hotel key encoder</span>
+      </nav>
+      <h1>Hotel key encoder</h1>
+      <p class="lede">
+        The Marlowe Inn's front desk. Enter is supposed to encode a card
+        once. Because <code>:once</code> is a native <code>keydown</code>
+        option, the first letter of the guest's name spends that listener
+        before Enter ever arrives.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="key-encoder"
+               data-action="keydown@document->key-encoder#noteKey keydown.enter@document->key-encoder#encodeFromEnter:once:prevent">
+        <h2>The Marlowe Inn · Front desk</h2>
+        <div class="desk-form">
+          <label>
+            Guest
+            <input type="text" name="guest" value="Jonah Ellison" autocomplete="off" data-key-encoder-target="guestName">
+          </label>
+          <label>
+            Room
+            <input type="text" name="room" value="412" autocomplete="off" data-key-encoder-target="room">
+          </label>
+          <div class="desk-actions">
+            <button type="button" data-action="click->key-encoder#encodeFromButton:once">Encode</button>
+            <span class="muted">Stay 12–15 October 2026</span>
+          </div>
+        </div>
+
+        <p class="desk-status" data-key-encoder-target="status" aria-live="polite"></p>
+        <p class="encoded-pass" data-key-encoder-target="encodedPass" hidden></p>
+        <h3>Key log</h3>
+        <ol class="key-log" data-key-encoder-target="keyLog"></ol>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="key_encoder_controller.js"><code>key_encoder_controller.js</code></a> — encodes from Enter or the button, and logs every keydown</li>
+          <li>This page's source — <code>:once</code> on a filtered <code>keydown</code> versus <code>:once</code> on click</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

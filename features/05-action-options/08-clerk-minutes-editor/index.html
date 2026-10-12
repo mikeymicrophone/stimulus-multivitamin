@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Action options · 08 · Clerk minutes editor
+
+  Teaches:
+  - Keyboard filters and action options compose. Save is
+    keydown.ctrl+s@window->minutes-editor#saveDraft:prevent and the same
+    with meta+s. :prevent cancels the browser Save dialog; saveDraft()
+    never calls preventDefault().
+  - The same pattern closes Find:
+    keydown.esc@document->minutes-editor#closeFind:prevent, and finds a
+    word with keydown.enter->minutes-editor#findPassage:prevent on the
+    find field so Enter does not submit the wrapping form.
+  - Stimulus runs the key filter before action options. A key that fails
+    the filter never reaches :prevent. Shift+Enter in Find is not
+    keydown.enter, so :prevent does not run and the browser may still
+    treat the chord as its own.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Clerk minutes editor · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .minutes-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0 0 0.8rem; }
+      .minutes-body { width: 100%; min-height: 12rem; box-sizing: border-box; padding: 0.6rem 0.7rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; font: inherit; }
+      .find-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.7rem 0; padding: 0.5rem 0.7rem; border: 1px solid var(--rule, #ddd); border-radius: 8px; background: #fffdf8; }
+      .find-bar input { width: 12rem; }
+      .minutes-status, .saved-at { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MinutesEditorController from "./minutes_editor_controller.js"
+
+      const application = Application.start()
+      application.register("minutes-editor", MinutesEditorController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>08 · Clerk minutes editor</span>
+      </nav>
+      <h1>Clerk minutes editor</h1>
+      <p class="lede">
+        Millbrook City Clerk's draft for the 12 October council meeting.
+        Save, Find, and Escape are keyboard filters with
+        <code>:prevent</code> on <code>@window</code> and
+        <code>@document</code>. The methods never call
+        <code>preventDefault()</code> themselves.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="minutes-editor" action="filed/" method="get"
+            data-action="keydown.ctrl+s@window->minutes-editor#saveDraft:prevent keydown.meta+s@window->minutes-editor#saveDraft:prevent keydown.esc@document->minutes-editor#closeFind:prevent">
+        <h2>Millbrook City Council · 12 October 2026</h2>
+        <div class="minutes-toolbar">
+          <button type="button" data-action="minutes-editor#saveDraft">Save draft</button>
+          <button type="button" class="quiet" data-action="minutes-editor#openFind">Find in minutes</button>
+          <span class="saved-at" data-minutes-editor-target="savedAt">Not saved this session</span>
+        </div>
+
+        <label for="minutes-body" class="visually-hidden">Minutes body</label>
+        <textarea id="minutes-body" class="minutes-body" name="minutes" data-minutes-editor-target="body">Call to order at 19:04. Mayor Yolanda Ibarra presiding. Roll: Councilors DeWitt, Habib, and Shore present; Councilor Penn excused.
+
+Public comment. Linwood Cates asked that the Damariscotta eel weir be added to the heritage register. Referred to the historic commission.
+
+New business. Ordinance 2026-18, Harbor Street mill overlay, first reading. Councilor Habib moved, Councilor Shore seconded. Motion carried 3–0.
+
+Adjourned 20:11.</textarea>
+
+        <div class="find-bar" data-minutes-editor-target="findBar" hidden>
+          <label for="find-field">Find</label>
+          <input id="find-field" type="text" name="find" value="Harbor Street" autocomplete="off"
+                 data-minutes-editor-target="findField"
+                 data-action="keydown.enter->minutes-editor#findPassage:prevent">
+          <span data-minutes-editor-target="matchCount"></span>
+        </div>
+
+        <p class="minutes-status" data-minutes-editor-target="status" aria-live="polite"></p>
+        <p class="muted">Ctrl+S or ⌘S saves · Enter in Find looks up a word · Escape closes Find</p>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="minutes_editor_controller.js"><code>minutes_editor_controller.js</code></a> — saves, finds, and closes without calling <code>preventDefault()</code></li>
+          <li>This page's source — keyboard filters with <code>:prevent</code> on <code>@window</code> and <code>@document</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  Action options · 03 · County archives viewer
+
+  Teaches:
+  - :self only invokes the method when event.target is the element that
+    declared the action. The overlay uses click->archives-viewer#dismiss:self
+    so a click on the dimmed backdrop closes the viewer, and a click on the
+    scan, the caption, or Close does not go through that action.
+  - :self compares the declaring element to event.target, not to
+    event.currentTarget. currentTarget is already the overlay for any click
+    inside it; that comparison would never filter children.
+  - :!self is a no-op. The built-in self filter returns true when value is
+    false, so it does not mean "only children".
+  - Close omits :self, so a child control can still dismiss the viewer.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>County archives viewer · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .shelf { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: start; }
+      .shelf button { margin-top: 0.4rem; }
+      .viewer-overlay { position: fixed; inset: 0; background: rgba(20, 24, 28, 0.55); z-index: 20; display: grid; place-items: center; padding: 1.5rem; }
+      .viewer-frame { background: #fffdf8; border-radius: 12px; padding: 1rem 1.2rem; max-width: 28rem; display: grid; gap: 0.6rem; }
+      .ordinance-scan { margin: 0; border: 1px solid var(--rule, #ddd); border-radius: 8px; min-height: 10rem; background: linear-gradient(#f3ecdd, #e4dccb); display: grid; place-items: center; cursor: default; }
+      .ordinance-scan figcaption { padding: 0.5rem; font-size: 0.9rem; }
+      .viewer-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ArchivesViewerController from "./archives_viewer_controller.js"
+
+      const application = Application.start()
+      application.register("archives-viewer", ArchivesViewerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>03 · County archives viewer</span>
+      </nav>
+      <h1>County archives viewer</h1>
+      <p class="lede">
+        Westridge County Archives. The overlay closes from
+        <code>click-&gt;archives-viewer#dismiss:self</code>, so only a
+        click on the dimmed backdrop itself dismisses. The scan and
+        caption are children and stay put.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="archives-viewer">
+        <h2>Westridge County Archives · Harbor Street files</h2>
+        <div class="shelf">
+          <div>
+            <p><strong>Ordinance 1974-12</strong></p>
+            <p class="muted">Harbor Street paving, adopted 12 November 1974. Clerk's scan, 3 pages.</p>
+            <button type="button" data-action="archives-viewer#openViewer">Open the scan</button>
+          </div>
+        </div>
+
+        <div class="viewer-overlay" data-archives-viewer-target="overlay" data-action="click->archives-viewer#dismiss:self" hidden>
+          <div class="viewer-frame">
+            <figure class="ordinance-scan" data-child-label="the ordinance scan" data-action="click->archives-viewer#noteChildClick">
+              <figcaption>Ordinance 1974-12 · Harbor Street from Front to Elm, bituminous concrete, 22 feet wide.</figcaption>
+            </figure>
+            <p class="muted" data-child-label="the caption" data-action="click->archives-viewer#noteChildClick">Gift of the Westridge Historical Society, box 14, folder 3.</p>
+            <button type="button" class="quiet" data-action="archives-viewer#dismiss">Close</button>
+          </div>
+        </div>
+
+        <p class="viewer-status" data-archives-viewer-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="archives_viewer_controller.js"><code>archives_viewer_controller.js</code></a> — opens the overlay and dismisses only for <code>:self</code> clicks</li>
+          <li>This page's source — overlay with <code>:self</code>, children that log a skipped dismiss</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
