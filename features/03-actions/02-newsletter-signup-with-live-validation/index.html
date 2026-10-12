@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  Actions · 02 · Newsletter signup with live validation
+
+  Teaches:
+  - One element can list several actions. The email field has two for
+    input and one for blur, and they run in the order they are written:
+    normalizeEmail cleans the address, then validateEmail checks it.
+  - Order is how one action guards another. The form lists validateSignup
+    before subscribe for submit. When the form is invalid, validateSignup
+    calls event.stopImmediatePropagation() and subscribe never runs.
+    event.stopPropagation() would not stop it, because both actions are on
+    the same element.
+  - Events that bubble can be handled on a container. The topics fieldset
+    has no default event, so it names change explicitly and hears every
+    checkbox inside it.
+  - Code that sets .value must dispatch the event itself. "Did you mean…"
+    fills in the corrected address and dispatches input, so both email
+    actions run in order.
+  - novalidate keeps the browser's own validation from swallowing the
+    submit event before any action sees it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Newsletter signup with live validation · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .signup-form { max-width: 34rem; }
+      .signup-form label { font-weight: 600; }
+      .signup-form input[type="email"] { width: 100%; box-sizing: border-box; padding: 0.4rem 0.55rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .signup-form input[aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 2px #f6d5d2; }
+      .field-error { color: #b3261e; min-height: 1.3em; margin: 0.25rem 0 0.6rem; font-size: 0.9rem; }
+      .email-suggestion { margin: 0.2rem 0 0; font-size: 0.9rem; }
+      .email-suggestion button { padding: 0.1rem 0.6rem; }
+      .signup-form fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.5rem 0.9rem; margin: 0.6rem 0 0; }
+      .signup-form legend { font-weight: 700; padding: 0 0.3rem; color: var(--bottle-green, #1f3d2b); }
+      .topic-choice { display: block; font-weight: 400; margin: 0.25rem 0; }
+      .topic-choice small { color: var(--muted-ink, #555); display: block; margin-left: 1.6rem; }
+      .signup-status { min-height: 1.4em; font-weight: 600; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import NewsletterSignupController from "./newsletter_signup_controller.js"
+
+      const application = Application.start()
+      application.register("newsletter-signup", NewsletterSignupController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>02 · Newsletter signup with live validation</span>
+      </nav>
+      <h1>Newsletter signup with live validation</h1>
+      <p class="lede">
+        The signup form for a food magazine's newsletters. The email field
+        carries three actions for two events, and the form carries two
+        actions for <code>submit</code>, where the first one decides whether
+        the second runs.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>The Saturday Larder · Newsletters</h2>
+        <form class="signup-form" novalidate data-controller="newsletter-signup"
+              data-action="submit->newsletter-signup#validateSignup submit->newsletter-signup#subscribe">
+          <label for="signup-email">Email address</label>
+          <input id="signup-email" name="email" type="email" autocomplete="email" aria-describedby="signup-email-error"
+                 data-newsletter-signup-target="email"
+                 data-action="input->newsletter-signup#normalizeEmail input->newsletter-signup#validateEmail blur->newsletter-signup#revealEmailError">
+          <p class="email-suggestion" data-newsletter-signup-target="suggestion" hidden>
+            Did you mean <strong data-newsletter-signup-target="suggestedEmail"></strong>?
+            <button type="button" class="quiet" data-action="newsletter-signup#acceptSuggestion">Use this address</button>
+          </p>
+          <p class="field-error" id="signup-email-error" data-newsletter-signup-target="emailError" aria-live="polite"></p>
+
+          <fieldset data-newsletter-signup-target="topics" data-action="change->newsletter-signup#validateTopics">
+            <legend>Which newsletters?</legend>
+            <label class="topic-choice"><input type="checkbox" name="topics" value="weeknight" checked> The Weeknight Table
+              <small>Five dinners in 30 minutes or less, every Sunday.</small></label>
+            <label class="topic-choice"><input type="checkbox" name="topics" value="bread"> Proof &amp; Crumb
+              <small>A monthly bread project with a printable schedule.</small></label>
+            <label class="topic-choice"><input type="checkbox" name="topics" value="preserving"> Put Up
+              <small>Pickles, jams, and ferments as each harvest comes in.</small></label>
+            <p class="field-error" data-newsletter-signup-target="topicsError" aria-live="polite"></p>
+          </fieldset>
+
+          <p><button type="submit" data-newsletter-signup-target="submitButton">Subscribe</button></p>
+          <p class="signup-status" data-newsletter-signup-target="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="newsletter_signup_controller.js"><code>newsletter_signup_controller.js</code></a> — normalizes, validates, suggests corrections, and subscribes</li>
+          <li>This page's source — the ordered <code>data-action</code> lists, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
