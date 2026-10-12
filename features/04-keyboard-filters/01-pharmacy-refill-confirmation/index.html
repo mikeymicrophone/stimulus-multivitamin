@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  Keyboard filters · 01 · Pharmacy refill confirmation
+
+  Teaches:
+  - keydown.esc@document->refill-dialog#dismiss runs for Escape no matter
+    which element has focus. Stimulus adds the listener on document when
+    the dialog controller connects and removes it when it disconnects.
+  - A local keydown.esc on the dialog element would miss Escape while
+    focus is in the NDC lookup, a sibling the dialog does not contain.
+    Keydown goes to the focused element and bubbles through ancestors,
+    never sideways.
+  - The @document action also runs while the dialog is closed, so dismiss()
+    returns immediately unless the dialog is open.
+  - The filter name is esc, matching event.key "Escape". There is no
+    built-in "escape" filter.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pharmacy refill confirmation · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .desk-grid { display: grid; grid-template-columns: minmax(0, 1fr) 14rem; gap: 1rem; align-items: start; }
+      .prescription-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; }
+      .prescription-card dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.2rem 0.8rem; margin: 0 0 0.8rem; }
+      .prescription-card dt { color: var(--muted-ink, #555); font-size: 0.85rem; }
+      .prescription-card dd { margin: 0; }
+      .ndc-lookup label { display: grid; gap: 0.2rem; font-size: 0.9rem; font-weight: 600; }
+      .ndc-lookup input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .confirm-overlay { position: fixed; inset: 0; background: rgba(18, 22, 26, 0.45); display: grid; place-items: center; z-index: 8; }
+      .confirm-panel { background: #fff; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 12px; padding: 1.1rem 1.3rem; max-width: 26rem; display: grid; gap: 0.7rem; }
+      .confirm-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+      .desk-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RefillDeskController from "./refill_desk_controller.js"
+      import RefillDialogController from "./refill_dialog_controller.js"
+
+      const application = Application.start()
+      application.register("refill-desk", RefillDeskController)
+      application.register("refill-dialog", RefillDialogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>01 · Pharmacy refill confirmation</span>
+      </nav>
+      <h1>Pharmacy refill confirmation</h1>
+      <p class="lede">
+        Harborview Pharmacy's refill bench. Confirming a fill opens a
+        dialog that closes from <code>keydown.esc@document</code>, even
+        while the technician is typing in the NDC lookup beside it.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="refill-desk">
+        <h2>Harborview Pharmacy · Refill bench</h2>
+        <div class="desk-grid">
+          <div data-controller="refill-dialog" data-action="keydown.esc@document->refill-dialog#dismiss">
+            <article class="prescription-card">
+              <h3>Rx 482917</h3>
+              <dl>
+                <dt>Patient</dt><dd>Marisol Keene</dd>
+                <dt>Medication</dt><dd>Lisinopril 10 mg tablets</dd>
+                <dt>Quantity</dt><dd>90 · 90-day supply</dd>
+                <dt>Prescriber</dt><dd>Dr. Anjali Rao</dd>
+                <dt>Bin</dt><dd>4 · Will-call</dd>
+              </dl>
+              <button type="button" data-action="refill-dialog#open">Prepare refill</button>
+            </article>
+
+            <div class="confirm-overlay" data-refill-dialog-target="panel" hidden>
+              <div class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="refill-heading">
+                <h3 id="refill-heading" data-refill-dialog-target="heading">Rx 482917 · Lisinopril 10 mg</h3>
+                <p>Count 90 tablets of lisinopril 10 mg for Marisol Keene and place them in will-call bin 4. This cannot be undone from the bench.</p>
+                <div class="confirm-actions">
+                  <button type="button" class="quiet" data-action="refill-dialog#dismiss">Keep in queue</button>
+                  <button type="button" data-refill-dialog-target="confirmButton" data-action="refill-dialog#confirm">Confirm fill</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ndc-lookup">
+            <label>
+              NDC lookup
+              <input type="text" name="ndc" value="68180-0513-09" aria-describedby="ndc-hint" autocomplete="off">
+            </label>
+            <p id="ndc-hint" class="muted">Sits outside the dialog controller. Focus it while the dialog is open, then press Escape.</p>
+          </div>
+        </div>
+
+        <p class="desk-status" data-refill-desk-target="status" aria-live="polite">Waiting to prepare Rx 482917.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="refill_dialog_controller.js"><code>refill_dialog_controller.js</code></a> — opens, confirms, and dismisses from <code>keydown.esc@document</code></li>
+          <li><a href="refill_desk_controller.js"><code>refill_desk_controller.js</code></a> — holds the bench status the dialog writes to</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
