@@ -34,18 +34,29 @@ properties.
 ### Action params turn all-digit strings into numbers
 
 **What happens.** `data-[identifier]-[name]-param` values go through
-`JSON.parse`. A string of digits becomes a number, so a UPC like
-`084271003318` arrives in `event.params` as `84271003318`.
+`JSON.parse`. A string of digits with no leading zero becomes a number,
+so `"482917"` arrives as `482917` and is not `===` to the printed tag
+`"482917"`. A leading zero is illegal in JSON, so `"01482"` and a UPC
+like `"084271003318"` stay strings — `Number("084271003318")` would have
+dropped the zero, and Stimulus params do not. A digit string past
+`Number.MAX_SAFE_INTEGER` (`9007199254740993`) becomes a number and is
+rounded. Wrapping the attribute in JSON quotes (`'"482917"'`) forces a
+string.
 
-**Why it matters.** Leading zeros disappear. Codes, zip codes, and
-international phone numbers that are "numbers that look like strings" get
-corrupted before the action runs.
+**Why it matters.** The failure is inconsistent. A coat-check tag or a
+member id that is only digits will not compare equal to the printed
+string. A zip or a lot code that happens to start with zero survives,
+which makes the bug look random. Long tokens lose a digit either way
+once they parse as numbers.
 
-**What to do.** Keep those codes in `value=""` on the button, or in a
-`data-*` attribute you read yourself. Don't put an all-digit identifier
-in an action param.
+**What to do.** Keep codes you must match character for character in a
+String value, in `value=""`, or in a `data-*` attribute you read
+yourself. To force a param to stay a string, wrap it in JSON quotes.
+Don't put a bare all-digit identifier in an action param.
 
-**Seen in:** [Warehouse pick list](features/01-controllers/12-warehouse-pick-list/).
+**Seen in:** [Warehouse pick list](features/01-controllers/12-warehouse-pick-list/)
+(the scanner buttons keep every UPC in `value=""`),
+[Concert hall coat check](features/06-action-parameters/04-concert-hall-coat-check/).
 
 ## Lifecycle callbacks
 
@@ -771,6 +782,112 @@ in `:capture`. Put "this button owns the click" on the button with
 [Community radio request](features/05-action-options/10-community-radio-request/)
 (`:stop` hides `@document` / `@window` bubble, not `@window:capture`).
 
+## Action parameters
+
+### Params are read from the action's element when the action runs
+
+**What happens.** `event.params` is built from
+`data-[identifier]-[name]-param` attributes on the element that declares
+the action. A click whose `event.target` is a child `<span>` still sees
+the button's params. An action on a parent does not see param attributes
+on the child that was clicked. An `@document` or `@window` action reads
+the element that wrote the descriptor, not the focused field. The
+attributes are read at the call, not when the action was bound, so
+changing one updates the next event. An element inserted in the same
+turn has no action yet; see
+[Actions on a brand-new element are not bound in the same turn](#actions-on-a-brand-new-element-are-not-bound-in-the-same-turn).
+
+**Why it matters.** A room that listens for clicks will not pick up
+accessions written on the paintings. A keyboard shortcut on the page
+shell will not pick up a param written on the field that has focus.
+Doubling a servings attribute, though, is visible on the next click
+without reconnecting.
+
+**What to do.** Put the action and its params on the same element. Read
+`event.target` yourself when the click target is the data you need and
+the action lives on an ancestor. Change param attributes freely; don't
+cache them in `connect()`.
+
+**Seen in:** [Museum gallery labels](features/06-action-parameters/08-museum-gallery-labels/),
+[Neighborhood potluck board](features/06-action-parameters/06-neighborhood-potluck-board/),
+[Lighthouse watch log](features/06-action-parameters/11-lighthouse-watch-log/),
+[Field recording chapters](features/06-action-parameters/07-field-recording-chapters/).
+
+### Each action gets a fresh `event.params`, and the next action replaces it
+
+**What happens.** Stimulus assigns `event.params` on the shared event
+object just before each action method. The object is built again from
+the attributes, so a property the first method adds is not visible to
+the second method on the same element. A later action — including an
+ancestor that runs after this method hits `await` — replaces the
+property. A reference saved before the `await` still points at the
+original object. `:stop` keeps ancestors from running, so nothing
+replaces it.
+
+**Why it matters.** `const seat = event.params` before the first
+`await` is stable. `event.params.sectionName` after the `await` may be
+missing, or may be the ancestor's house note.
+
+**What to do.** Copy the fields you need before the first `await`. Don't
+assume the event's `params` property is still yours after you yield.
+
+**Seen in:** [Campus mail tray](features/06-action-parameters/05-campus-mail-tray/),
+[Repertory seat holds](features/06-action-parameters/12-repertory-seat-holds/).
+
+### Params are `JSON.parse`; values and `dataset` are not
+
+**What happens.** A param is cast with `JSON.parse`. `"2"` and `"1.5"`
+become numbers, `"true"` and `"false"` become booleans, `"null"` becomes
+`null`, and a JSON array or object becomes that value. Anything that is
+not valid JSON, including `"Caraway rye"`, `"FALSE"`, and `"1_000"`,
+stays the original string. `"2e1"` is valid JSON and becomes `20`. Keys
+inside a JSON object are not camelized. A String value is never parsed.
+A Number value uses `Number()`, so `"08"` becomes `8` and `"1_000"`
+becomes `1000`. A Boolean value treats `"FALSE"` as false. `dataset`
+keeps the raw string under a key that includes the identifier and the
+`Param` suffix (`greenhouseBedLitersParam`), not the param name
+(`liters`).
+
+**Why it matters.** The same characters mean different things depending
+on which channel you read. A spreadsheet's `"FALSE"` is a string in a
+param and `false` in a Boolean value. A liters param is a number on
+`event.params.liters` and the string `"1.5"` on `dataset`.
+
+**What to do.** Read `event.params` for action arguments. Use a value
+when the controller needs the data without an event and a declared type.
+Use `dataset` only when you want the raw attribute string. For all-digit
+strings and leading zeros, see
+[Action params turn all-digit strings into numbers](#action-params-turn-all-digit-strings-into-numbers).
+
+**Seen in:** [Bakery preorder window](features/06-action-parameters/02-bakery-preorder-window/),
+[Trail kitchen batch card](features/06-action-parameters/03-trail-kitchen-batch-card/),
+[Greenhouse watering round](features/06-action-parameters/09-greenhouse-watering-round/).
+
+**Why this section.** `dataset` returning strings is the DOM. It's here
+because the surprise is reading it instead of `event.params`.
+
+### A shorter identifier matches a longer identifier's param attributes
+
+**What happens.** The pattern is `^data-${identifier}-(.+)-param$`. For
+`bin-ticket` that also matches
+`data-bin-ticket-printer-copies-param`, and the captured name
+`printer-copies` camelizes to `printerCopies`.
+`data-bin-ticket-printer-tray-name-param` becomes `printerTrayName`.
+The controller `bin-ticket-printer` sees those same attributes as
+`copies` and `trayName`. `data-bin-ticket-shed-name-param` matches only
+`bin-ticket`.
+
+**Why it matters.** Two controllers on one element, where one identifier
+extends the other with a hyphen, leak params into the shorter one under
+a different name.
+
+**What to do.** Don't let one identifier be a hyphen-prefix of another
+(`bin-ticket` / `bin-ticket-printer`). Use names that don't nest
+(`dispatch-slip` / `courier-radio`).
+
+**Seen in:** [Orchard bin tickets](features/06-action-parameters/13-orchard-bin-tickets/),
+[Courier dispatch slip](features/06-action-parameters/10-courier-dispatch-slip/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
@@ -1115,6 +1232,28 @@ should freeze the scroll and does not.
 **Why this section.** Ignoring `preventDefault()` is the Event Listener
 options spec; it shows up here because Stimulus exposes those flags as
 `:passive` / `:prevent`.
+
+### HTML lowercases param attribute names
+
+**What happens.** In an HTML document, attribute names are converted to
+ASCII lowercase. `data-hold-shelf-patronName-param` is stored as
+`data-hold-shelf-patronname-param`. Stimulus camelizes only on `-` and
+`_`, so the key is `patronname`, not `patronName`.
+`setAttribute("data-hold-shelf-patronName-param", ...)` is lowercased
+the same way.
+
+**Why it matters.** `event.params.patronName` is `undefined`. The value
+is sitting on `patronname`.
+
+**What to do.** Write multi-word param names in kebab-case:
+`data-hold-shelf-patron-name-param`. Underscores camelize too
+(`patron_name` becomes `patronName`), but hyphens match the rest of the
+`data-*` attributes in this catalog.
+
+**Seen in:** [Library hold shelf](features/06-action-parameters/01-library-hold-shelf/).
+
+**Why this section.** Lowercasing is the HTML parser. Stimulus's
+camelize is what fails to put the capital letter back.
 
 ### An already-aborted `AbortSignal` silently adds nothing
 

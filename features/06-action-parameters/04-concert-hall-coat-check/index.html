@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  Action parameters · 04 · Concert hall coat check
+
+  Teaches:
+  - A bare digit string is valid JSON, so "482917" arrives as the number
+    482917 and fails a comparison with the printed tag.
+  - A leading zero is not valid JSON. "01482" stays the string "01482"
+    and matches. See DISCOVERIES.md, "Action params turn all-digit
+    strings into numbers."
+  - Wrapping the value in JSON quotes ("482917" with quote characters
+    in the attribute) forces the string and the tag matches.
+  - "9007199254740993" parses as a number and is rounded to
+    9007199254740992.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Concert hall coat check · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+      .claim-result { display: block; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fff; max-width: 40rem; }
+      .tag-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+      .tag-table th, .tag-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--rule, #ddd); }
+      .tag-table code { font-size: 0.85rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CoatCheckController from "./coat_check_controller.js"
+
+      const application = Application.start()
+      application.register("coat-check", CoatCheckController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>04 · Concert hall coat check</span>
+      </nav>
+      <h1>Concert hall coat check</h1>
+      <p class="lede">
+        Riverhouse Hall's coat check. The printed tag is a string of digits.
+        Claiming it through an action param runs that text through
+        <code>JSON.parse</code>, which keeps a leading zero and drops the
+        match for a bare number.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="coat-check">
+        <h2>Riverhouse Hall · Will-call rail</h2>
+        <table class="tag-table">
+          <thead>
+            <tr><th scope="col">Printed tag</th><th scope="col">Coat</th><th scope="col">Param text</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>01482</td><td>Marisol Keene, navy wool</td><td><code>01482</code></td></tr>
+            <tr><td>482917</td><td>Helen Cho, camel coat</td><td><code>482917</code></td></tr>
+            <tr><td>482917</td><td>Owen Hart, black overcoat, quotes forced</td><td><code>"482917"</code></td></tr>
+            <tr><td>9007199254740993</td><td>Insurance token for the touring harp</td><td><code>9007199254740993</code></td></tr>
+          </tbody>
+        </table>
+        <div class="tag-row">
+          <button type="button" data-action="coat-check#claim"
+                  data-printed-tag="01482"
+                  data-coat-check-ticket-code-param="01482">
+            Claim tag 01482
+          </button>
+          <button type="button" data-action="coat-check#claim"
+                  data-printed-tag="482917"
+                  data-coat-check-ticket-code-param="482917">
+            Claim tag 482917
+          </button>
+          <button type="button" data-action="coat-check#claim"
+                  data-printed-tag="482917"
+                  data-coat-check-ticket-code-param='"482917"'>
+            Claim quoted tag 482917
+          </button>
+          <button type="button" data-action="coat-check#claim"
+                  data-printed-tag="9007199254740993"
+                  data-coat-check-ticket-code-param="9007199254740993">
+            Claim harp token
+          </button>
+        </div>
+        <p data-coat-check-target="empty">No tag claimed yet.</p>
+        <p class="claim-result" data-coat-check-target="result" hidden aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="coat_check_controller.js"><code>coat_check_controller.js</code></a> — compares the cast param with the printed tag</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

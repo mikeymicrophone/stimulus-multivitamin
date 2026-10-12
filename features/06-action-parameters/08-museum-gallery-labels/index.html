@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Action parameters · 08 · Museum gallery labels
+
+  Teaches:
+  - Params are read from the element that declares the action. Clicking
+    the span inside a plaque button leaves event.target as the span, and
+    event.params still carries the button's accessionNumber and wingName.
+  - Putting the action on the room and the params on the painting does
+    not work. The room action's element has no param attributes, so
+    accessionNumber is missing even though the painting that was clicked
+    has them.
+  - A div has no default event, so the room names click-> explicitly.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Museum gallery labels · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .wing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .wing { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.7rem; align-content: start; }
+      .wing h3 { margin: 0; font-size: 1.05rem; }
+      .plaque, .painting { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.6rem 0.7rem; background: #fff; display: grid; gap: 0.15rem; text-align: left; }
+      .painting { cursor: pointer; }
+      .plaque span, .painting span { font-weight: 700; }
+      .wing-status { min-height: 3.2em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GalleryWallController from "./gallery_wall_controller.js"
+
+      const application = Application.start()
+      application.register("gallery-wall", GalleryWallController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>08 · Museum gallery labels</span>
+      </nav>
+      <h1>Museum gallery labels</h1>
+      <p class="lede">
+        Two walls at the Lantern Museum. Plaque buttons carry their own
+        params, so a click on the title span still knows the accession.
+        The other wall listens on the room and never sees the painting's
+        params.
+      </p>
+    </header>
+
+    <main>
+      <div class="wing-grid">
+        <section class="scenario wing" data-controller="gallery-wall">
+          <h2>Plaques carry the action</h2>
+          <button type="button" class="plaque" data-action="gallery-wall#choosePlaque"
+                  data-gallery-wall-accession-number-param="E-1942-18"
+                  data-gallery-wall-wing-name-param="East wing">
+            <span>Harbor at Dusk</span>
+            <small>M. Ellison</small>
+          </button>
+          <p class="wing-status" data-gallery-wall-target="status" aria-live="polite">No plaque chosen yet.</p>
+        </section>
+
+        <section class="scenario wing" data-controller="gallery-wall">
+          <h2>The room listens</h2>
+          <div data-action="click->gallery-wall#chooseFromRoom">
+            <div class="painting" data-gallery-wall-accession-number-param="W-1888-4" data-gallery-wall-wing-name-param="West wing">
+              <span>Winter Orchard</span>
+              <small>A. Pell</small>
+            </div>
+          </div>
+          <p class="wing-status" data-gallery-wall-target="status" aria-live="polite">No painting chosen yet.</p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="gallery_wall_controller.js"><code>gallery_wall_controller.js</code></a> — reads params from the action element</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

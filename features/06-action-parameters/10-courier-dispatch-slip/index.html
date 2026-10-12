@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Action parameters · 10 · Courier dispatch slip
+
+  Teaches:
+  - Two controllers on one element only see their own params.
+    data-dispatch-slip-route-code-param is invisible to courier-radio.
+    data-courier-radio-channel-name-param is invisible to dispatch-slip.
+  - The identifiers dispatch-slip and courier-radio do not nest, so the
+    shorter pattern cannot swallow the longer one's attributes.
+  - Both actions sit on the same button and run in data-action order.
+    Each receives a params object built for its identifier.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Courier dispatch slip · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .slip { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; max-width: 36rem; }
+      .slip h3 { margin: 0; font-size: 1.05rem; }
+      .slip dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.15rem 0.7rem; margin: 0; }
+      .slip dt { color: var(--muted-ink, #555); }
+      .slip dd { margin: 0; }
+      .log-line { min-height: 1.4em; margin: 0.3rem 0 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DispatchSlipController from "./dispatch_slip_controller.js"
+      import CourierRadioController from "./courier_radio_controller.js"
+
+      const application = Application.start()
+      application.register("dispatch-slip", DispatchSlipController)
+      application.register("courier-radio", CourierRadioController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>10 · Courier dispatch slip</span>
+      </nav>
+      <h1>Courier dispatch slip</h1>
+      <p class="lede">
+        North Dock couriers. One card is both a dispatch slip and a radio
+        call. Sending it runs both actions, and each one sees only the
+        params that carry its own identifier.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>North Dock · Run 18</h2>
+        <article class="slip" data-controller="dispatch-slip courier-radio">
+          <h3>Four stops, north route</h3>
+          <dl>
+            <dt>Route</dt><dd>NORTH</dd>
+            <dt>Stops</dt><dd>4</dd>
+            <dt>Radio</dt><dd>North dock, priority</dd>
+          </dl>
+          <button type="button"
+                  data-action="dispatch-slip#send courier-radio#announce"
+                  data-dispatch-slip-route-code-param="NORTH"
+                  data-dispatch-slip-stop-count-param="4"
+                  data-courier-radio-channel-name-param="North dock"
+                  data-courier-radio-priority-param="true">
+            Send the slip
+          </button>
+          <p class="log-line" data-dispatch-slip-target="slipLog" aria-live="polite">The slip has not been sent.</p>
+          <p class="log-line" data-courier-radio-target="radioLog" aria-live="polite">The radio has not been called.</p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dispatch_slip_controller.js"><code>dispatch_slip_controller.js</code></a> — reads the route and the stop count</li>
+          <li><a href="courier_radio_controller.js"><code>courier_radio_controller.js</code></a> — reads the channel and the priority</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

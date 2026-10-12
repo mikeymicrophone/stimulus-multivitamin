@@ -1,0 +1,151 @@
+<!doctype html>
+<!--
+  Action parameters · 13 · Orchard bin tickets
+
+  Teaches:
+  - bin-ticket and bin-ticket-printer share the shed. The shorter
+    pattern also matches data-bin-ticket-printer-copies-param, so
+    readSlip sees printerCopies and printerTrayName. printBatch, whose
+    identifier is bin-ticket-printer, sees copies and trayName, and
+    does not see shedName.
+  - keydown.ctrl+p@window and keydown.meta+p@window carry :prevent and
+    read the shed's printer params, not the focused control.
+  - A bin button's click->bin-ticket#select:stop reads that button's
+    params. The span inside the button is the target. A leading-zero
+    lot stays a string and matches the stamped label. A bare lot number
+    becomes a number and does not. Crew is a JSON array. Bushels is a
+    number. Organic is a boolean.
+  - Tagging a bin inserts a button with those params. The action works
+    on a later click.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Orchard bin tickets · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .shed { display: grid; gap: 0.9rem; }
+      .shed-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .bin-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+      .bin-list li { display: contents; }
+      .bin-list button { text-align: left; display: flex; justify-content: space-between; gap: 0.8rem; }
+      .receive-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.55rem; align-items: end; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem; background: #fffdf8; }
+      .receive-form label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .receive-form input[type="text"], .receive-form input[type="number"] { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fff; }
+      .check-line { display: flex; gap: 0.4rem; align-items: center; }
+      .slip, .batch, .bin-status { display: block; border-radius: 10px; padding: 0.7rem 0.9rem; background: #fff; }
+      .slip, .batch { border: 2px solid var(--bottle-green, #1f3d2b); }
+      .bin-status { border: 1px solid var(--rule, #ddd); min-height: 1.4em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BinTicketController from "./bin_ticket_controller.js"
+      import BinTicketPrinterController from "./bin_ticket_printer_controller.js"
+
+      const application = Application.start()
+      application.register("bin-ticket", BinTicketController)
+      application.register("bin-ticket-printer", BinTicketPrinterController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>13 · Orchard bin tickets</span>
+      </nav>
+      <h1>Orchard bin tickets</h1>
+      <p class="lede">
+        North packing at Red Barn Orchard. The shed slip and the printer
+        share an element, and one identifier is a hyphen-prefix of the
+        other. Bin tags carry the lot, the crew, and the bushels.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario shed" data-controller="bin-ticket bin-ticket-printer"
+               data-action="click->bin-ticket#readSlip keydown.ctrl+p@window->bin-ticket-printer#printBatch:prevent keydown.meta+p@window->bin-ticket-printer#printBatch:prevent"
+               data-bin-ticket-shed-name-param="North packing"
+               data-bin-ticket-printer-copies-param="2"
+               data-bin-ticket-printer-tray-name-param="East tray">
+        <h2>Red Barn Orchard · North packing</h2>
+        <div class="shed-actions">
+          <button type="button">Read the shed slip</button>
+        </div>
+        <p class="slip" data-bin-ticket-target="slip" hidden aria-live="polite"></p>
+        <p class="batch" data-bin-ticket-printer-target="batch" hidden aria-live="polite"></p>
+
+        <ul class="bin-list" data-bin-ticket-target="binList">
+          <li>
+            <button type="button" data-action="click->bin-ticket#select:stop"
+                    data-stamped-lot="01428"
+                    data-bin-ticket-variety-param="Honeycrisp"
+                    data-bin-ticket-bushels-param="18"
+                    data-bin-ticket-organic-param="true"
+                    data-bin-ticket-lot-code-param="01428"
+                    data-bin-ticket-crew-param='["Rosa Alvarez","Eli Brooks"]'>
+              <span class="variety">Honeycrisp</span>
+              <span class="lot">Lot 01428</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-action="click->bin-ticket#select:stop"
+                    data-stamped-lot="77021"
+                    data-bin-ticket-variety-param="Cortland"
+                    data-bin-ticket-bushels-param="14"
+                    data-bin-ticket-organic-param="false"
+                    data-bin-ticket-lot-code-param="77021"
+                    data-bin-ticket-crew-param='["Priya Raman"]'>
+              <span class="variety">Cortland</span>
+              <span class="lot">Lot 77021</span>
+            </button>
+          </li>
+        </ul>
+
+        <form class="receive-form">
+          <label>
+            Variety
+            <input type="text" name="variety" value="McIntosh" data-bin-ticket-target="variety" autocomplete="off">
+          </label>
+          <label>
+            Bushels
+            <input type="number" name="bushels" value="12" min="1" data-bin-ticket-target="bushels">
+          </label>
+          <label>
+            Lot code
+            <input type="text" name="lot" value="01455" data-bin-ticket-target="lotCode" autocomplete="off">
+          </label>
+          <label>
+            Crew, comma separated
+            <input type="text" name="crew" value="Nia Cole, Samir Shah" data-bin-ticket-target="crew" autocomplete="off">
+          </label>
+          <label class="check-line">
+            <input type="checkbox" name="organic" data-bin-ticket-target="organic" checked>
+            Organic
+          </label>
+          <button type="button" data-action="click->bin-ticket#receive:stop">Tag the bin</button>
+        </form>
+        <p class="bin-status" data-bin-ticket-target="status" aria-live="polite">No bin selected.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bin_ticket_controller.js"><code>bin_ticket_controller.js</code></a> — reads the shed slip and selects a bin</li>
+          <li><a href="bin_ticket_printer_controller.js"><code>bin_ticket_printer_controller.js</code></a> — prints a batch from the printer's own params</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

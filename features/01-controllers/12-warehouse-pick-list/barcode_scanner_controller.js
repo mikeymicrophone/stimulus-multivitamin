@@ -21,8 +21,9 @@ export default class extends Controller {
     this.deliverScan(barcode)
   }
 
-  // Simulator buttons keep codes in value="" because action params would
-  // typecast an all-digit UPC into a number and drop its leading zero.
+  // Simulator buttons keep codes in value="". Action params run the
+  // attribute through JSON.parse, so a UPC with no leading zero would
+  // arrive as a number. value="" always hands the scanner a string.
   simulateScan({ currentTarget }) {
     this.deliverScan(currentTarget.value)
     this.scanInputTarget.focus()

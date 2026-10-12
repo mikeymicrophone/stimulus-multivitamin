@@ -22,8 +22,9 @@ up empty.
 - Lines connect after the pick list, so the list filters out lines whose
   controllers aren't ready yet, and each line calls `lineChanged()` when it
   connects.
-- Action params typecast their values, so the simulator buttons keep UPCs in
-  `value=""`, where a code like `084271003318` keeps its leading zero.
+- Action params run values through `JSON.parse`, so a UPC with no leading
+  zero would become a number. The simulator buttons keep every code in
+  `value=""`, where `084271003318` stays a string of digits.
 
 **Files**
 

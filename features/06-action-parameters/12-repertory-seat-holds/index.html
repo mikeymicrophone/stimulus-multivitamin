@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Action parameters · 12 · Repertory seat holds
+
+  Teaches:
+  - Each action assigns event.params on the shared event object. hold()
+    reads the seat's params, then awaits. The row's click action runs
+    before that await resumes and replaces event.params with the row's
+    houseNote. A reference saved before the await still points at the
+    seat's object.
+  - click->seat-hold#hold:stop calls stopPropagation before hold() runs,
+    so the row action never replaces params.
+  - The seat label is a span inside the button. event.target is the span.
+    The seat params still come from the button, the element that declares
+    hold.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Repertory seat holds · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .house { display: grid; gap: 0.8rem; max-width: 42rem; }
+      .seat-row { display: flex; flex-wrap: wrap; gap: 0.6rem; border: 1px dashed var(--capsule-amber, #e8912d); border-radius: 10px; padding: 0.8rem; }
+      .seat-row button { min-width: 6rem; }
+      .seat-row button span { font-weight: 700; }
+      .hold-report { display: grid; gap: 0.35rem; }
+      .hold-report p { margin: 0; min-height: 1.4em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SeatHoldController from "./seat_hold_controller.js"
+
+      const application = Application.start()
+      application.register("seat-hold", SeatHoldController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>12 · Repertory seat holds</span>
+      </nav>
+      <h1>Repertory seat holds</h1>
+      <p class="lede">
+        The Lantern Repertory box office. Holding a balcony seat reads the
+        seat's params, then waits. The row's action replaces
+        <code>event.params</code> before that wait finishes. The orchestra
+        seat stops the click, so its params stay put.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario house" data-controller="seat-hold">
+        <h2>Lantern Repertory · Friday house</h2>
+        <div class="seat-row" data-action="click->seat-hold#noteRow" data-seat-hold-house-note-param="Balcony rail is loose">
+          <button type="button" data-action="seat-hold#hold"
+                  data-seat-hold-section-name-param="Balcony"
+                  data-seat-hold-row-letter-param="C"
+                  data-seat-hold-seat-number-param="12">
+            <span>Balcony C12</span>
+          </button>
+          <button type="button" data-action="click->seat-hold#hold:stop"
+                  data-seat-hold-section-name-param="Orchestra"
+                  data-seat-hold-row-letter-param="A"
+                  data-seat-hold-seat-number-param="4">
+            <span>Orchestra A4</span>
+          </button>
+        </div>
+        <div class="hold-report">
+          <p data-seat-hold-target="before" aria-live="polite">No seat held yet.</p>
+          <p data-seat-hold-target="after" aria-live="polite"></p>
+          <p data-seat-hold-target="rowNote">The row has not noted a click.</p>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="seat_hold_controller.js"><code>seat_hold_controller.js</code></a> — holds a seat, then reads <code>event.params</code> again after a wait</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
