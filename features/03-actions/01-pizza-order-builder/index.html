@@ -1,0 +1,177 @@
+<!doctype html>
+<!--
+  Actions · 01 · Pizza order builder
+
+  Teaches:
+  - A descriptor can leave out the event name. "pizza-order#chooseSize" on a
+    radio listens for input, on a <select> for change, on a <details> for
+    toggle, on a link or <button> for click, and on a <form> for submit.
+  - The default comes from the element, not from what the element does.
+    Checkboxes and radios default to input, which fires on every check or
+    uncheck, so the price updates without a change listener.
+  - <input type="button"> defaults to input, an event it never fires, so a
+    bare descriptor on it silently does nothing. "Repeat my last order"
+    names click explicitly. Only type="submit" maps to click.
+  - A <details> rendered with the open attribute fires its first toggle
+    before Stimulus is listening, so connect() reads .open itself.
+  - Setting .value or .checked from code fires no events, so "Repeat my
+    last order" renders directly instead of waiting for actions.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pizza order builder · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .order-layout { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1.5rem; align-items: start; }
+      @media (max-width: 46rem) { .order-layout { grid-template-columns: 1fr; } }
+      .order-layout fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; margin: 0 0 1rem; padding: 0.6rem 0.9rem 0.8rem; }
+      .order-layout legend { font-weight: 700; color: var(--bottle-green, #1f3d2b); padding: 0 0.3rem; }
+      .size-choices, .topping-choices { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; }
+      .topping-choices label:has(input:disabled) { color: var(--muted-ink, #555); }
+      .field-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.4rem; }
+      .order-layout textarea { width: 100%; box-sizing: border-box; min-height: 4rem; }
+      .order-layout details { border: 1px dashed var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.7rem; margin: 0 0 1rem; }
+      .order-layout summary { cursor: pointer; font-weight: 600; }
+      .order-ticket { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; position: sticky; top: 1rem; }
+      .order-ticket h3 { margin: 0 0 0.4rem; }
+      .order-ticket ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
+      .order-total { font-weight: 700; font-size: 1.1rem; margin: 0 0 0.6rem; font-variant-numeric: tabular-nums; }
+      .order-status { min-height: 1.4em; font-size: 0.9rem; color: var(--bottle-green, #1f3d2b); }
+      .order-confirmation { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.7rem; }
+      .allergen-guide { font-size: 0.9rem; }
+      .form-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PizzaOrderController from "./pizza_order_controller.js"
+
+      const application = Application.start()
+      application.register("pizza-order", PizzaOrderController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>01 · Pizza order builder</span>
+      </nav>
+      <h1>Pizza order builder</h1>
+      <p class="lede">
+        Online pickup ordering for a neighborhood pizzeria. One
+        <code>pizza-order</code> controller sits on the form, and every
+        control on it uses a descriptor with no event name, so each element
+        listens for its own default event.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="pizza-order" data-action="pizza-order#placeOrder"
+            data-pizza-order-topping-limit-value="5" data-pizza-order-topping-price-cents-value="175"
+            data-pizza-order-note-limit-value="140"
+            data-pizza-order-last-order-value='{"size":"large","crust":"thin","toppings":["soppressata","hot-honey","basil"],"quantity":2,"kitchenNote":"Well done, please. Cut in squares."}'>
+        <h2>Forno Rosa · Build your pie</h2>
+
+        <div class="order-layout">
+          <div>
+            <fieldset>
+              <legend>Size</legend>
+              <div class="size-choices">
+                <label><input type="radio" name="size" value="small" data-size-label="Small 10″" data-price-cents="1250" data-pizza-order-target="size" data-action="pizza-order#chooseSize"> Small 10″ · $12.50</label>
+                <label><input type="radio" name="size" value="medium" data-size-label="Medium 12″" data-price-cents="1500" data-pizza-order-target="size" data-action="pizza-order#chooseSize" checked> Medium 12″ · $15.00</label>
+                <label><input type="radio" name="size" value="large" data-size-label="Large 16″" data-price-cents="1900" data-pizza-order-target="size" data-action="pizza-order#chooseSize"> Large 16″ · $19.00</label>
+              </div>
+              <div class="field-row">
+                <label for="crust">Crust</label>
+                <select id="crust" name="crust" data-pizza-order-target="crust" data-action="pizza-order#chooseCrust">
+                  <option value="hand-tossed" data-surcharge-cents="0">Hand-tossed</option>
+                  <option value="thin" data-surcharge-cents="0">Thin and crisp</option>
+                  <option value="sourdough" data-surcharge-cents="150">Sourdough (+$1.50)</option>
+                  <option value="gluten-free" data-surcharge-cents="300">Gluten-free (+$3.00)</option>
+                </select>
+                <label for="quantity">How many</label>
+                <input id="quantity" name="quantity" type="number" min="1" max="12" value="1" style="width: 5rem"
+                       data-pizza-order-target="quantity" data-action="pizza-order#changeQuantity">
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Toppings · $1.75 each</legend>
+              <div class="topping-choices">
+                <label><input type="checkbox" name="toppings" value="soppressata" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Spicy soppressata</label>
+                <label><input type="checkbox" name="toppings" value="mushrooms" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Roasted mushrooms</label>
+                <label><input type="checkbox" name="toppings" value="fennel-sausage" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Fennel sausage</label>
+                <label><input type="checkbox" name="toppings" value="olives" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Castelvetrano olives</label>
+                <label><input type="checkbox" name="toppings" value="peppers" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Calabrian chiles</label>
+                <label><input type="checkbox" name="toppings" value="ricotta" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Whipped ricotta</label>
+                <label><input type="checkbox" name="toppings" value="hot-honey" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Hot honey</label>
+                <label><input type="checkbox" name="toppings" value="basil" data-pizza-order-target="topping" data-action="pizza-order#toggleTopping"> Fresh basil</label>
+              </div>
+              <div class="field-row">
+                <span class="muted" data-pizza-order-target="toppingCount"></span>
+                <button type="button" class="quiet" data-action="pizza-order#clearToppings">Clear toppings</button>
+                <a href="#allergen-guide" aria-controls="allergen-guide" aria-expanded="false"
+                   data-pizza-order-target="allergenLink" data-action="pizza-order#toggleAllergenGuide">Allergen guide</a>
+              </div>
+              <div class="allergen-guide" id="allergen-guide" data-pizza-order-target="allergenGuide" hidden>
+                <p>Soppressata and fennel sausage contain pork. Whipped ricotta contains milk. The gluten-free crust is baked in the same oven as wheat dough.</p>
+              </div>
+            </fieldset>
+
+            <label for="kitchen-note"><strong>Note for the kitchen</strong></label>
+            <textarea id="kitchen-note" name="kitchen_note" maxlength="140" placeholder="Well done, light sauce, cut in squares…"
+                      data-pizza-order-target="kitchenNote" data-action="pizza-order#countNoteCharacters"></textarea>
+            <p class="muted" data-pizza-order-target="noteRemaining"></p>
+
+            <details open data-pizza-order-target="schedule" data-action="pizza-order#toggleSchedule">
+              <summary>Schedule for later</summary>
+              <p class="field-row">
+                <label for="pickup-time">Pickup time</label>
+                <select id="pickup-time" name="pickup_time" data-pizza-order-target="pickupTime" data-action="pizza-order#choosePickupTime">
+                  <option value="">Choose a time</option>
+                  <option value="17:30">5:30 PM</option>
+                  <option value="18:00">6:00 PM</option>
+                  <option value="18:30">6:30 PM</option>
+                  <option value="19:00">7:00 PM</option>
+                </select>
+              </p>
+            </details>
+
+            <div class="form-actions">
+              <button type="submit">Place order</button>
+              <input type="button" value="Repeat my last order" class="quiet" data-action="click->pizza-order#repeatLastOrder">
+            </div>
+          </div>
+
+          <aside class="order-ticket" aria-live="polite">
+            <h3>Your order</h3>
+            <ul data-pizza-order-target="lineItems"></ul>
+            <p class="order-total" data-pizza-order-target="total"></p>
+            <p class="muted" data-pizza-order-target="readyTime"></p>
+            <p class="order-status" data-pizza-order-target="status"></p>
+            <p class="order-confirmation" data-pizza-order-target="confirmation" hidden></p>
+          </aside>
+        </div>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pizza_order_controller.js"><code>pizza_order_controller.js</code></a> — one controller whose actions all rely on default events</li>
+          <li>This page's source — every <code>data-action</code> on the form, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
