@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  Actions · 07 · API token copy button
+
+  Teaches:
+  - Actions can be async. copySecret awaits the clipboard and rollSecret
+    awaits a fetch. Stimulus calls the method and doesn't wait for it.
+  - Take what you need from the event before the first await. Once an
+    awaited promise needs a task to settle, the event has finished
+    dispatching and event.currentTarget is null. Both actions destructure
+    currentTarget in their parameter list.
+  - A rejected promise from an action never reaches
+    application.handleError(); it surfaces as an unhandled rejection. Each
+    async action catches its own failure and tells the developer what to do.
+  - The event object is the browser's own. copy->api-token#copyFullSecret
+    receives a ClipboardEvent and writes the real token into clipboardData,
+    so selecting the masked text and pressing Ctrl+C still copies the token.
+  - The Reveal and Copy buttons hold an SVG icon and a label, so clicks land
+    on <svg>, <path>, or <span>. None of the actions read event.target.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>API token copy button · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .token-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+      .api-token { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .token-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.8rem; }
+      .token-heading h3 { margin: 0; font-size: 1rem; }
+      .token-heading p { margin: 0; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .environment { font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 0 0.5rem; }
+      .environment.live { background: #fbe3c4; color: #7a3d00; }
+      .environment.sandbox { background: #e7efe6; color: var(--bottle-green, #1f3d2b); }
+      .token-secret { display: block; font-size: 0.95rem; padding: 0.4rem 0.6rem; overflow-x: auto; white-space: nowrap; }
+      .token-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+      .token-actions button { display: inline-flex; align-items: center; gap: 0.35rem; }
+      .token-actions svg { width: 1rem; height: 1rem; }
+      .token-status { margin: 0; min-height: 1.3em; font-size: 0.86rem; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ApiTokenController from "./api_token_controller.js"
+
+      const application = Application.start()
+      application.register("api-token", ApiTokenController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>07 · API token copy button</span>
+      </nav>
+      <h1>API token copy button</h1>
+      <p class="lede">
+        The API tokens page of a shipping platform's developer settings. Each
+        token is an <code>api-token</code> controller with async Copy and
+        Roll actions that take what they need from the event before they
+        await anything.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>Parcelwise · Developer settings · API tokens</h2>
+        <ul class="token-list">
+          <li class="api-token" data-controller="api-token"
+              data-api-token-secret-value="pw_live_4bN7cXe1QwPz9KmT3f9a" data-api-token-roll-url-value="rolled/order-sync.json">
+            <div class="token-heading">
+              <h3>Order sync</h3>
+              <span class="environment live">Live</span>
+              <p>read:orders write:shipments · ends in <span data-api-token-target="lastFour"></span> · last used 4 minutes ago</p>
+            </div>
+            <code class="token-secret" data-api-token-target="display" data-action="copy->api-token#copyFullSecret"></code>
+            <div class="token-actions">
+              <button type="button" class="quiet" aria-pressed="false" data-api-token-target="revealButton" data-action="api-token#toggleReveal">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1 10 Q10 2 19 10 Q10 18 1 10Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>
+                <span data-api-token-target="revealLabel">Reveal</span>
+              </button>
+              <button type="button" data-action="api-token#copySecret">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6" y="6" width="11" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 14 V4 a2 2 0 0 1 2 -2 H13" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                <span data-api-token-target="copyLabel">Copy</span>
+              </button>
+              <button type="button" class="quiet" data-api-token-target="rollButton" data-action="api-token#rollSecret"><span>Roll token</span></button>
+            </div>
+            <p class="token-status" data-api-token-target="status" aria-live="polite"></p>
+          </li>
+
+          <li class="api-token" data-controller="api-token"
+              data-api-token-secret-value="pw_test_Vr5yHs8LkA2nDq0Wb7c1" data-api-token-roll-url-value="rolled/staging-webhooks.json">
+            <div class="token-heading">
+              <h3>Staging webhooks</h3>
+              <span class="environment sandbox">Sandbox</span>
+              <p>read:events · ends in <span data-api-token-target="lastFour"></span> · last used yesterday</p>
+            </div>
+            <code class="token-secret" data-api-token-target="display" data-action="copy->api-token#copyFullSecret"></code>
+            <div class="token-actions">
+              <button type="button" class="quiet" aria-pressed="false" data-api-token-target="revealButton" data-action="api-token#toggleReveal">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1 10 Q10 2 19 10 Q10 18 1 10Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="3" fill="currentColor"/></svg>
+                <span data-api-token-target="revealLabel">Reveal</span>
+              </button>
+              <button type="button" data-action="api-token#copySecret">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="6" y="6" width="11" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 14 V4 a2 2 0 0 1 2 -2 H13" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                <span data-api-token-target="copyLabel">Copy</span>
+              </button>
+              <button type="button" class="quiet" data-api-token-target="rollButton" data-action="api-token#rollSecret"><span>Roll token</span></button>
+            </div>
+            <p class="token-status" data-api-token-target="status" aria-live="polite"></p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="api_token_controller.js"><code>api_token_controller.js</code></a> — reveals, copies, and rolls one token</li>
+          <li><a href="rolled/order-sync.json"><code>rolled/</code></a> — the API's responses when a token is rolled</li>
+          <li>This page's source — token markup, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
