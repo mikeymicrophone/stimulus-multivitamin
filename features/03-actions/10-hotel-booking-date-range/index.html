@@ -1,0 +1,120 @@
+<!doctype html>
+<!--
+  Actions · 10 · Hotel booking date range
+
+  Teaches:
+  - Elements added after the page loads get their actions automatically.
+    The controller builds every day button with its own data-action, and
+    rebuilds them all when the month changes. Stimulus binds the new buttons
+    and forgets the removed ones; nothing is wired by hand.
+  - Not in the same tick, though. Stimulus notices new elements from a
+    MutationObserver, after the code that inserted them returns. Clicking a
+    button right after rendering it does nothing, so applyOffer() calls
+    chooseDate() directly instead of clicking.
+  - A generated element can use any event, including non-bubbling ones:
+    each day has pointerenter and focus actions for the check-out preview.
+  - The preview only toggles classes. Rebuilding the calendar from the
+    focus action would remove the very button that just took focus.
+  - The date fields default to input; they name change so a half-typed
+    date isn't applied on every keystroke.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Hotel booking date range · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .booking-offer { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.8rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-bottom: 1rem; }
+      .booking-offer p { margin: 0; }
+      .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+      .calendar-months { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem; }
+      .calendar-month h3 { margin: 0 0 0.4rem; font-size: 1rem; text-align: center; }
+      .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .weekday { text-align: center; font-size: 0.75rem; color: var(--muted-ink, #555); padding-bottom: 0.2rem; }
+      .calendar-day { all: unset; box-sizing: border-box; text-align: center; padding: 0.4rem 0; border-radius: 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+      .calendar-day:hover, .calendar-day:focus-visible { outline: 2px solid var(--capsule-amber, #e8912d); }
+      .calendar-day:disabled { color: #c9c2b3; cursor: default; outline: none; }
+      .calendar-day.sold-out { color: #b3261e; text-decoration: line-through; }
+      .calendar-day.in-range { background: #f6e3c5; border-radius: 0; }
+      .calendar-day.previewed { background: #f6e3c5; }
+      .calendar-day.check-in, .calendar-day.check-out { background: var(--bottle-green, #1f3d2b); color: #fff; }
+      .stay-fields { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: end; margin: 1rem 0 0.5rem; }
+      .stay-fields label { display: grid; gap: 0.15rem; font-weight: 600; font-size: 0.9rem; }
+      .stay-summary { font-weight: 600; color: var(--bottle-green, #1f3d2b); }
+      .booking-status { min-height: 1.4em; font-size: 0.9rem; }
+      .rate-key { font-size: 0.82rem; color: var(--muted-ink, #555); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import StayDatesController from "./stay_dates_controller.js"
+
+      const application = Application.start()
+      application.register("stay-dates", StayDatesController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>10 · Hotel booking date range</span>
+      </nav>
+      <h1>Hotel booking date range</h1>
+      <p class="lede">
+        A small inn's booking calendar. The <code>stay-dates</code>
+        controller draws two months of day buttons, each with its own
+        actions, and redraws them whenever the guest changes month.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="stay-dates" data-action="stay-dates#reserve"
+            data-stay-dates-first-bookable-date-value="2026-11-01" data-stay-dates-last-bookable-date-value="2027-03-31"
+            data-stay-dates-sold-out-dates-value='["2026-11-26","2026-11-27","2026-12-24","2026-12-25","2026-12-31","2027-02-13"]'
+            data-stay-dates-weeknight-rate-cents-value="18900" data-stay-dates-weekend-rate-cents-value="24900"
+            data-stay-dates-minimum-nights-value="2"
+            data-stay-dates-offer-value='{"checkIn":"2027-01-12","checkOut":"2027-01-15"}'>
+        <h2>The Saltmarsh Inn · Choose your dates</h2>
+
+        <div class="booking-offer">
+          <p><strong>Winter midweek escape:</strong> three nights from Tuesday, January 12, with breakfast in the conservatory.</p>
+          <button type="button" class="quiet" data-action="stay-dates#applyOffer">Use these dates</button>
+        </div>
+
+        <div class="calendar-nav">
+          <button type="button" class="quiet" data-stay-dates-target="previousMonthButton" data-action="stay-dates#showPreviousMonth">‹ Earlier</button>
+          <span class="rate-key">Weeknights $189 · Friday and Saturday $249 · Two-night minimum · <span style="color: #b3261e; text-decoration: line-through">Sold out</span></span>
+          <button type="button" class="quiet" data-stay-dates-target="nextMonthButton" data-action="stay-dates#showNextMonth">Later ›</button>
+        </div>
+        <div class="calendar-months" data-stay-dates-target="calendar" data-action="pointerleave->stay-dates#endPreview"></div>
+
+        <div class="stay-fields">
+          <label>Check-in <input type="date" name="check_in" data-stay-dates-target="checkInField" data-action="change->stay-dates#typeDates"></label>
+          <label>Check-out <input type="date" name="check_out" data-stay-dates-target="checkOutField" data-action="change->stay-dates#typeDates"></label>
+          <button type="button" class="quiet" data-action="stay-dates#clearDates">Clear dates</button>
+        </div>
+        <p class="stay-summary" data-stay-dates-target="summary" aria-live="polite"></p>
+        <button type="submit" data-stay-dates-target="reserveButton">Hold these dates</button>
+        <p class="booking-status" data-stay-dates-target="status" aria-live="polite"></p>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="stay_dates_controller.js"><code>stay_dates_controller.js</code></a> — draws the calendar, chooses and previews the stay, prices it</li>
+          <li>This page's source — the season, rates, and sold-out nights as values, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
