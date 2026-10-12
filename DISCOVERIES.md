@@ -627,6 +627,26 @@ different event.
 
 **Seen in:** [Hotel key encoder](features/05-action-options/09-hotel-key-encoder/).
 
+### `:once` takes `:prevent` with it
+
+**What happens.** `:once` is `{ once: true }` on the native listener.
+After the first event the browser removes that listener. `:prevent` was
+a Stimulus filter on the same listener, not a separate one. A second
+click on a Charge card `<a href="receipt/">` or a second Join submit
+is a plain browser click/submit again.
+
+**Why it matters.** The first Charge stays on the box office page. The
+second follows `receipt/` and looks like `:once` "didn't work", when
+what actually happened is `:prevent` stopped working.
+
+**What to do.** After a `:prevent:once` action runs, disable the control
+or remove the `href` / `action`. Don't leave a live link or submit
+button whose only guard was that listener.
+
+**Seen in:** [Community theater box office](features/05-action-options/01-community-theater-box-office/),
+[CSA share signup](features/05-action-options/07-csa-share-signup/),
+[Permit photo uploader](features/05-action-options/13-permit-photo-uploader/).
+
 ### Built-in filters run in descriptor order and short-circuit
 
 **What happens.** Stimulus walks `Object.entries(eventOptions)` and

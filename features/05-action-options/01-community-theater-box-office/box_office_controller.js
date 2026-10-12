@@ -4,6 +4,7 @@
  * Teaches: the Charge card link uses click->box-office#charge:prevent:once.
  * :prevent cancels the link's navigation before charge() runs, and :once is
  * a native listener option, so a second click never reaches the method.
+ * charge() strips the href because :prevent is gone with that listener.
  */
 import { Controller } from "@hotwired/stimulus"
 
@@ -38,6 +39,8 @@ export default class extends Controller {
     this.receiptTarget.hidden = false
     this.receiptTarget.textContent = `${lines.join(", ")} — ${dollars.format(this.totalCents / 100)}. Order ${this.orderNumberValue}. Charged once.`
     this.statusTarget.textContent = `Card charged (defaultPrevented=${event.defaultPrevented}). :once already removed the listener, so a second click will not run charge() (charges this visit: ${this.chargeCount}).`
+    event.currentTarget.removeAttribute("href")
+    event.currentTarget.setAttribute("aria-disabled", "true")
   }
 
   renderTotal() {

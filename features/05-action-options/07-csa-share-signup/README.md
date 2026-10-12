@@ -8,8 +8,10 @@ options which differ put actions on different native listeners.
 **What it teaches**
 
 - Several options chain: `submit->csa-signup#joinShare:prevent:once`.
-  `:prevent` keeps the POST on this page. `:once` drops the listener after
+  `:prevent` keeps the submit on this page. `:once` drops the listener after
   the first submit, so a second Join does not increment the join count.
+  `joinShare()` also disables the button: `:prevent` is gone with the
+  listener, and a second submit would otherwise GET `joined/`.
 - Built-in filters run in descriptor order and AND together. Stimulus
   walks `Object.entries(eventOptions)` and stops calling later filters
   once one has failed.

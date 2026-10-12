@@ -74,6 +74,7 @@ export default class extends Controller {
     this.confirmationTarget.hidden = false
     this.confirmationTarget.textContent = `Permit ${this.permitNumberValue} packet sent with ${names}. Submits this visit: ${this.submitCount}.`
     this.statusTarget.textContent = `Sent (defaultPrevented=${event.defaultPrevented}). :once already dropped the submit listener.`
+    event.currentTarget.querySelector("button[type='submit']").disabled = true
   }
 
   renderQueue() {

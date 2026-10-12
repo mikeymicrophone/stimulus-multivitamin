@@ -8,7 +8,8 @@
     page so charge() can write the receipt itself.
   - :once is passed to addEventListener as { once: true }. The browser
     removes that listener after the first click, so a second click never
-    reaches charge() even if the link stays enabled.
+    reaches charge(). :prevent is gone with the listener, so charge()
+    also strips the href.
   - Options chain: click->box-office#charge:prevent:once. Stimulus applies
     :prevent, then the method runs, and the native :once option is what
     stops the next click.

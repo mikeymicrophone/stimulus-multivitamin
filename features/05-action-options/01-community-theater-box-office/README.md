@@ -10,7 +10,8 @@ whose descriptor is `click->box-office#charge:prevent:once`.
   not navigate, so `charge()` can write the receipt on this page.
 - `:once` is a native `addEventListener` option, `{ once: true }`. After the
   first click the browser removes that listener. A second click never
-  reaches `charge()`, even while the link stays enabled.
+  reaches `charge()`. `:prevent` is gone with it, so `charge()` also
+  strips the `href` — otherwise the second click would follow `receipt/`.
 - Options chain on one descriptor: `:prevent:once`. Stimulus runs the
   built-in `:prevent` filter, then the method. `:once` is not a Stimulus
   filter; it is handed to the browser.

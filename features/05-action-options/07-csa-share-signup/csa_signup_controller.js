@@ -30,6 +30,7 @@ export default class extends Controller {
     this.confirmationTarget.hidden = false
     this.confirmationTarget.textContent = `You're on the Thornfield Organics ${share.dataset.seasonLabel} list for a ${share.dataset.shareLabel} share, pickup ${pickup}. Joins this visit: ${this.joinCount}.`
     this.statusTarget.textContent = `Joined (defaultPrevented=${event.defaultPrevented}). :once already dropped the submit listener.`
+    event.currentTarget.querySelector("button[type='submit']").disabled = true
   }
 
   holdShare() {

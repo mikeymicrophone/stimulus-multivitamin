@@ -18,7 +18,9 @@ PDF. Sending must stay on this page and must not run twice.
   `false` blocks the action; `queueDroppedPhoto()` never sees that drop.
 - The file picker uses
   `change->permit-upload#queuePickedPhoto:online:accepted`. Submit uses
-  `submit->permit-upload#sendPacket:prevent:once`.
+  `submit->permit-upload#sendPacket:prevent:once`. After the first send,
+  the button is disabled: `:once` has dropped `:prevent` too, and a
+  second submit would otherwise POST to `filed/`.
 - Custom filters run in descriptor order with the built-in ones. On drop,
   `:prevent` and `:stop` run first (they always return true), then
   `:online`, then `:accepted`. An offline drop is still cancelled, so the
