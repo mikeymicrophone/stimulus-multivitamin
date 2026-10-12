@@ -1,6 +1,6 @@
 # Controllers · 10 · Podcast episode queue
 
-A podcast app's library, Up Next queue, and player bar. Each episode is an
+A podcast app's library, Up Next queue, and playback controls. Each episode is an
 `episode` controller. The `episode-queue` and `now-playing` controllers pass
 episode instances back and forth through small public APIs and keep
 everything else private.
@@ -27,10 +27,10 @@ everything else private.
 
 | File | Role |
 | --- | --- |
-| [`index.html`](index.html) | Library, queue, and player markup, importmap, and controller registration |
+| [`index.html`](index.html) | Library, queue, and playback markup, importmap, and controller registration |
 | [`episode_controller.js`](episode_controller.js) | One instance per episode; exposes title, show, and duration |
 | [`episode_queue_controller.js`](episode_queue_controller.js) | Holds episode instances in a private array; `enqueue()` and `takeNext()` |
-| [`now_playing_controller.js`](now_playing_controller.js) | Player bar with public `play()` and a private timer |
+| [`now_playing_controller.js`](now_playing_controller.js) | Playback controls with public `play()` and a private timer |
 
 **Try it**
 

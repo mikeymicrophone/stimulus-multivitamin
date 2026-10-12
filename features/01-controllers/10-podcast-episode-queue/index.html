@@ -77,7 +77,7 @@
       </nav>
       <h1>Podcast episode queue</h1>
       <p class="lede">
-        A podcast app's library, Up Next queue, and player bar. Each episode is
+        A podcast app's library, Up Next queue, and playback controls. Each episode is
         an <code>episode</code> controller; the <code>episode-queue</code> and
         <code>now-playing</code> controllers pass episode instances between
         them through small public APIs and keep everything else private.
@@ -185,7 +185,7 @@
         <ul>
           <li><a href="episode_controller.js"><code>episode_controller.js</code></a> — one instance per episode; exposes title, show, and duration</li>
           <li><a href="episode_queue_controller.js"><code>episode_queue_controller.js</code></a> — holds episode instances in a private array; enqueue() and takeNext()</li>
-          <li><a href="now_playing_controller.js"><code>now_playing_controller.js</code></a> — the player bar; public play(), private timer and render</li>
+          <li><a href="now_playing_controller.js"><code>now_playing_controller.js</code></a> — the playback controls; public play(), private timer and render</li>
           <li>This page's source — markup, importmap, and controller registration</li>
         </ul>
       </section>
