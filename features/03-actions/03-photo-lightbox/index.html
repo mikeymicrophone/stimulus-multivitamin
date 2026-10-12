@@ -1,0 +1,169 @@
+<!doctype html>
+<!--
+  Actions · 03 · Photo lightbox
+
+  Teaches:
+  - event.target is where the event started; event.currentTarget is the
+    element whose data-action matched. A click on a thumbnail usually lands
+    on its <img> or caption, so open() reads the button from currentTarget.
+  - this.element is neither: it is the controller's element, the whole
+    gallery section.
+  - Comparing the two tells a backdrop click from a click on its contents.
+    The overlay's click action closes only when target === currentTarget.
+  - keydown@document and resize@window listen globally while the
+    controller is connected, and their currentTarget is the document or the
+    window. Both actions check whether the lightbox is open before acting.
+  - The arrow and close buttons hold SVG icons, so their clicks start on an
+    <svg> or <path>. Their actions don't read the event at all.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Photo lightbox · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .contact-sheet { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.9rem; }
+      .thumbnail-button { all: unset; cursor: zoom-in; display: grid; gap: 0.3rem; border-radius: 8px; padding: 0.35rem; background: #fffdf8; border: 1px solid var(--rule, #ddd); }
+      .thumbnail-button:focus-visible { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .thumbnail-button img { width: 100%; height: 8rem; object-fit: cover; border-radius: 5px; display: block; }
+      .thumbnail-caption { font-size: 0.88rem; }
+      .thumbnail-caption small { display: block; color: var(--muted-ink, #555); }
+      .lightbox { position: fixed; inset: 0; background: rgba(18, 22, 26, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; z-index: 10; color: #f3efe6; }
+      .lightbox figure { margin: 0; display: grid; justify-items: center; gap: 0.4rem; }
+      .lightbox img { display: block; background: #222; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+      .lightbox figcaption { text-align: center; }
+      .lightbox figcaption small { color: #c9c3b6; display: block; }
+      .lightbox-controls { display: flex; gap: 0.6rem; align-items: center; }
+      .lightbox-controls button { display: inline-flex; align-items: center; gap: 0.3rem; }
+      .lightbox-controls svg { width: 1.1rem; height: 1.1rem; }
+      .lightbox-close { position: absolute; top: 1rem; right: 1rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PhotoLightboxController from "./photo_lightbox_controller.js"
+
+      const application = Application.start()
+      application.register("photo-lightbox", PhotoLightboxController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>03 · Photo lightbox</span>
+      </nav>
+      <h1>Photo lightbox</h1>
+      <p class="lede">
+        A camera club's online exhibition. Each thumbnail opens a full-size
+        lightbox. The <code>photo-lightbox</code> controller reads
+        <code>event.currentTarget</code>, <code>event.target</code>, and
+        <code>this.element</code> for different jobs, and listens to the
+        keyboard and window size only through declared global actions.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="photo-lightbox"
+               data-action="keydown@document->photo-lightbox#navigateWithKeys resize@window->photo-lightbox#fitPhoto">
+        <h2>Tidewater Camera Club · Spring exhibition, “Edges of the Bay”</h2>
+        <ul class="contact-sheet">
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="Heron at First Light" data-photo-credit="Marguerite Osei · Blackwater Refuge" data-photo-alt="A great blue heron standing in shallow water against an orange sunrise"
+                    data-full-width="6000" data-full-height="4000">
+              <img src="photos/heron-at-first-light.svg" alt="">
+              <span class="thumbnail-caption">Heron at First Light <small>Marguerite Osei</small></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="North Point Lighthouse" data-photo-credit="Dev Castellano · North Point State Park" data-photo-alt="A red and white lighthouse on a rocky point, its beam crossing a pale sky"
+                    data-full-width="4000" data-full-height="6000">
+              <img src="photos/north-point-lighthouse.svg" alt="">
+              <span class="thumbnail-caption">North Point Lighthouse <small>Dev Castellano</small></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="Tide Pool, Low Water" data-photo-credit="Hana Whitfield · Calvert Cliffs" data-photo-alt="Orange anemones opening in a green tide pool"
+                    data-full-width="5000" data-full-height="5000">
+              <img src="photos/tide-pool-anemones.svg" alt="">
+              <span class="thumbnail-caption">Tide Pool, Low Water <small>Hana Whitfield</small></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="Salt Marsh, Late October" data-photo-credit="Marguerite Osei · Deal Island" data-photo-alt="A wide view of a salt marsh with a winding channel and reeds"
+                    data-full-width="9600" data-full-height="4800">
+              <img src="photos/salt-marsh-panorama.svg" alt="">
+              <span class="thumbnail-caption">Salt Marsh, Late October <small>Marguerite Osei</small></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="Boats at Harbor Street" data-photo-credit="Theo Lindqvist · Annapolis" data-photo-alt="Two sailboats, one red and one dark green, moored in blue water"
+                    data-full-width="6000" data-full-height="4000">
+              <img src="photos/boats-at-harbor-street.svg" alt="">
+              <span class="thumbnail-caption">Boats at Harbor Street <small>Theo Lindqvist</small></span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="thumbnail-button" data-photo-lightbox-target="thumbnail" data-action="photo-lightbox#open"
+                    data-photo-title="Shucked, Saturday Market" data-photo-credit="Hana Whitfield · Solomons Island" data-photo-alt="Three open oyster shells on a pale counter beside a slice of lemon"
+                    data-full-width="4800" data-full-height="6000">
+              <img src="photos/shucked-oysters.svg" alt="">
+              <span class="thumbnail-caption">Shucked, Saturday Market <small>Hana Whitfield</small></span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="lightbox" role="dialog" aria-modal="true" aria-label="Exhibition photo" data-photo-lightbox-target="overlay"
+             data-action="click->photo-lightbox#closeFromBackdrop" hidden>
+          <button type="button" class="lightbox-close" data-lightbox-close data-action="photo-lightbox#close">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 L16 16 M16 4 L4 16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <span>Close</span>
+          </button>
+          <figure>
+            <img data-photo-lightbox-target="photo" src="photos/heron-at-first-light.svg" alt="">
+            <figcaption>
+              <strong data-photo-lightbox-target="title"></strong>
+              <small data-photo-lightbox-target="credit"></small>
+              <small data-photo-lightbox-target="scale"></small>
+            </figcaption>
+          </figure>
+          <div class="lightbox-controls">
+            <button type="button" data-action="photo-lightbox#showPrevious">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13 3 L6 10 L13 17" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+              <span>Previous</span>
+            </button>
+            <span data-photo-lightbox-target="position"></span>
+            <button type="button" data-action="photo-lightbox#showNext">
+              <span>Next</span>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3 L14 10 L7 17" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="photo_lightbox_controller.js"><code>photo_lightbox_controller.js</code></a> — opens, steps through, fits, and closes the lightbox</li>
+          <li><a href="photos/heron-at-first-light.svg"><code>photos/</code></a> — the exhibition's six photos</li>
+          <li>This page's source — thumbnails, the overlay, global actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
