@@ -1,0 +1,166 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 10 · Stock ticker over a WebSocket
+
+  Teaches:
+  - Subscribe in connect(), unsubscribe in disconnect(), and keep the
+    function that undoes the subscription. Each quote-row holds the
+    unsubscribe function the shared stream gave it.
+  - Shared resources belong to a module, not to one instance. One socket
+    serves every row; it opens for the first subscriber and closes after the
+    last one leaves.
+  - Moves and swaps unsubscribe and resubscribe within the same task. The
+    stream waits a moment before cleaning up, so sorting (rows move) and
+    switching watchlists (rows replaced) never close and reopen the socket.
+    The status line counts how many times it has opened.
+  - New instances start blank. The stream keeps each symbol's last quote and
+    replays it on subscribe, so a row from the newly fetched watchlist shows
+    a price immediately.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Stock ticker over a WebSocket · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .watchlist-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-bottom: 0.75rem; }
+      .watchlist-tabs { display: flex; gap: 0.4rem; }
+      .watchlist-tabs [aria-selected="false"] { background: transparent; color: var(--muted-ink, #555); border-color: var(--rule, #ddd); }
+      .stream-status { margin-left: auto; font-size: 0.85rem; display: flex; gap: 0.5rem; align-items: center; }
+      .stream-status strong::before { content: "●"; margin-right: 0.3rem; color: var(--muted-ink, #555); }
+      .stream-status[data-connection="open"] strong::before { color: #2e7d32; }
+      .stream-status[data-connection="connecting"] strong::before { color: var(--capsule-amber, #e8912d); }
+      .watchlist-table { width: 100%; border-collapse: collapse; }
+      .watchlist-table th, .watchlist-table td { padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--rule, #ddd); text-align: left; }
+      .watchlist-table thead th { font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .watchlist-table .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+      .company { font-weight: 400; color: var(--muted-ink, #555); font-size: 0.85rem; }
+      tr[data-tick="up"] [data-quote-row-target="price"] { color: #2e7d32; }
+      tr[data-tick="down"] [data-quote-row-target="price"] { color: #b3261e; }
+      .gain { color: #2e7d32; }
+      .loss { color: #b3261e; }
+      .add-symbol { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+      .add-symbol select { padding: 0.3rem 0.4rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WatchlistController from "./watchlist_controller.js"
+      import QuoteRowController from "./quote_row_controller.js"
+      import StreamStatusController from "./stream_status_controller.js"
+
+      const application = Application.start()
+      application.register("watchlist", WatchlistController)
+      application.register("quote-row", QuoteRowController)
+      application.register("stream-status", StreamStatusController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>10 · Stock ticker over a WebSocket</span>
+      </nav>
+      <h1>Stock ticker over a WebSocket</h1>
+      <p class="lede">
+        A brokerage watchlist with live prices. Every row is a
+        <code>quote-row</code> controller subscribed to one symbol on a single
+        shared socket. The <code>watchlist</code> controller switches lists,
+        sorts, adds, and removes rows, and <code>stream-status</code> shows
+        the socket's state.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="watchlist">
+        <h2>Northgate Brokerage · Watchlists</h2>
+        <div class="watchlist-toolbar">
+          <div class="watchlist-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected="true" data-watchlist-target="listTab" data-action="watchlist#switchList" data-watchlist-list-url-param="watchlists/growth.html">Growth</button>
+            <button type="button" role="tab" aria-selected="false" data-watchlist-target="listTab" data-action="watchlist#switchList" data-watchlist-list-url-param="watchlists/dividend.html">Dividend</button>
+          </div>
+          <button type="button" class="quiet" data-action="watchlist#sortByChange">Sort by change</button>
+          <p class="stream-status" data-controller="stream-status" aria-live="polite">
+            <strong data-stream-status-target="connection"></strong>
+            <span class="muted" data-stream-status-target="details"></span>
+          </p>
+        </div>
+
+        <table class="watchlist-table">
+          <thead>
+            <tr><th scope="col">Symbol</th><th scope="col" class="numeric">Last</th><th scope="col" class="numeric">Change</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr>
+          </thead>
+          <tbody data-watchlist-target="rows">
+              <tr data-controller="quote-row" data-watchlist-target="row" data-quote-row-symbol-value="NVDA">
+                <th scope="row"><span data-symbol>NVDA</span> <span class="company" data-company>NVIDIA</span></th>
+                <td class="numeric" data-quote-row-target="price">—</td>
+                <td class="numeric" data-quote-row-target="change">—</td>
+                <td><button type="button" class="quiet" data-action="watchlist#removeRow">Remove</button></td>
+              </tr>
+              <tr data-controller="quote-row" data-watchlist-target="row" data-quote-row-symbol-value="MSFT">
+                <th scope="row"><span data-symbol>MSFT</span> <span class="company" data-company>Microsoft</span></th>
+                <td class="numeric" data-quote-row-target="price">—</td>
+                <td class="numeric" data-quote-row-target="change">—</td>
+                <td><button type="button" class="quiet" data-action="watchlist#removeRow">Remove</button></td>
+              </tr>
+              <tr data-controller="quote-row" data-watchlist-target="row" data-quote-row-symbol-value="AAPL">
+                <th scope="row"><span data-symbol>AAPL</span> <span class="company" data-company>Apple</span></th>
+                <td class="numeric" data-quote-row-target="price">—</td>
+                <td class="numeric" data-quote-row-target="change">—</td>
+                <td><button type="button" class="quiet" data-action="watchlist#removeRow">Remove</button></td>
+              </tr>
+              <tr data-controller="quote-row" data-watchlist-target="row" data-quote-row-symbol-value="AMZN">
+                <th scope="row"><span data-symbol>AMZN</span> <span class="company" data-company>Amazon</span></th>
+                <td class="numeric" data-quote-row-target="price">—</td>
+                <td class="numeric" data-quote-row-target="change">—</td>
+                <td><button type="button" class="quiet" data-action="watchlist#removeRow">Remove</button></td>
+              </tr>
+          </tbody>
+        </table>
+
+        <template data-watchlist-target="rowTemplate">
+          <tr data-controller="quote-row" data-watchlist-target="row">
+            <th scope="row"><span data-symbol></span> <span class="company" data-company></span></th>
+            <td class="numeric" data-quote-row-target="price">—</td>
+            <td class="numeric" data-quote-row-target="change">—</td>
+            <td><button type="button" class="quiet" data-action="watchlist#removeRow">Remove</button></td>
+          </tr>
+        </template>
+
+        <form class="add-symbol" data-action="watchlist#addSymbol">
+          <label for="symbol-choice">Add a symbol</label>
+          <select id="symbol-choice" data-watchlist-target="symbolChoice">
+            <option value="COST" data-company="Costco">COST · Costco</option>
+            <option value="TSLA" data-company="Tesla">TSLA · Tesla</option>
+            <option value="KO" data-company="Coca-Cola">KO · Coca-Cola</option>
+            <option value="NVDA" data-company="NVIDIA">NVDA · NVIDIA</option>
+          </select>
+          <button type="submit">Add</button>
+          <span class="muted" data-watchlist-target="loadStatus" aria-live="polite"></span>
+        </form>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="quote_row_controller.js"><code>quote_row_controller.js</code></a> — subscribes on connect and calls its unsubscribe function on disconnect</li>
+          <li><a href="watchlist_controller.js"><code>watchlist_controller.js</code></a> — switches lists, sorts, adds, and removes rows</li>
+          <li><a href="stream_status_controller.js"><code>stream_status_controller.js</code></a> — watches the shared stream's status while connected</li>
+          <li><a href="quote_stream.js"><code>quote_stream.js</code></a> — the shared, reference-counted stream with a cleanup grace period</li>
+          <li><a href="simulated_quote_socket.js"><code>simulated_quote_socket.js</code></a> — stands in for a real WebSocket</li>
+          <li><a href="watchlists/dividend.html"><code>watchlists/dividend.html</code></a> — a server-rendered watchlist</li>
+          <li>This page's source — markup with the first watchlist rendered in, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
