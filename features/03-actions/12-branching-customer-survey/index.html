@@ -1,0 +1,198 @@
+<!doctype html>
+<!--
+  Actions · 12 · Branching customer survey
+
+  Teaches:
+  - The earlier action patterns composed on one form. The select, radios,
+    checkboxes, text fields, and the form itself all use default events.
+    "Next" and "Back" are buttons; "Send to the innkeepers" is the submit.
+  - Follow-up questions are revealed, not rebuilt. Their data-action
+    attributes are in the markup from the start, so the actions are bound
+    even while the fields are hidden. Showing a field is enough for it to
+    start working.
+  - Answers on a hidden branch are kept. Changing the overall rating hides
+    the other branch without clearing it, so a guest who goes back and
+    forth doesn't lose a comment.
+  - "Add another reason" clones a <template> after the page loads. The new
+    field and its Remove button carry data-action, and Stimulus binds them
+    on its own.
+  - Pressing Enter in a field submits the form. submitSurvey() treats that
+    as Next until the review step, so a guest never skips a required
+    question by accident.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Branching customer survey · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .survey-form { max-width: 38rem; }
+      .survey-progress { font-size: 0.85rem; color: var(--muted-ink, #555); margin: 0 0 0.8rem; }
+      .survey-step h3, .survey-step legend { font-size: 1.05rem; color: var(--bottle-green, #1f3d2b); }
+      .survey-step fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.5rem 0.9rem 0.8rem; margin: 0 0 0.8rem; }
+      .choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; }
+      .choice-stack { display: grid; gap: 0.3rem; }
+      .choice-stack label, .choice-row label { font-weight: 400; }
+      .survey-step select, .survey-step input[type="text"], .survey-step textarea { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .survey-step textarea { min-height: 4rem; }
+      .other-reasons { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+      .other-reason { display: grid; grid-template-columns: 1fr auto; gap: 0.4rem; }
+      .survey-nav { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.8rem; }
+      .survey-status { min-height: 1.4em; color: #b3261e; font-size: 0.9rem; }
+      .review-list { margin: 0; padding-left: 1.1rem; }
+      .review-list li { margin: 0.25rem 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import StaySurveyController from "./stay_survey_controller.js"
+
+      const application = Application.start()
+      application.register("stay-survey", StaySurveyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>12 · Branching customer survey</span>
+      </nav>
+      <h1>Branching customer survey</h1>
+      <p class="lede">
+        The departure survey at a lakeside inn. One
+        <code>stay-survey</code> controller walks the guest through five
+        steps. The follow-up questions change with the overall rating, and
+        extra "other" reasons can be added after the page has loaded.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario survey-form" novalidate data-controller="stay-survey" data-action="stay-survey#submitSurvey">
+        <h2>Pinecone Lodge · How was your stay?</h2>
+        <p class="survey-progress" data-stay-survey-target="progress"></p>
+
+        <section class="survey-step" data-step="cabin" data-stay-survey-target="step">
+          <label for="cabin"><strong>Which cabin did you stay in?</strong></label>
+          <select id="cabin" name="cabin" data-stay-survey-target="cabin" data-action="stay-survey#chooseCabin">
+            <option value="">Choose a cabin</option>
+            <option value="hemlock" data-short-label="Hemlock">Hemlock — lake view, sleeps 4</option>
+            <option value="tamarack" data-short-label="Tamarack">Tamarack — woods, sleeps 2</option>
+            <option value="birch" data-short-label="Birch">Birch — family cabin, sleeps 8</option>
+            <option value="cedar" data-short-label="Cedar">Cedar — accessible, sleeps 4</option>
+          </select>
+        </section>
+
+        <section class="survey-step" data-step="overall" data-stay-survey-target="step" hidden>
+          <fieldset>
+            <legend>Overall, how was your stay?</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="overall" value="1" data-stay-survey-target="overall" data-action="stay-survey#rateStay"> 1 · Poor</label>
+              <label><input type="radio" name="overall" value="2" data-stay-survey-target="overall" data-action="stay-survey#rateStay"> 2 · Fair</label>
+              <label><input type="radio" name="overall" value="3" data-stay-survey-target="overall" data-action="stay-survey#rateStay"> 3 · Fine</label>
+              <label><input type="radio" name="overall" value="4" data-stay-survey-target="overall" data-action="stay-survey#rateStay"> 4 · Good</label>
+              <label><input type="radio" name="overall" value="5" data-stay-survey-target="overall" data-action="stay-survey#rateStay"> 5 · Excellent</label>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="survey-step" data-step="follow-up" data-stay-survey-target="step" hidden>
+          <fieldset data-stay-survey-target="disappointment" hidden>
+            <legend>What disappointed you?</legend>
+            <div class="choice-stack">
+              <label><input type="checkbox" name="disappointment" value="cleanliness"> Cabin wasn't as clean as we expected</label>
+              <label><input type="checkbox" name="disappointment" value="noise"> Noise from the road or other cabins</label>
+              <label><input type="checkbox" name="disappointment" value="check-in"> Check-in took too long</label>
+              <label><input type="checkbox" name="disappointment" value="amenities"> Kitchen or dock wasn't ready</label>
+            </div>
+            <ul class="other-reasons" data-stay-survey-target="otherReasonList" hidden></ul>
+            <p><button type="button" class="quiet" data-action="stay-survey#addOtherReason">Add another reason</button></p>
+          </fieldset>
+
+          <label data-stay-survey-target="midStay" hidden>
+            What could we improve on your next visit?
+            <textarea name="improvement" placeholder="The dock was slippery after the rain…"></textarea>
+          </label>
+
+          <fieldset data-stay-survey-target="highlight" hidden>
+            <legend>What stood out?</legend>
+            <div class="choice-stack">
+              <label><input type="checkbox" name="highlight" value="lake"> The lake at first light</label>
+              <label><input type="checkbox" name="highlight" value="woodstove"> The woodstove on a cold night</label>
+              <label><input type="checkbox" name="highlight" value="staff"> The innkeepers remembered our names</label>
+              <label><input type="checkbox" name="highlight" value="trails"> The ridge trail behind Birch</label>
+            </div>
+          </fieldset>
+
+          <fieldset data-stay-survey-target="recommend" hidden>
+            <legend>Would you recommend Pinecone Lodge?</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="recommend" value="yes" data-action="stay-survey#chooseRecommend"> Yes</label>
+              <label><input type="radio" name="recommend" value="no" data-action="stay-survey#chooseRecommend"> Not this time</label>
+            </div>
+          </fieldset>
+
+          <label class="stacked" data-stay-survey-target="quoteConsent" hidden>
+            If we quote you on the website, how should we sign it?
+            <input type="text" name="quote_name" placeholder="The Okonkwos, Hemlock cabin" autocomplete="name">
+          </label>
+        </section>
+
+        <section class="survey-step" data-step="add-ons" data-stay-survey-target="step" hidden>
+          <fieldset data-addons>
+            <legend>Which extras did you use?</legend>
+            <div class="choice-stack">
+              <label><input type="checkbox" name="addons" value="breakfast" data-stay-survey-target="addOn" data-action="stay-survey#toggleAddOn"> Breakfast in the lodge</label>
+              <label><input type="checkbox" name="addons" value="kayaks" data-stay-survey-target="addOn" data-action="stay-survey#toggleAddOn"> Kayaks from the dock</label>
+              <label><input type="checkbox" name="addons" value="maps" data-stay-survey-target="addOn" data-action="stay-survey#toggleAddOn"> Printed trail maps</label>
+            </div>
+          </fieldset>
+          <label data-stay-survey-target="breakfastRating" hidden>
+            How was breakfast?
+            <select name="breakfast_rating">
+              <option value="loved">We loved it</option>
+              <option value="fine">Fine, nothing special</option>
+              <option value="skip">We'd skip it next time</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="survey-step" data-step="review" data-stay-survey-target="step" hidden>
+          <h3>Review your answers</h3>
+          <ul class="review-list" data-stay-survey-target="reviewList"></ul>
+        </section>
+
+        <template data-stay-survey-target="otherReasonTemplate">
+          <li class="other-reason" data-stay-survey-target="otherReason">
+            <input type="text" name="other_reason" placeholder="Something we didn't list">
+            <button type="button" class="quiet" data-action="stay-survey#removeOtherReason">Remove</button>
+          </li>
+        </template>
+
+        <div class="survey-nav">
+          <button type="button" class="quiet" data-stay-survey-target="backButton" data-action="stay-survey#goToPreviousStep">Back</button>
+          <button type="button" data-stay-survey-target="nextButton" data-action="stay-survey#goToNextStep">Next</button>
+          <button type="submit" data-stay-survey-target="sendButton" hidden>Send to the innkeepers</button>
+          <span class="survey-status" data-stay-survey-target="status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="stay_survey_controller.js"><code>stay_survey_controller.js</code></a> — steps, branches, cloned reasons, and the review</li>
+          <li>This page's source — every question's <code>data-action</code>, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
