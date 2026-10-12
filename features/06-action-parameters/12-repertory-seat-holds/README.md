@@ -7,10 +7,12 @@ action and its own param.
 **What it teaches**
 
 - Stimulus assigns `event.params` on the shared event for each action.
-  `hold()` captures the seat's object, then `await`s. The row action runs
-  before that `await` resumes and replaces `event.params` with
-  `houseNote`. Reading `event.params` again sees the row. The captured
-  object still has the seat.
+  `hold()` captures the seat's object, then waits for a timer. The timer
+  runs after the click finishes bubbling, and `event.params` is now the
+  row's `houseNote`. The captured object still has the seat.
+  `await Promise.resolve()` is too early on a real click: that microtask
+  runs before the event reaches the row. A scripted `element.click()`
+  runs the row first.
 - `click->seat-hold#hold:stop` stops the click before `hold()` runs, so
   the row action does not replace the params. After the wait they are
   still the orchestra seat.

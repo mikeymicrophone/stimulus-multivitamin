@@ -4,10 +4,11 @@
 
   Teaches:
   - Each action assigns event.params on the shared event object. hold()
-    reads the seat's params, then awaits. The row's click action runs
-    before that await resumes and replaces event.params with the row's
-    houseNote. A reference saved before the await still points at the
-    seat's object.
+    reads the seat's params, then waits for a timer. That timer runs
+    after the click finishes bubbling, so event.params is the row's
+    houseNote. A reference saved before the wait still points at the
+    seat's object. await Promise.resolve() resumes too early on a real
+    click: the microtask runs before the event reaches the row.
   - click->seat-hold#hold:stop calls stopPropagation before hold() runs,
     so the row action never replaces params.
   - The seat label is a span inside the button. event.target is the span.

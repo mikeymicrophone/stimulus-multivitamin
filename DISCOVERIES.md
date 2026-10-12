@@ -818,18 +818,20 @@ cache them in `connect()`.
 **What happens.** Stimulus assigns `event.params` on the shared event
 object just before each action method. The object is built again from
 the attributes, so a property the first method adds is not visible to
-the second method on the same element. A later action — including an
-ancestor that runs after this method hits `await` — replaces the
-property. A reference saved before the `await` still points at the
+the second method on the same element. After the click has finished
+bubbling, a later action's assignment is what `event.params` points at.
+A reference saved at the start of the method still points at the
 original object. `:stop` keeps ancestors from running, so nothing
 replaces it.
 
-**Why it matters.** `const seat = event.params` before the first
-`await` is stable. `event.params.sectionName` after the `await` may be
-missing, or may be the ancestor's house note.
+**Why it matters.** `const seat = event.params` is stable.
+`event.params.sectionName` after the click may be missing, or may be
+the ancestor's house note. `await Promise.resolve()` is not late enough
+to see that on a real click; see
+[A real click runs microtasks before the event finishes bubbling](#a-real-click-runs-microtasks-before-the-event-finishes-bubbling).
 
-**What to do.** Copy the fields you need before the first `await`. Don't
-assume the event's `params` property is still yours after you yield.
+**What to do.** Copy the fields you need before you yield. Don't read
+`event.params` again after the click has moved on.
 
 **Seen in:** [Campus mail tray](features/06-action-parameters/05-campus-mail-tray/),
 [Repertory seat holds](features/06-action-parameters/12-repertory-seat-holds/).
@@ -1232,6 +1234,31 @@ should freeze the scroll and does not.
 **Why this section.** Ignoring `preventDefault()` is the Event Listener
 options spec; it shows up here because Stimulus exposes those flags as
 `:passive` / `:prevent`.
+
+### A real click runs microtasks before the event finishes bubbling
+
+**What happens.** During a real click, the browser runs the microtask
+checkpoint when a listener returns, before the event bubbles to the next
+element. `await Promise.resolve()` inside an action therefore resumes
+before ancestor actions run, and `event.params` is still the seat's
+object. `element.click()` from script does not checkpoint there: the
+rest of the bubble, including the ancestor action, runs before that
+microtask, so the same `await` already sees the ancestor's params.
+`setTimeout` runs after the whole dispatch either way.
+
+**Why it matters.** A check that uses `element.click()` and
+`await Promise.resolve()` will say the params were replaced. The same
+code, clicked for real, still sees the seat. The two disagree, and only
+the timer agrees with both.
+
+**What to do.** Copy the params before yielding. When the read has to
+happen after the click, wait for a timer. Don't treat
+`Promise.resolve()` as "after the bubble."
+
+**Seen in:** [Repertory seat holds](features/06-action-parameters/12-repertory-seat-holds/).
+
+**Why this section.** The checkpoint is the browser. Stimulus is what
+writes a new `event.params` for each action along the way.
 
 ### HTML lowercases param attribute names
 
