@@ -31,7 +31,7 @@ export default class extends Controller {
     this.statusTarget.textContent = "Draft cleared."
   }
 
-  handleSpecialKeys(event) {
+  commitIfCommaOrBackspace(event) {
     if (event.key === ",") {
       event.preventDefault()
       this.addDraftAsTag()

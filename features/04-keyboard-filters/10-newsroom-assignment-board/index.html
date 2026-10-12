@@ -1,0 +1,144 @@
+<!doctype html>
+<!--
+  Keyboard filters · 10 · Newsroom assignment board
+
+  Teaches:
+  - Modifier combinations have to list every flag. keydown.alt+left moves
+    one column; it does not match Alt+Shift+Left, because shiftKey is true.
+    keydown.shift+alt+left jumps to Pitch. The order of alt and shift in
+    the descriptor does not matter; both are looked up with includes().
+  - keydown.ctrl+enter opens the story. Ctrl+Enter does not match Enter
+    or Alt+Enter.
+  - Alt+ArrowLeft is Back in some browsers. The actions preventDefault()
+    so the assignment board keeps the key.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Newsroom assignment board · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+      .column { background: #f3ecdd; border-radius: 10px; padding: 0.5rem; min-height: 16rem; }
+      .column h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+      .column-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; min-height: 2rem; }
+      .story { display: grid; gap: 0.15rem; width: 100%; text-align: left; border-radius: 8px; background: #fff; border: 1px solid #cfc6b3; color: inherit; font-weight: 600; padding: 0.45rem 0.55rem; }
+      .story small { font-weight: 400; color: var(--muted-ink, #555); }
+      .story[aria-current="true"] { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .board-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); margin-top: 0.7rem; }
+      .story-drawer { position: fixed; inset: auto 0 0 0; background: #fff; border-top: 3px solid var(--bottle-green, #1f3d2b); padding: 0.9rem 1.2rem 1.2rem; box-shadow: 0 -8px 24px rgba(0,0,0,0.12); }
+      .legend { font-size: 0.85rem; color: var(--muted-ink, #555); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import AssignmentBoardController from "./assignment_board_controller.js"
+
+      const application = Application.start()
+      application.register("assignment-board", AssignmentBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>10 · Newsroom assignment board</span>
+      </nav>
+      <h1>Newsroom assignment board</h1>
+      <p class="lede">
+        The Marigold Dispatch's assignment desk. Alt+arrows move a story
+        one column or one slot; Shift+Alt+arrows jump to Pitch or
+        Published; Ctrl+Enter opens it.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="assignment-board"
+               data-action="keydown.alt+left->assignment-board#moveAcross keydown.alt+right->assignment-board#moveAcross keydown.alt+up->assignment-board#moveAlong keydown.alt+down->assignment-board#moveAlong keydown.shift+alt+left->assignment-board#jumpToEdge keydown.shift+alt+right->assignment-board#jumpToEdge keydown.ctrl+enter->assignment-board#openStory keydown.esc->assignment-board#closeDrawer">
+        <h2>The Marigold Dispatch · Monday assignments</h2>
+        <p class="legend">Alt+←/→ column · Alt+↑/↓ order · Shift+Alt+←/→ jump · Ctrl+Enter open · Escape close</p>
+        <div class="board">
+          <section class="column" data-column="pitch">
+            <h3>Pitch</h3>
+            <ul class="column-list" data-assignment-board-target="columnList" data-column="pitch">
+              <li>
+                <button type="button" class="story" data-assignment-board-target="story" data-action="assignment-board#focusStory"
+                        data-story-id="maple-blight" data-column="pitch" data-headline="Maple blight on the parkway" data-lede="City arborists want the east parkway maples surveyed before the next warm spell." tabindex="-1" aria-current="false">
+                  Maple blight on the parkway
+                  <small>Nia Colfax · metro</small>
+                </button>
+              </li>
+            </ul>
+          </section>
+          <section class="column" data-column="reporting">
+            <h3>Reporting</h3>
+            <ul class="column-list" data-assignment-board-target="columnList" data-column="reporting">
+              <li>
+                <button type="button" class="story" data-assignment-board-target="story" data-action="assignment-board#focusStory"
+                        data-story-id="harbor-crane" data-column="reporting" data-headline="Harbor crane collapse" data-lede="A harbor crane dropped a shipping spreader on Pier 4 just after 6 a.m. No injuries reported." tabindex="0" aria-current="true">
+                  Harbor crane collapse
+                  <small>Jonah Pell · waterfront</small>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="story" data-assignment-board-target="story" data-action="assignment-board#focusStory"
+                        data-story-id="school-board" data-column="reporting" data-headline="School board overtime" data-lede="District 19 logged 1,200 overtime hours in September, mostly at the two new buildings." tabindex="-1" aria-current="false">
+                  School board overtime
+                  <small>Priya Nandakumar · education</small>
+                </button>
+              </li>
+            </ul>
+          </section>
+          <section class="column" data-column="copy-desk">
+            <h3>Copy desk</h3>
+            <ul class="column-list" data-assignment-board-target="columnList" data-column="copy-desk">
+              <li>
+                <button type="button" class="story" data-assignment-board-target="story" data-action="assignment-board#focusStory"
+                        data-story-id="library-levy" data-column="copy-desk" data-headline="Library levy explainer" data-lede="What the 12-cent levy pays for, precinct by precinct, ahead of the November mailer." tabindex="-1" aria-current="false">
+                  Library levy explainer
+                  <small>Chris Okafor · politics</small>
+                </button>
+              </li>
+            </ul>
+          </section>
+          <section class="column" data-column="published">
+            <h3>Published</h3>
+            <ul class="column-list" data-assignment-board-target="columnList" data-column="published">
+              <li>
+                <button type="button" class="story" data-assignment-board-target="story" data-action="assignment-board#focusStory"
+                        data-story-id="ferry-schedule" data-column="published" data-headline="Winter ferry schedule" data-lede="Sailings drop to hourly after 8 p.m. starting the first Monday in November." tabindex="-1" aria-current="false">
+                  Winter ferry schedule
+                  <small>Len Cho · transit</small>
+                </button>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <p class="board-status" data-assignment-board-target="status" aria-live="polite">Harbor crane collapse is selected.</p>
+        <div class="story-drawer" data-assignment-board-target="drawer" hidden>
+          <h3 data-assignment-board-target="drawerTitle"></h3>
+          <p data-assignment-board-target="drawerBody"></p>
+          <button type="button" class="quiet" data-action="assignment-board#closeDrawer">Close</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="assignment_board_controller.js"><code>assignment_board_controller.js</code></a> — Alt+arrows, Shift+Alt jumps, Ctrl+Enter to open</li>
+          <li>This page's source — columns, stories, filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

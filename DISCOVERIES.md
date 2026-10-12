@@ -441,6 +441,171 @@ toggle that shares the page with other menus.
 **Seen in:** [Menu that closes on outside click](features/03-actions/09-menu-that-closes-on-outside-click/),
 [Spreadsheet-style cell editing](features/03-actions/13-spreadsheet-style-cell-editing/).
 
+## Keyboard filters
+
+### Filters match every modifier flag, not just the named key
+
+**What happens.** `keydown.enter` compares `event.key` to `"Enter"` *and*
+requires `shiftKey`, `altKey`, `ctrlKey`, and `metaKey` to be false.
+Shift+Enter does not match. `keydown.alt+left` does not match
+Alt+Shift+Left. The order of modifiers in the descriptor does not matter
+(`shift+alt+left` and `alt+shift+left` are the same set).
+
+**Why it matters.** A chat composer that "sends on Enter" will also send
+on Shift+Enter — the usual "newline" chord — unless Shift+Enter is a
+separate descriptor. A kanban that moves on Alt+arrows will ignore
+Shift+Alt+arrows until those combinations are declared too.
+
+**What to do.** Declare each chord you want: `keydown.enter` and
+`keydown.shift+enter`, or `keydown.alt+left` and `keydown.shift+alt+left`.
+
+**Seen in:** [Clinic message composer](features/04-keyboard-filters/02-clinic-message-composer/),
+[Newsroom assignment board](features/04-keyboard-filters/10-newsroom-assignment-board/).
+
+### A local key filter never sees keys from a sibling
+
+**What happens.** `keydown` goes to the focused element and bubbles
+through its ancestors. A `keydown.esc` action on a dialog element does
+not run while focus is in a sibling field. `keydown.esc@document` does.
+
+**Why it matters.** Confirmation dialogs, palettes, and lightboxes that
+listen on themselves miss Escape as soon as the visitor is typing
+somewhere else on the page.
+
+**What to do.** Put dismiss/open shortcuts on `@document` or `@window`,
+and return early when the UI they control is not active.
+
+**Seen in:** [Pharmacy refill confirmation](features/04-keyboard-filters/01-pharmacy-refill-confirmation/),
+[Darkroom contact sheet](features/04-keyboard-filters/03-darkroom-contact-sheet/)
+(the opposite: left/right stay on the filmstrip on purpose).
+
+### `@window` filters still run while typing in a field
+
+**What happens.** `keydown` bubbles to `window`. A
+`keydown.a@window` action fires while the caret is in an `<input>`,
+`<textarea>`, or `contenteditable` element. Stimulus does not skip
+those targets.
+
+**Why it matters.** Letter-key shortcuts steal keystrokes from team
+names, notes, and captions. Save shortcuts (`ctrl+s`) usually *should*
+win from those fields; answer keys usually should not.
+
+**What to do.** Ignore the event when `event.target` is inside an
+editable field, or, for a command palette, let the shortcut win on
+purpose.
+
+**Seen in:** [Pub quiz buzzers](features/04-keyboard-filters/04-pub-quiz-buzzers/)
+(skip the team-name field),
+[Hospital command palette](features/04-keyboard-filters/12-hospital-command-palette/)
+(Ctrl+K wins from chart notes),
+[Legal brief editor](features/04-keyboard-filters/11-legal-brief-editor/)
+(save from every field).
+
+### Unknown filter names throw when a key arrives, not when the page parses
+
+**What happens.** `keydown.comma` parses as a valid descriptor. The first
+keyboard event that reaches that action throws
+`Error: contains unknown key filter: comma` into `handleError`. The
+built-in map has `enter`, `tab`, `esc`, `space`, `up`, `down`, `left`,
+`right`, `home`, `end`, `page_up`, `page_down`, `a`–`z`, and `0`–`9`.
+`page-up`, `escape`, `backspace`, `comma`, and `plus` are not in it.
+
+**Why it matters.** The page looks fine until someone presses a key.
+`page_up` is the real name; `page-up` is an unknown filter.
+
+**What to do.** Add the name to `schema.keyMappings`, or read `event.key`
+from an unfiltered `keydown` action.
+
+**Seen in:** [Recipe dietary tags](features/04-keyboard-filters/06-recipe-dietary-tags/)
+(comma and Backspace via `event.key`),
+[Vet appointment calendar](features/04-keyboard-filters/08-vet-appointment-calendar/)
+(`page_up`, not `page-up`),
+[Deli counter scale](features/04-keyboard-filters/13-deli-counter-scale/)
+(custom mappings).
+
+### Custom mappings belong on the schema passed to `Application.start()`
+
+**What happens.** `Action` reads `this.schema.keyMappings` from the
+application. Spreading `defaultSchema.keyMappings` and adding `plus: "+"`,
+`f2: "F2"`, and so on makes `keydown.plus` and `keydown.f2` work.
+Replacing `keyMappings` outright drops `enter` and `esc`. The comparison
+is `event.key`, case-insensitive, still with exact modifier flags.
+
+**Why it matters.** A scale that maps `plus` but forgets to keep the
+defaults can no longer listen for Enter. Numpad `+` is `event.key === "+"`
+with `shiftKey === false`; the main-keyboard `+` is Shift+`=` (`event.key`
+`"+"` with `shiftKey === true`), so it needs `keydown.shift+plus`.
+
+**What to do.** Pass `{ ...defaultSchema, keyMappings: { ...defaultSchema.keyMappings, plus: "+" } }`
+into `Application.start()`. Declare both the shifted and unshifted
+forms when the produced character is the same.
+
+**Seen in:** [Deli counter scale](features/04-keyboard-filters/13-deli-counter-scale/).
+
+### Filters only apply to `keydown`, `keyup`, and `keypress`
+
+**What happens.** The descriptor parser treats `.esc` as a key filter
+only when the event name is `keydown`, `keyup`, or `keypress`. On any
+other event it concatenates the suffix, so `click.esc` listens for an
+event literally named `click.esc`, which never fires. No error is logged.
+
+**Why it matters.** A "click the Escape-looking button" descriptor that
+borrows the keyboard-filter spelling fails silently.
+
+**What to do.** Use keyboard event names for key filters. The three
+events are not interchangeable: `keydown` repeats while held, `keyup`
+fires once, and `keypress` does not fire for Escape, Tab, or arrows.
+
+**Seen in:** [Ferry radio talkback](features/04-keyboard-filters/05-ferry-radio-talkback/).
+
+**Why this section.** The silent `click.esc` miss is Stimulus's parser;
+which keys fire `keypress` is the browser (see below).
+
+### Letter filters ignore case on `event.key`, but Shift is still a modifier
+
+**What happens.** `keydown.a` lowercases both sides, so Caps Lock + A
+matches (`event.key` is `"A"`, `shiftKey` is false). Shift+A does not,
+because `shiftKey` is true and the filter did not name `shift`.
+
+**Why it matters.** A buzzer that should accept `A` with Caps Lock on
+already does. One that should accept Shift+A needs `keydown.shift+a`.
+
+**What to do.** Treat Caps Lock as `keydown.a`. Declare `shift` when you
+mean the Shift key.
+
+**Seen in:** [Pub quiz buzzers](features/04-keyboard-filters/04-pub-quiz-buzzers/).
+
+### `alt+letter` compares `event.key`, which Option rewrites on macOS
+
+**What happens.** `keydown.alt+r` requires `event.key.toLowerCase() === "r"`
+and `altKey === true`. On macOS, Option+R often produces a different
+character (`®`, `å`, …), so the filter misses. `event.code` stays `KeyR`.
+
+**Why it matters.** Menu mnemonics that look right in the markup fail on
+Mac keyboards.
+
+**What to do.** Keep the Stimulus filter for Windows/Linux, and also
+match `event.altKey && event.code === "KeyR"` from an unfiltered
+`keydown@window` action.
+
+**Seen in:** [Kitchen expo menubar](features/04-keyboard-filters/09-kitchen-expo-menubar/).
+
+### There is no `cmdorctrl` modifier
+
+**What happens.** Meta is Command on macOS and the Windows key elsewhere.
+Ctrl is Control on every platform. Stimulus has no combined modifier.
+`keydown.meta+s` and `keydown.ctrl+s` are two descriptors.
+
+**Why it matters.** A save shortcut declared only as `ctrl+s` never runs
+for ⌘S. One declared only as `meta+s` never runs for Ctrl+S on Windows
+and Linux.
+
+**What to do.** Declare both. `preventDefault()` on each so the browser's
+Save dialog does not appear.
+
+**Seen in:** [Legal brief editor](features/04-keyboard-filters/11-legal-brief-editor/),
+[Hospital command palette](features/04-keyboard-filters/12-hospital-command-palette/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
@@ -676,6 +841,71 @@ true forever, and the carousel, tooltip, or menu never resumes.
 
 **Why this section.** Missing `pointerleave` is the browser; it bites
 because a Stimulus reconnect would otherwise restore a stale hover flag.
+
+### `keypress` does not fire for Escape, Tab, arrows, Home, End, or Page Up/Down
+
+**What happens.** Modern browsers fire `keypress` only for (some)
+printable characters. Space gets a `keypress`; Escape, Tab, arrows,
+Home, End, PageUp, and PageDown do not. `keydown` and `keyup` still
+fire for all of them. `keydown` repeats while the key is held; `keyup`
+fires once.
+
+**Why it matters.** `keypress.esc` is a valid Stimulus filter that never
+runs. Talkback that starts on `keydown.space` must ignore the repeats
+or it will flicker.
+
+**What to do.** Use `keydown` / `keyup` for non-printable keys. Treat a
+repeated `keydown` as "already doing this".
+
+**Seen in:** [Ferry radio talkback](features/04-keyboard-filters/05-ferry-radio-talkback/).
+
+### The `space` filter maps to `" "`, not `"Space"`
+
+**What happens.** Stimulus's built-in `space` mapping is the character
+`" "`. That matches `event.key`. `event.code` is `"Space"`.
+
+**Why it matters.** Reading `event.code === "Space"` in a method that
+already passed a `space` filter works, but a custom mapping of
+`space: "Space"` would match nothing.
+
+**What to do.** Keep the built-in mapping. `preventDefault()` on
+`keydown.space` so the page does not scroll.
+
+**Seen in:** [Ferry radio talkback](features/04-keyboard-filters/05-ferry-radio-talkback/),
+[Medication pack tabs](features/04-keyboard-filters/07-medication-pack-tabs/).
+
+### Enter in a textarea inserts a newline; Enter in an input submits the form
+
+**What happens.** The browser's default for Enter depends on the field.
+A textarea inserts a newline. An input in a form submits. A
+`contenteditable` region inserts a break. Stimulus filters do not cancel
+those defaults.
+
+**Why it matters.** `keydown.enter` on a textarea that "sends" still
+gets a newline unless the action `preventDefault()`s. `keydown.enter`
+on a tag field inside a form submits the form unless it does the same.
+Tab still moves focus unless `preventDefault()` runs during `keydown`.
+
+**What to do.** Call `preventDefault()` when the filter should own the
+key. Leave it off when you want the browser's newline (Shift+Enter in a
+composer).
+
+**Seen in:** [Clinic message composer](features/04-keyboard-filters/02-clinic-message-composer/),
+[Recipe dietary tags](features/04-keyboard-filters/06-recipe-dietary-tags/),
+[Legal brief editor](features/04-keyboard-filters/11-legal-brief-editor/).
+
+### Alt+ArrowLeft is Back in some browsers
+
+**What happens.** Alt+Left and Alt+Right are history navigation in
+Chrome and Firefox on Windows and Linux. The page sees the `keydown`
+and can `preventDefault()` it. Without that, a kanban that listens for
+`keydown.alt+left` also leaves the page.
+
+**Why it matters.** The story moves *and* the browser goes Back.
+
+**What to do.** `preventDefault()` in the Alt+arrow actions.
+
+**Seen in:** [Newsroom assignment board](features/04-keyboard-filters/10-newsroom-assignment-board/).
 
 ### An already-aborted `AbortSignal` silently adds nothing
 

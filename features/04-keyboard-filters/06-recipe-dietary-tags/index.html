@@ -80,7 +80,7 @@
             <label>
               Add a dietary tag
               <input type="text" name="tag-draft" data-dietary-tags-target="draft" autocomplete="off"
-                     data-action="keydown.enter->dietary-tags#commitTag keydown.tab->dietary-tags#commitTagAndAdvance keydown.esc->dietary-tags#clearDraft keydown->dietary-tags#handleSpecialKeys"
+                     data-action="keydown.enter->dietary-tags#commitTag keydown.tab->dietary-tags#commitTagAndAdvance keydown.esc->dietary-tags#clearDraft keydown->dietary-tags#commitIfCommaOrBackspace"
                      placeholder="nut-free, vegan, dairy-free">
             </label>
           </div>

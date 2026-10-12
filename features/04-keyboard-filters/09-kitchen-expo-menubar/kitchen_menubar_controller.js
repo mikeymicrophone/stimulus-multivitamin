@@ -48,6 +48,7 @@ export default class extends Controller {
 
   openDown(event) {
     event.preventDefault()
+    event.stopPropagation()
     this.openMenuName = this.focusedMenuName
     this.render()
     this.itemTargets.find((item) => item.dataset.menu === this.openMenuName)?.focus()
@@ -55,6 +56,7 @@ export default class extends Controller {
 
   openUp(event) {
     event.preventDefault()
+    event.stopPropagation()
     this.openMenuName = this.focusedMenuName
     this.render()
     const items = this.itemsFor(this.openMenuName)
@@ -64,6 +66,7 @@ export default class extends Controller {
   moveAmongItems(event) {
     if (!this.openMenuName) return
     event.preventDefault()
+    event.stopPropagation()
     const items = this.itemsFor(this.openMenuName)
     const currentIndex = items.indexOf(document.activeElement)
     const delta = event.key === "ArrowDown" ? 1 : -1
@@ -73,6 +76,7 @@ export default class extends Controller {
 
   moveToEdge(event) {
     event.preventDefault()
+    event.stopPropagation()
     const toEnd = event.key === "End"
     if (this.openMenuName) {
       const items = this.itemsFor(this.openMenuName)
@@ -87,6 +91,7 @@ export default class extends Controller {
   closeMenu(event) {
     if (!this.openMenuName) return
     event.preventDefault()
+    event.stopPropagation()
     const wasOpen = this.openMenuName
     this.openMenuName = null
     this.focusedMenuName = wasOpen
