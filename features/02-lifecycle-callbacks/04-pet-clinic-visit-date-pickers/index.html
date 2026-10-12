@@ -1,0 +1,162 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 04 · Pet clinic visit date pickers
+
+  Teaches:
+  - Third-party widgets are built in connect() and destroyed in disconnect().
+    flatpickr appends its pop-up calendar to <body>, outside the controller's
+    element, so removing the element leaves the calendar behind unless
+    disconnect() calls destroy().
+  - Keep durable state in the DOM, not in the widget. The chosen date is the
+    <input>'s value, so moving a pet (disconnect, then connect) builds a fresh
+    widget that still shows the date.
+  - connect() and disconnect() run after the DOM change, from a
+    MutationObserver callback, not inside the code that changed the DOM. The
+    form counts pop-up calendars on the next animation frame for that reason.
+  - Elements cloned from a <template> get their own widget when they connect.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pet clinic visit date pickers · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <style>
+      .pet-list { display: grid; gap: 0.85rem; }
+      .pet-visit { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.6rem 1rem 0.85rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem 1rem; align-items: end; }
+      .pet-visit legend { font-weight: 700; color: var(--bottle-green, #1f3d2b); padding: 0 0.3rem; }
+      .pet-visit label { display: grid; gap: 0.2rem; font-size: 0.9rem; }
+      .pet-visit select { padding: 0.35rem 0.4rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .date-field input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .date-hint { margin: 0; font-size: 0.8rem; color: var(--muted-ink, #555); grid-column: 1 / -1; }
+      .pet-actions { display: flex; gap: 0.4rem; grid-column: 1 / -1; }
+      .request-footer { display: flex; flex-wrap: wrap; gap: 0.75rem 1rem; align-items: center; margin-top: 1rem; }
+      .widget-count { font-size: 0.85rem; color: var(--muted-ink, #555); margin: 1rem 0 0; }
+      .confirmation { font-weight: 600; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js",
+          "flatpickr": "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/+esm"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import VisitRequestController from "./visit_request_controller.js"
+      import VisitDatePickerController from "./visit_date_picker_controller.js"
+
+      const application = Application.start()
+      application.register("visit-request", VisitRequestController)
+      application.register("visit-date-picker", VisitDatePickerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>04 · Pet clinic visit date pickers</span>
+      </nav>
+      <h1>Pet clinic visit date pickers</h1>
+      <p class="lede">
+        A veterinary clinic's visit request form. Each pet's preferred date is
+        a <code>visit-date-picker</code> controller wrapping a flatpickr
+        calendar. The <code>visit-request</code> controller adds, removes, and
+        reorders pets.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="visit-request" data-action="visit-request#requestVisits">
+        <h2>Maple Hollow Veterinary Clinic · Request a visit</h2>
+
+        <div class="pet-list" data-visit-request-target="petList">
+          <fieldset class="pet-visit" data-visit-request-target="petVisit">
+            <legend>Pet 1</legend>
+            <label>Pet's name <input type="text" name="pet_name" value="Biscuit"></label>
+            <label>Reason for visit
+              <select name="visit_reason">
+                <option selected>Annual exam and vaccines</option>
+                <option>Dental cleaning</option>
+                <option>Skin or ear problem</option>
+                <option>Limping or injury</option>
+              </select>
+            </label>
+            <div class="date-field" data-controller="visit-date-picker">
+              <label>Preferred date <input type="text" name="preferred_date" placeholder="Choose a date" data-visit-date-picker-target="dateInput"></label>
+              <p class="date-hint" data-visit-date-picker-target="summary"></p>
+            </div>
+            <div class="pet-actions">
+              <button type="button" class="quiet" data-action="visit-request#movePetUp">Move up</button>
+              <button type="button" class="quiet" data-action="visit-request#removePet">Remove pet</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="pet-visit" data-visit-request-target="petVisit">
+            <legend>Pet 2</legend>
+            <label>Pet's name <input type="text" name="pet_name" value="Juniper"></label>
+            <label>Reason for visit
+              <select name="visit_reason">
+                <option>Annual exam and vaccines</option>
+                <option selected>Dental cleaning</option>
+                <option>Skin or ear problem</option>
+                <option>Limping or injury</option>
+              </select>
+            </label>
+            <div class="date-field" data-controller="visit-date-picker">
+              <label>Preferred date <input type="text" name="preferred_date" placeholder="Choose a date" data-visit-date-picker-target="dateInput"></label>
+              <p class="date-hint" data-visit-date-picker-target="summary"></p>
+            </div>
+            <div class="pet-actions">
+              <button type="button" class="quiet" data-action="visit-request#movePetUp">Move up</button>
+              <button type="button" class="quiet" data-action="visit-request#removePet">Remove pet</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <template data-visit-request-target="petVisitTemplate">
+          <fieldset class="pet-visit" data-visit-request-target="petVisit">
+            <legend></legend>
+            <label>Pet's name <input type="text" name="pet_name" placeholder="Pet's name"></label>
+            <label>Reason for visit
+              <select name="visit_reason">
+                <option>Annual exam and vaccines</option>
+                <option>Dental cleaning</option>
+                <option>Skin or ear problem</option>
+                <option>Limping or injury</option>
+              </select>
+            </label>
+            <div class="date-field" data-controller="visit-date-picker">
+              <label>Preferred date <input type="text" name="preferred_date" placeholder="Choose a date" data-visit-date-picker-target="dateInput"></label>
+              <p class="date-hint" data-visit-date-picker-target="summary"></p>
+            </div>
+            <div class="pet-actions">
+              <button type="button" class="quiet" data-action="visit-request#movePetUp">Move up</button>
+              <button type="button" class="quiet" data-action="visit-request#removePet">Remove pet</button>
+            </div>
+          </fieldset>
+        </template>
+
+        <div class="request-footer">
+          <button type="button" class="quiet" data-action="visit-request#addPet">Add another pet</button>
+          <button type="submit">Request visits</button>
+          <span class="confirmation" data-visit-request-target="confirmation" aria-live="polite"></span>
+        </div>
+        <p class="widget-count" data-visit-request-target="calendarCount" aria-live="polite"></p>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="visit_date_picker_controller.js"><code>visit_date_picker_controller.js</code></a> — builds a flatpickr calendar on connect and destroys it on disconnect</li>
+          <li><a href="visit_request_controller.js"><code>visit_request_controller.js</code></a> — adds, removes, and reorders pets; counts pop-up calendars</li>
+          <li>This page's source — markup, importmap (with flatpickr), and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

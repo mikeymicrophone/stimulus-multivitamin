@@ -1,0 +1,100 @@
+<section class="insurance-quote" data-controller="insurance-quote" data-insurance-quote-quote-name-value="Homeowners · 9 Juniper Way">
+  <div class="quote-heading">
+    <h3>Homeowners · 9 Juniper Way, Ashford</h3>
+    <button type="button" class="quiet" data-action="insurance-quote#startQuote" data-insurance-quote-quote-url-param="quotes/renters.html">Quote renters insurance instead</button>
+  </div>
+  <div class="quote-layout">
+    <div>
+      <div class="coverage-list" data-insurance-quote-target="coverageList">
+        <fieldset class="coverage" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Dwelling">
+          <legend>Dwelling</legend>
+          <label>Limit
+            <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+              <option data-annual-premium="980">$350,000</option>
+              <option data-annual-premium="1140" selected>$425,000</option>
+              <option data-annual-premium="1310">$500,000</option>
+            </select>
+          </label>
+          <span class="coverage-premium" data-coverage-option-target="premium"></span>
+        </fieldset>
+        <fieldset class="coverage" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Personal property">
+          <legend>Personal property</legend>
+          <label>Limit
+            <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+              <option data-annual-premium="310">$150,000</option>
+              <option data-annual-premium="385" selected>$200,000</option>
+              <option data-annual-premium="450">$250,000</option>
+            </select>
+          </label>
+          <span class="coverage-premium" data-coverage-option-target="premium"></span>
+        </fieldset>
+        <fieldset class="coverage" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Personal liability">
+          <legend>Personal liability</legend>
+          <label>Limit
+            <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+              <option data-annual-premium="96" selected>$300,000</option>
+              <option data-annual-premium="128">$500,000</option>
+            </select>
+          </label>
+          <span class="coverage-premium" data-coverage-option-target="premium"></span>
+        </fieldset>
+      </div>
+
+      <div class="add-coverage">
+        <select aria-label="Optional coverage" data-insurance-quote-target="addCoverageChoice">
+          <option value="">Add optional coverage…</option>
+          <option value="Water backup">Water backup</option>
+          <option value="Scheduled jewelry">Scheduled jewelry</option>
+          <option value="Identity theft restoration">Identity theft restoration</option>
+        </select>
+        <button type="button" class="quiet" data-action="insurance-quote#addRider">Add</button>
+      </div>
+    </div>
+
+    <aside class="quote-summary">
+      <h4>Your premium</h4>
+      <p class="muted" data-insurance-quote-target="status">Loading the rating engine…</p>
+      <ul data-insurance-quote-target="lineItems"></ul>
+      <p class="quote-total"><strong data-insurance-quote-target="annualTotal">—</strong> <span data-insurance-quote-target="monthlyTotal"></span></p>
+    </aside>
+  </div>
+
+  <template data-insurance-quote-target="coverageTemplate" data-coverage-name="Water backup">
+    <fieldset class="coverage rider" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Water backup">
+      <legend>Water backup</legend>
+      <label>Limit
+        <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+          <option data-annual-premium="85">$10,000</option>
+          <option data-annual-premium="140">$25,000</option>
+        </select>
+      </label>
+      <span class="coverage-premium" data-coverage-option-target="premium"></span>
+      <button type="button" class="quiet" data-action="coverage-option#remove">Remove</button>
+    </fieldset>
+  </template>
+  <template data-insurance-quote-target="coverageTemplate" data-coverage-name="Scheduled jewelry">
+    <fieldset class="coverage rider" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Scheduled jewelry">
+      <legend>Scheduled jewelry</legend>
+      <label>Limit
+        <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+          <option data-annual-premium="60">$5,000</option>
+          <option data-annual-premium="165">$15,000</option>
+        </select>
+      </label>
+      <span class="coverage-premium" data-coverage-option-target="premium"></span>
+      <button type="button" class="quiet" data-action="coverage-option#remove">Remove</button>
+    </fieldset>
+  </template>
+  <template data-insurance-quote-target="coverageTemplate" data-coverage-name="Identity theft restoration">
+    <fieldset class="coverage rider" data-controller="coverage-option" data-insurance-quote-target="coverage" data-coverage-option-coverage-name-value="Identity theft restoration">
+      <legend>Identity theft restoration</legend>
+      <label>Limit
+        <select data-coverage-option-target="limit" data-action="coverage-option#limitChanged">
+          <option data-annual-premium="35">$25,000</option>
+        </select>
+      </label>
+      <span class="coverage-premium" data-coverage-option-target="premium"></span>
+      <button type="button" class="quiet" data-action="coverage-option#remove">Remove</button>
+    </fieldset>
+  </template>
+</section>

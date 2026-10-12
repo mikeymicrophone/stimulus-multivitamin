@@ -1,0 +1,145 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 12 · Photo upload progress
+
+  Teaches:
+  - A view's lifetime and its work's lifetime are different. Uploads live in
+    a module-level queue keyed by id; photo-upload rows are rebuilt every
+    time the list re-renders. disconnect() stops watching an upload but never
+    cancels it.
+  - connect() re-attaches by identity. A new row reads its upload id from a
+    value, looks the upload up, and renders its current progress, so a
+    re-render picks up mid-transfer.
+  - Per-view resources are released in disconnect(). Each row makes its own
+    thumbnail with URL.createObjectURL() and revokes it on disconnect;
+    otherwise every re-render would leak a full-size photo.
+  - State that must survive a re-render (the room each photo belongs to)
+    goes in the long-lived queue, not on the row's instance.
+  - Watching with an AbortSignal makes "stop listening" one call, for both
+    the rows and the report.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Photo upload progress · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .report-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-bottom: 0.75rem; }
+      .report-toolbar label { font-size: 0.9rem; }
+      .photo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+      .room-heading { font-weight: 700; color: var(--bottle-green, #1f3d2b); margin-top: 0.5rem; }
+      .photo-upload { display: grid; grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.5rem; }
+      .photo-upload[data-upload-status="cancelled"] { opacity: 0.6; }
+      .photo-thumbnail { width: 6rem; height: 4.5rem; object-fit: cover; border-radius: 6px; background: #ece4d3; }
+      .photo-details { display: grid; gap: 0.25rem; }
+      .photo-name { margin: 0; font-weight: 600; font-size: 0.9rem; overflow-wrap: anywhere; }
+      .photo-details label { font-size: 0.85rem; }
+      .photo-details select { padding: 0.2rem 0.3rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .photo-details progress { width: 100%; }
+      .upload-status { font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .photo-actions { display: grid; gap: 0.3rem; }
+      .photo-actions button { font-size: 0.8rem; padding: 0.1rem 0.6rem; }
+      .photo-actions button[hidden] { display: none; }
+      .report-footer { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-top: 1rem; }
+      .report-sent { text-align: center; padding: 1.5rem 1rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import InspectionReportController from "./inspection_report_controller.js"
+      import PhotoUploadController from "./photo_upload_controller.js"
+
+      const application = Application.start()
+      application.register("inspection-report", InspectionReportController)
+      application.register("photo-upload", PhotoUploadController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>12 · Photo upload progress</span>
+      </nav>
+      <h1>Photo upload progress</h1>
+      <p class="lede">
+        A home inspector attaches photos to a report. The
+        <code>inspection-report</code> controller starts uploads and re-renders
+        its whole photo list whenever it changes; each row is a
+        <code>photo-upload</code> controller that shows one upload's progress.
+        Uploads are simulated, so nothing leaves your browser.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="inspection-report"
+               data-inspection-report-sample-photos-value='[
+                 {"fileName": "attic-water-stain.png", "caption": "Attic: water stain by chimney", "room": "Roof & attic", "tone": "#7a6a58"},
+                 {"fileName": "panel-double-tap.png", "caption": "Panel: double-tapped breaker", "room": "Electrical", "tone": "#5d6b78"},
+                 {"fileName": "basement-efflorescence.png", "caption": "Basement: efflorescence", "room": "Basement", "tone": "#8a8a7a"},
+                 {"fileName": "kitchen-outlet-no-gfci.png", "caption": "Kitchen: outlet lacks GFCI", "room": "Kitchen", "tone": "#9a7b5c"}
+               ]'>
+        <h2>Keystone Home Inspections · Report IR-3307 · 1520 Garnet Street</h2>
+        <div data-inspection-report-target="reportBody">
+          <div class="report-toolbar">
+            <label>Attach photos <input type="file" accept="image/*" multiple data-inspection-report-target="fileInput" data-action="inspection-report#addPhotos"></label>
+            <button type="button" class="quiet" data-action="inspection-report#addSamplePhotos">Add sample photos</button>
+            <label><input type="checkbox" data-inspection-report-target="groupByRoom" data-action="inspection-report#regroup"> Group by room</label>
+          </div>
+
+          <ul class="photo-list" data-inspection-report-target="photoList"></ul>
+
+          <template data-inspection-report-target="photoTemplate">
+            <li class="photo-upload" data-controller="photo-upload">
+              <img class="photo-thumbnail" alt="" data-photo-upload-target="thumbnail">
+              <div class="photo-details">
+                <p class="photo-name" data-photo-upload-target="fileName"></p>
+                <label>Room
+                  <select data-photo-upload-target="room" data-action="photo-upload#assignRoom">
+                    <option>Unassigned</option>
+                    <option>Exterior</option>
+                    <option>Roof &amp; attic</option>
+                    <option>Kitchen</option>
+                    <option>Bathrooms</option>
+                    <option>Basement</option>
+                    <option>Electrical</option>
+                  </select>
+                </label>
+                <progress max="100" value="0" data-photo-upload-target="progress"></progress>
+                <span class="upload-status" data-photo-upload-target="status" aria-live="polite"></span>
+              </div>
+              <div class="photo-actions">
+                <button type="button" class="quiet" data-photo-upload-target="cancelButton" data-action="photo-upload#cancel">Cancel upload</button>
+                <button type="button" class="quiet" data-action="inspection-report#removePhoto">Remove</button>
+              </div>
+            </li>
+          </template>
+
+          <div class="report-footer">
+            <button type="button" data-inspection-report-target="sendButton" data-action="inspection-report#sendReport" disabled>Send report</button>
+            <span class="muted" data-inspection-report-target="summary" aria-live="polite"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="photo_upload_controller.js"><code>photo_upload_controller.js</code></a> — one disposable row per upload; watches progress and owns a thumbnail URL while connected</li>
+          <li><a href="inspection_report_controller.js"><code>inspection_report_controller.js</code></a> — starts uploads and re-renders the photo list</li>
+          <li><a href="upload_queue.js"><code>upload_queue.js</code></a> — the long-lived upload queue, with simulated transfers</li>
+          <li><a href="report-sent.html"><code>report-sent.html</code></a> — the server's confirmation</li>
+          <li>This page's source — markup, sample photo list, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

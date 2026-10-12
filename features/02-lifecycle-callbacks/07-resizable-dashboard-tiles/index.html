@@ -1,0 +1,180 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 07 · Resizable dashboard tiles
+
+  Teaches:
+  - Create the ResizeObserver once in initialize(), observe in connect(),
+    and call observer.disconnect() in disconnect(). The same observer object
+    is reused every time the tile reconnects.
+  - observe() reports the element's current size right away, so connect()
+    doesn't measure anything itself, and a moved tile gets its new size as
+    soon as it reconnects.
+  - A ResizeObserver hears every size change, not only window resizes: a move
+    to the narrow sidebar (which reconnects the tile), a "Span two columns"
+    class toggle (which doesn't), and a drag of the resize handle.
+  - A detached element that is put back reconnects to the same instance, so
+    a hidden tile keeps its selected series when it is shown again.
+  - Tiles have a fixed height, so changing their contents inside the
+    observer callback never changes the observed size and never triggers
+    another round of callbacks.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Resizable dashboard tiles · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .dashboard-columns { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1rem; align-items: start; }
+      .main-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; align-content: start; min-height: 6rem; }
+      .sidebar-column { display: grid; gap: 0.75rem; align-content: start; min-height: 6rem; background: #f7f2e7; border-radius: 10px; padding: 0.5rem; }
+      .column-label { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--muted-ink, #555); text-transform: uppercase; letter-spacing: 0.04em; }
+      .dashboard-tile { box-sizing: border-box; height: 12.5rem; min-width: 11rem; max-width: 100%; overflow: auto; resize: horizontal; display: flex; flex-direction: column; gap: 0.3rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.6rem 0.75rem; background: var(--card, #fff); }
+      .dashboard-tile.spans-two-columns { grid-column: span 2; }
+      .dashboard-tile h3 { margin: 0; font-size: 0.95rem; }
+      .series-picker { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+      .series-picker[hidden], .sparkline[hidden] { display: none; }
+      .series-picker button { font-size: 0.75rem; padding: 0.05rem 0.5rem; }
+      .series-picker [aria-pressed="true"] { background: #e7efe6; color: var(--bottle-green, #1f3d2b); border-color: var(--bottle-green, #1f3d2b); }
+      .tile-headline { margin: 0; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .dashboard-tile[data-tile-layout="compact"] .tile-headline { font-size: 1.9rem; }
+      .sparkline { flex: 1; min-height: 0; }
+      .sparkline svg { width: 100%; height: 100%; display: block; }
+      .sparkline polyline { stroke: var(--capsule-amber-deep, #b5651d); stroke-width: 2; }
+      .tile-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.4rem; margin-top: auto; }
+      .tile-footer button { font-size: 0.75rem; padding: 0.05rem 0.5rem; }
+      .tile-footer button[aria-pressed="true"] { background: #e7efe6; }
+      .layout-note { font-size: 0.75rem; color: var(--muted-ink, #555); margin-right: auto; }
+      .hidden-tray { margin-top: 1rem; font-size: 0.9rem; }
+      .hidden-tray ul { list-style: none; padding: 0; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import OperationsDashboardController from "./operations_dashboard_controller.js"
+      import DashboardTileController from "./dashboard_tile_controller.js"
+
+      const application = Application.start()
+      application.register("operations-dashboard", OperationsDashboardController)
+      application.register("dashboard-tile", DashboardTileController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>07 · Resizable dashboard tiles</span>
+      </nav>
+      <h1>Resizable dashboard tiles</h1>
+      <p class="lede">
+        A water utility's operations dashboard. Each tile is a
+        <code>dashboard-tile</code> controller that picks a compact, standard,
+        or wide layout from its own width. The
+        <code>operations-dashboard</code> controller moves, widens, hides, and
+        restores tiles.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="operations-dashboard">
+        <h2>Cedar Falls Water Utility · Operations</h2>
+        <p class="muted">Drag a tile's lower-right corner to resize it.</p>
+
+        <div class="dashboard-columns">
+          <div class="main-column" data-operations-dashboard-target="mainColumn">
+            <p class="column-label">Main area</p>
+
+            <article class="dashboard-tile" id="tile-reservoir-levels" data-controller="dashboard-tile" data-operations-dashboard-target="tile"
+                     data-dashboard-tile-unit-value="% full"
+                     data-dashboard-tile-series-value='{"North reservoir":[78.4,78.1,77.9,77.6,77.2,76.9,77.8,78.6,78.3,77.9,77.5,77.1,76.8,76.4,76.0,75.7,75.3,75.0,74.6,74.9,75.8,75.4,75.0,74.6,74.1,73.7,73.2,72.8,72.3,71.9],"South reservoir":[64.2,64.5,64.9,65.1,65.0,65.4,65.8,66.1,66.0,66.3,66.7,66.9,67.2,67.0,67.4,67.8,68.0,67.9,68.2,68.5,68.4,68.8,69.0,68.7,68.9,69.2,69.4,69.1,69.3,69.6]}'>
+              <h3>Reservoir levels</h3>
+              <div class="series-picker" data-dashboard-tile-target="seriesPicker"></div>
+              <p class="tile-headline" data-dashboard-tile-target="headline"></p>
+              <div class="sparkline" data-dashboard-tile-target="sparkline"><svg preserveAspectRatio="none" role="img"><title></title><polyline fill="none" vector-effect="non-scaling-stroke" points=""/></svg></div>
+              <div class="tile-footer">
+                <span class="layout-note" data-dashboard-tile-target="layoutNote"></span>
+                <button type="button" class="quiet" data-action="operations-dashboard#moveTile">Move to sidebar</button>
+                <button type="button" class="quiet" aria-pressed="false" data-action="operations-dashboard#toggleSpan">Span two columns</button>
+                <button type="button" class="quiet" data-action="operations-dashboard#hideTile">Hide</button>
+              </div>
+            </article>
+
+            <article class="dashboard-tile" id="tile-daily-consumption" data-controller="dashboard-tile" data-operations-dashboard-target="tile"
+                     data-dashboard-tile-unit-value="million gal"
+                     data-dashboard-tile-series-value='{"Citywide":[11.8,12.1,12.4,12.0,11.6,10.2,9.8,11.9,12.3,12.6,12.2,11.7,10.4,9.9,12.0,12.5,12.8,12.4,11.9,10.6,10.1,12.2,12.7,13.1,12.6,12.0,10.8,10.3,12.4,12.9]}'>
+              <h3>Daily consumption</h3>
+              <div class="series-picker" data-dashboard-tile-target="seriesPicker"></div>
+              <p class="tile-headline" data-dashboard-tile-target="headline"></p>
+              <div class="sparkline" data-dashboard-tile-target="sparkline"><svg preserveAspectRatio="none" role="img"><title></title><polyline fill="none" vector-effect="non-scaling-stroke" points=""/></svg></div>
+              <div class="tile-footer">
+                <span class="layout-note" data-dashboard-tile-target="layoutNote"></span>
+                <button type="button" class="quiet" data-action="operations-dashboard#moveTile">Move to sidebar</button>
+                <button type="button" class="quiet" aria-pressed="false" data-action="operations-dashboard#toggleSpan">Span two columns</button>
+                <button type="button" class="quiet" data-action="operations-dashboard#hideTile">Hide</button>
+              </div>
+            </article>
+
+            <article class="dashboard-tile" id="tile-pump-station-pressure" data-controller="dashboard-tile" data-operations-dashboard-target="tile"
+                     data-dashboard-tile-unit-value="psi"
+                     data-dashboard-tile-series-value='{"Pump station 4":[64,65,63,64,66,67,65,64,63,62,64,65,66,68,67,65,64,63,64,65,66,65,64,63,65,66,67,66,65,64]}'>
+              <h3>Discharge pressure</h3>
+              <div class="series-picker" data-dashboard-tile-target="seriesPicker"></div>
+              <p class="tile-headline" data-dashboard-tile-target="headline"></p>
+              <div class="sparkline" data-dashboard-tile-target="sparkline"><svg preserveAspectRatio="none" role="img"><title></title><polyline fill="none" vector-effect="non-scaling-stroke" points=""/></svg></div>
+              <div class="tile-footer">
+                <span class="layout-note" data-dashboard-tile-target="layoutNote"></span>
+                <button type="button" class="quiet" data-action="operations-dashboard#moveTile">Move to sidebar</button>
+                <button type="button" class="quiet" aria-pressed="false" data-action="operations-dashboard#toggleSpan">Span two columns</button>
+                <button type="button" class="quiet" data-action="operations-dashboard#hideTile">Hide</button>
+              </div>
+            </article>
+          </div>
+
+          <aside class="sidebar-column" data-operations-dashboard-target="sidebarColumn">
+            <p class="column-label">Sidebar</p>
+
+            <article class="dashboard-tile" id="tile-treated-water-turbidity" data-controller="dashboard-tile" data-operations-dashboard-target="tile"
+                     data-dashboard-tile-unit-value="NTU"
+                     data-dashboard-tile-series-value='{"Treated water":[0.11,0.10,0.12,0.09,0.10,0.11,0.13,0.12,0.10,0.09,0.08,0.10,0.11,0.12,0.14,0.15,0.12,0.10,0.09,0.10,0.11,0.10,0.09,0.10,0.12,0.11,0.10,0.09,0.10,0.11]}'>
+              <h3>Turbidity</h3>
+              <div class="series-picker" data-dashboard-tile-target="seriesPicker"></div>
+              <p class="tile-headline" data-dashboard-tile-target="headline"></p>
+              <div class="sparkline" data-dashboard-tile-target="sparkline"><svg preserveAspectRatio="none" role="img"><title></title><polyline fill="none" vector-effect="non-scaling-stroke" points=""/></svg></div>
+              <div class="tile-footer">
+                <span class="layout-note" data-dashboard-tile-target="layoutNote"></span>
+                <button type="button" class="quiet" data-action="operations-dashboard#moveTile">Move to main area</button>
+                <button type="button" class="quiet" aria-pressed="false" data-action="operations-dashboard#toggleSpan" hidden>Span two columns</button>
+                <button type="button" class="quiet" data-action="operations-dashboard#hideTile">Hide</button>
+              </div>
+            </article>
+          </aside>
+        </div>
+
+        <section class="hidden-tray">
+          <h3>Hidden tiles</h3>
+          <ul data-operations-dashboard-target="hiddenTray"></ul>
+        </section>
+        <template data-operations-dashboard-target="hiddenTileTemplate">
+          <li><button type="button" class="quiet" data-action="operations-dashboard#showTile"></button></li>
+        </template>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dashboard_tile_controller.js"><code>dashboard_tile_controller.js</code></a> — observes its own size and picks a layout</li>
+          <li><a href="operations_dashboard_controller.js"><code>operations_dashboard_controller.js</code></a> — moves, widens, hides, and restores tiles</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
