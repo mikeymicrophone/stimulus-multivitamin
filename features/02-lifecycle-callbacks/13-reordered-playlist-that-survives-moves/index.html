@@ -1,0 +1,221 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 13 · Reordered playlist that survives moves
+
+  Teaches:
+  - A move is a disconnect() followed by a connect() on the same instance,
+    and inside disconnect() a moved element is already back in the document.
+    Checking this.element.isConnected tells a move from a removal, so the
+    dragged track keeps its drag session (document listeners) through every
+    live reorder, and the on-air clock keeps running through auto-advance.
+  - Everything that runs on reconnect must be idempotent: connect(), and
+    value-changed callbacks, which Stimulus calls again on every reconnect.
+    Starting the clock or a drag session twice is a no-op.
+  - Value-changed callbacks run before connect(), so they can't rely on
+    references set in connect(). The track looks its running order up on
+    first use instead, and keeps it.
+  - A real removal (Drop, or the studio's running order replacing the list)
+    tears everything down. The on-air start time lives on the long-lived
+    running order, so the replacement track resumes the same clock.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Reordered playlist that survives moves · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .running-order-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; margin-bottom: 0.75rem; }
+      .running-order-status { margin: 0 0 0.75rem; min-height: 1.5em; font-size: 0.9rem; color: var(--bottle-green, #1f3d2b); }
+      .running-order h3 { margin: 1rem 0 0.4rem; font-size: 1rem; display: flex; gap: 0.75rem; align-items: baseline; }
+      .running-order h3 span { font-weight: 400; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .track-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .playlist-track { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto auto; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.35rem 0.6rem; background: var(--card, #fff); }
+      .playlist-track.dragging { box-shadow: 0 6px 16px rgb(31 61 43 / 0.25); border-color: var(--capsule-amber, #e8912d); }
+      .on-air-slot .playlist-track { border: 2px solid #b3261e; background: #fbe9e6; }
+      .played-list .playlist-track { opacity: 0.65; }
+      .drag-handle { cursor: grab; touch-action: none; padding: 0.1rem 0.4rem; background: transparent; border-color: var(--rule, #ddd); color: var(--muted-ink, #555); }
+      .track-title { margin: 0; font-weight: 600; }
+      .track-artist { margin: 0; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .track-time { font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+      .track-actions { display: flex; gap: 0.25rem; }
+      .track-actions button { font-size: 0.8rem; padding: 0.05rem 0.5rem; }
+      .on-air-slot .drag-handle, .played-list .drag-handle, .on-air-slot .track-actions, .played-list .track-actions { visibility: hidden; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RunningOrderController from "./running_order_controller.js"
+      import PlaylistTrackController from "./playlist_track_controller.js"
+
+      const application = Application.start()
+      application.register("running-order", RunningOrderController)
+      application.register("playlist-track", PlaylistTrackController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>13 · Reordered playlist that survives moves</span>
+      </nav>
+      <h1>Reordered playlist that survives moves</h1>
+      <p class="lede">
+        A community radio host's running order. Every track is a
+        <code>playlist-track</code> controller; the on-air track runs a clock
+        and hands off to the next track when it ends. Drag tracks by their
+        handle to reorder what plays next. The <code>running-order</code>
+        controller moves, drops, and reloads tracks.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario running-order" data-controller="running-order" data-running-order-on-air-elapsed-seconds-value="75">
+        <h2>WKRV 89.3 · Saturday Night Soul with Lorraine Pike</h2>
+        <div class="running-order-toolbar">
+          <button type="button" data-action="running-order#takeNext">Next track</button>
+          <button type="button" class="quiet" data-action="running-order#reloadFromStudio">Reload from the studio</button>
+        </div>
+        <p class="running-order-status" data-running-order-target="status" aria-live="polite"></p>
+
+        <h3>On air</h3>
+        <ol class="track-list on-air-slot" data-running-order-target="onAirSlot">
+            <li class="playlist-track" id="track-love-and-happiness" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="love-and-happiness" data-playlist-track-duration-seconds-value="302" data-playlist-track-on-air-value="true"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Love and Happiness</p><p class="track-artist">Al Green · 1972</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+        </ol>
+
+        <h3>Up next <span data-running-order-target="upNextSummary"></span></h3>
+        <ol class="track-list up-next-list" data-running-order-target="upNextList">
+            <li class="playlist-track" id="track-rock-steady" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="rock-steady" data-playlist-track-duration-seconds-value="193" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Rock Steady</p><p class="track-artist">Aretha Franklin · 1971</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-use-me" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="use-me" data-playlist-track-duration-seconds-value="227" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Use Me</p><p class="track-artist">Bill Withers · 1972</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-tell-mama" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="tell-mama" data-playlist-track-duration-seconds-value="140" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Tell Mama</p><p class="track-artist">Etta James · 1967</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-move-on-up" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="move-on-up" data-playlist-track-duration-seconds-value="532" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Move On Up</p><p class="track-artist">Curtis Mayfield · 1970</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-cold-sweat" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="cold-sweat" data-playlist-track-duration-seconds-value="450" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Cold Sweat</p><p class="track-artist">James Brown · 1967</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-grapevine" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="grapevine" data-playlist-track-duration-seconds-value="195" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">I Heard It Through the Grapevine</p><p class="track-artist">Marvin Gaye · 1968</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+        </ol>
+
+        <h3>Played</h3>
+        <ol class="track-list played-list" data-running-order-target="playedList">
+            <li class="playlist-track" id="track-mr-big-stuff" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="mr-big-stuff" data-playlist-track-duration-seconds-value="166" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Mr. Big Stuff</p><p class="track-artist">Jean Knight · 1971</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+            <li class="playlist-track" id="track-hold-on-im-comin" data-controller="playlist-track" data-running-order-target="track"
+                data-playlist-track-track-id-value="hold-on-im-comin" data-playlist-track-duration-seconds-value="152" data-playlist-track-on-air-value="false"
+                data-action="playlist-track:finished->running-order#takeNext playlist-track:reordered->running-order#trackReordered">
+              <button type="button" class="drag-handle" aria-label="Drag to reorder" data-action="pointerdown->playlist-track#startDrag">⠿</button>
+              <div class="track-info"><p class="track-title" data-playlist-track-target="title">Hold On, I'm Comin'</p><p class="track-artist">Sam &amp; Dave · 1966</p></div>
+              <span class="track-time" data-playlist-track-target="time"></span>
+              <div class="track-actions">
+                <button type="button" class="quiet" aria-label="Move up" data-action="running-order#moveTrack" data-running-order-offset-param="-1">↑</button>
+                <button type="button" class="quiet" aria-label="Move down" data-action="running-order#moveTrack" data-running-order-offset-param="1">↓</button>
+                <button type="button" class="quiet" data-action="running-order#dropTrack">Drop</button>
+              </div>
+            </li>
+        </ol>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="playlist_track_controller.js"><code>playlist_track_controller.js</code></a> — tells moves from removals; keeps its drag session and clock through moves</li>
+          <li><a href="running_order_controller.js"><code>running_order_controller.js</code></a> — owns the on-air start time; moves, drops, advances, and reloads tracks</li>
+          <li><a href="studio/running-order.html"><code>studio/running-order.html</code></a> — the producer's latest running order, as server HTML</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
