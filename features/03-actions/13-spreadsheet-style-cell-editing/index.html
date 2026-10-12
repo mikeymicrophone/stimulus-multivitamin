@@ -1,0 +1,189 @@
+<!doctype html>
+<!--
+  Actions · 13 · Spreadsheet-style cell editing
+
+  Teaches:
+  - A table cell has no default event, so every cell names click
+    explicitly. The click usually starts on the number button inside the
+    cell; editCell reads the cell from currentTarget, not target.
+  - The same click then reaches click@document. By the time
+    commitIfOutside() runs, that cell is already the one being edited, so
+    the board doesn't commit it. A click on the heading, another cell, or
+    "Add crop" is outside, and the open cell commits first.
+  - The editor is one <input> that moves from cell to cell. Its keydown
+    and input actions travel with it. Enter and arrows commit and move;
+    Escape restores the previous value; Tab and Shift+Tab walk the grid.
+  - Rows added from a <template> or fetched from last week carry the same
+    data-action on every cell. Stimulus binds the new cells after the
+    insert. Calling startEdit() from addCrop() doesn't wait for that,
+    because it calls the method directly instead of clicking.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Spreadsheet-style cell editing · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .harvest-table { width: 100%; border-collapse: collapse; }
+      .harvest-table th, .harvest-table td { border-bottom: 1px solid var(--rule, #ddd); padding: 0.2rem 0.35rem; text-align: right; font-variant-numeric: tabular-nums; }
+      .harvest-table th { font-size: 0.82rem; color: var(--muted-ink, #555); font-weight: 600; }
+      .harvest-table .crop-name, .harvest-table td:first-child { text-align: left; font-weight: 600; }
+      .harvest-cell { position: relative; min-width: 4.2rem; }
+      .harvest-cell [data-display] { all: unset; display: block; width: 100%; box-sizing: border-box; padding: 0.35rem 0.4rem; text-align: right; cursor: text; border-radius: 6px; min-height: 1.4em; }
+      .harvest-cell [data-display]:hover, .harvest-cell [data-display]:focus-visible { background: #fff6e4; outline: 2px solid var(--capsule-amber, #e8912d); }
+      .harvest-cell.editing [data-display] { display: none; }
+      .harvest-editor { width: 100%; box-sizing: border-box; text-align: right; padding: 0.3rem 0.35rem; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 6px; background: #fff; }
+      .totals-row th, .totals-row td { border-top: 2px solid var(--bottle-green, #1f3d2b); font-weight: 700; }
+      .board-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin: 1rem 0 0.4rem; }
+      .board-toolbar label { display: grid; gap: 0.15rem; font-size: 0.85rem; font-weight: 600; }
+      .board-status { min-height: 1.4em; font-size: 0.9rem; color: var(--bottle-green, #1f3d2b); }
+      .remove-crop { font-size: 0.8rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HarvestBoardController from "./harvest_board_controller.js"
+
+      const application = Application.start()
+      application.register("harvest-board", HarvestBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>13 · Spreadsheet-style cell editing</span>
+      </nav>
+      <h1>Spreadsheet-style cell editing</h1>
+      <p class="lede">
+        The weekly harvest board at a CSA farm. Each cell is an action.
+        Click a crate count to edit it, then Tab, Enter, or the arrow keys
+        to move, or click elsewhere to commit. New crops, whether typed or
+        fetched from last week, arrive with the same actions already on
+        every cell.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="harvest-board"
+               data-action="click@document->harvest-board#commitIfOutside">
+        <h2>Cedar Hollow CSA · Harvest board · Week of June 15</h2>
+        <p class="muted">Crate counts for the packing shed. Click a cell to change it.</p>
+
+        <table class="harvest-table">
+          <thead>
+            <tr>
+              <th class="crop-name">Crop</th>
+              <th>Mon</th>
+              <th>Wed</th>
+              <th>Fri</th>
+              <th>Sat market</th>
+              <th>Week</th>
+              <th><span class="visually-hidden">Remove</span></th>
+            </tr>
+          </thead>
+          <tbody data-harvest-board-target="gridBody">
+            <tr data-harvest-board-target="cropRow" data-crop="Red Russian kale">
+              <th class="crop-name" data-crop-name>Red Russian kale</th>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="8"><button type="button" data-display aria-label="Red Russian kale, Monday">8</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="8"><button type="button" data-display aria-label="Red Russian kale, Wednesday">8</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="6"><button type="button" data-display aria-label="Red Russian kale, Friday">6</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="12"><button type="button" data-display aria-label="Red Russian kale, Saturday market">12</button></td>
+              <td data-row-total></td>
+              <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+            </tr>
+            <tr data-harvest-board-target="cropRow" data-crop="Sungold tomatoes">
+              <th class="crop-name" data-crop-name>Sungold tomatoes</th>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="0"><button type="button" data-display aria-label="Sungold tomatoes, Monday"></button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="4"><button type="button" data-display aria-label="Sungold tomatoes, Wednesday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="4"><button type="button" data-display aria-label="Sungold tomatoes, Friday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="10"><button type="button" data-display aria-label="Sungold tomatoes, Saturday market">10</button></td>
+              <td data-row-total></td>
+              <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+            </tr>
+            <tr data-harvest-board-target="cropRow" data-crop="Chioggia beets">
+              <th class="crop-name" data-crop-name>Chioggia beets</th>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="4"><button type="button" data-display aria-label="Chioggia beets, Monday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="4"><button type="button" data-display aria-label="Chioggia beets, Wednesday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="4"><button type="button" data-display aria-label="Chioggia beets, Friday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="6"><button type="button" data-display aria-label="Chioggia beets, Saturday market">6</button></td>
+              <td data-row-total></td>
+              <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+            </tr>
+            <tr data-harvest-board-target="cropRow" data-crop="Hakurei turnips">
+              <th class="crop-name" data-crop-name>Hakurei turnips</th>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="6"><button type="button" data-display aria-label="Hakurei turnips, Monday">6</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="6"><button type="button" data-display aria-label="Hakurei turnips, Wednesday">6</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="4"><button type="button" data-display aria-label="Hakurei turnips, Friday">4</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="8"><button type="button" data-display aria-label="Hakurei turnips, Saturday market">8</button></td>
+              <td data-row-total></td>
+              <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+            </tr>
+            <tr data-harvest-board-target="cropRow" data-crop="Bouquet dill">
+              <th class="crop-name" data-crop-name>Bouquet dill</th>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="2"><button type="button" data-display aria-label="Bouquet dill, Monday">2</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="2"><button type="button" data-display aria-label="Bouquet dill, Wednesday">2</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="2"><button type="button" data-display aria-label="Bouquet dill, Friday">2</button></td>
+              <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="4"><button type="button" data-display aria-label="Bouquet dill, Saturday market">4</button></td>
+              <td data-row-total></td>
+              <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <th class="crop-name">All crops</th>
+              <td data-harvest-board-target="dayTotal" data-day="monday"></td>
+              <td data-harvest-board-target="dayTotal" data-day="wednesday"></td>
+              <td data-harvest-board-target="dayTotal" data-day="friday"></td>
+              <td data-harvest-board-target="dayTotal" data-day="saturday"></td>
+              <td data-harvest-board-target="grandTotal"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <input class="harvest-editor" hidden type="number" min="0" max="99" inputmode="numeric" aria-label="Crate count"
+               data-harvest-board-target="editor"
+               data-action="keydown->harvest-board#editWithKeys input->harvest-board#previewTotals">
+
+        <form class="board-toolbar" data-action="harvest-board#addCrop">
+          <label>Add a crop <input type="text" name="crop_name" placeholder="Garlic scapes" data-harvest-board-target="cropNameField"></label>
+          <button type="submit">Add crop</button>
+          <button type="button" class="quiet" data-action="harvest-board#loadLastWeek">Add last week's extras</button>
+        </form>
+        <p class="board-status" data-harvest-board-target="status" aria-live="polite"></p>
+
+        <template data-harvest-board-target="cropTemplate">
+          <tr data-harvest-board-target="cropRow" data-crop="">
+            <th class="crop-name" data-crop-name></th>
+            <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="monday" data-crates="0"><button type="button" data-display></button></td>
+            <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="wednesday" data-crates="0"><button type="button" data-display></button></td>
+            <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="friday" data-crates="0"><button type="button" data-display></button></td>
+            <td class="harvest-cell" data-harvest-board-target="cell" data-action="click->harvest-board#editCell" data-day="saturday" data-crates="0"><button type="button" data-display></button></td>
+            <td data-row-total></td>
+            <td><button type="button" class="quiet remove-crop" data-action="harvest-board#removeCrop">Remove</button></td>
+          </tr>
+        </template>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="harvest_board_controller.js"><code>harvest_board_controller.js</code></a> — edits cells, moves the editor, totals the board, adds and removes crops</li>
+          <li><a href="last-week/extra-crops/"><code>last-week/extra-crops/</code></a> — last week's extra crops, as a server fragment</li>
+          <li>This page's source — every cell's <code>data-action</code>, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

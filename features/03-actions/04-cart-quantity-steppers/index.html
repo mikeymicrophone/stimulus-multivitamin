@@ -1,0 +1,192 @@
+<!doctype html>
+<!--
+  Actions · 04 · Cart quantity steppers
+
+  Teaches:
+  - An action goes to the nearest element with its identifier. Every line's
+    buttons say cart-line#increment, and each click reaches only that line's
+    instance.
+  - One element can call two controllers. The − and + buttons and the
+    quantity field list a cart-line action and then shopping-cart#recalculate.
+    The cart can be called from inside a line because the line sits inside
+    the cart's element.
+  - Actions on one element run in the order written, whichever controller
+    they belong to and whichever connected first. The line updates its
+    quantity before the cart adds up the lines; written the other way
+    round, the totals would trail one click behind.
+  - Two events on one field: input updates the cart on every keystroke,
+    change tidies the field when the shopper leaves it.
+  - The cart removes lines itself. If a line's action detached the line,
+    a shopping-cart action listed after it on the same button would not
+    run, because the button is no longer inside the cart.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cart quantity steppers · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .cart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 16rem; gap: 1.5rem; align-items: start; }
+      @media (max-width: 46rem) { .cart-layout { grid-template-columns: 1fr; } }
+      .cart-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+      .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.3rem 1rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.6rem 0.85rem; background: #fffdf8; }
+      .cart-line h3 { margin: 0; font-size: 1rem; }
+      .cart-line p { margin: 0; font-size: 0.86rem; color: var(--muted-ink, #555); }
+      .quantity-stepper { display: inline-flex; align-items: center; gap: 0.25rem; }
+      .quantity-stepper button { padding: 0.1rem 0.65rem; font-size: 1.05rem; }
+      .quantity-stepper button:disabled { opacity: 0.4; cursor: not-allowed; }
+      .quantity-stepper input { width: 3.6rem; }
+      .line-subtotal { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 4.5rem; text-align: right; }
+      .stock-note { color: #b3261e; font-size: 0.8rem; min-height: 1.2em; }
+      .order-summary { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; }
+      .order-summary dl { display: grid; grid-template-columns: 1fr auto; gap: 0.3rem; margin: 0 0 0.6rem; }
+      .order-summary dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+      .order-summary .grand { font-weight: 700; border-top: 1px solid var(--rule, #ddd); padding-top: 0.3rem; }
+      .order-summary progress { width: 100%; }
+      .cart-status { min-height: 1.4em; font-size: 0.9rem; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CartLineController from "./cart_line_controller.js"
+      import ShoppingCartController from "./shopping_cart_controller.js"
+
+      const application = Application.start()
+      application.register("cart-line", CartLineController)
+      application.register("shopping-cart", ShoppingCartController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>04 · Cart quantity steppers</span>
+      </nav>
+      <h1>Cart quantity steppers</h1>
+      <p class="lede">
+        The cart of a mail-order seed company. Each line is a
+        <code>cart-line</code> controller with its own stepper, inside one
+        <code>shopping-cart</code> controller. The steppers call both, in
+        a deliberate order.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="shopping-cart"
+               data-shopping-cart-free-shipping-threshold-cents-value="3500" data-shopping-cart-shipping-cents-value="595">
+        <h2>Larkspur Seed Co. · Your cart</h2>
+        <div class="cart-layout">
+          <div>
+            <ul class="cart-lines">
+              <li class="cart-line" data-controller="cart-line" data-shopping-cart-target="line"
+                  data-cart-line-unit-price-cents-value="425" data-cart-line-quantity-value="2" data-cart-line-stock-value="8">
+                <div>
+                  <h3>Cherokee Purple tomato</h3>
+                  <p>Heirloom, 80 days · 25 seeds per packet · $4.25</p>
+                  <p class="stock-note" data-cart-line-target="stockNote"></p>
+                </div>
+                <div class="quantity-stepper">
+                  <button type="button" aria-label="One fewer Cherokee Purple tomato" data-cart-line-target="decrementButton" data-action="cart-line#decrement shopping-cart#recalculate">−</button>
+                  <input type="number" min="1" aria-label="Cherokee Purple tomato packets" data-cart-line-target="quantityField"
+                         data-action="input->cart-line#typeQuantity input->shopping-cart#recalculate change->cart-line#settleQuantity">
+                  <button type="button" aria-label="One more Cherokee Purple tomato" data-cart-line-target="incrementButton" data-action="cart-line#increment shopping-cart#recalculate">+</button>
+                </div>
+                <div>
+                  <div class="line-subtotal" data-cart-line-target="subtotal"></div>
+                  <button type="button" class="quiet" data-action="shopping-cart#removeLine">Remove</button>
+                </div>
+              </li>
+              <li class="cart-line" data-controller="cart-line" data-shopping-cart-target="line"
+                  data-cart-line-unit-price-cents-value="350" data-cart-line-quantity-value="1" data-cart-line-stock-value="3">
+                <div>
+                  <h3>Lemon Queen sunflower</h3>
+                  <p>Pollinator favorite, 7 ft · 30 seeds per packet · $3.50</p>
+                  <p class="stock-note" data-cart-line-target="stockNote"></p>
+                </div>
+                <div class="quantity-stepper">
+                  <button type="button" aria-label="One fewer Lemon Queen sunflower" data-cart-line-target="decrementButton" data-action="cart-line#decrement shopping-cart#recalculate">−</button>
+                  <input type="number" min="1" aria-label="Lemon Queen sunflower packets" data-cart-line-target="quantityField"
+                         data-action="input->cart-line#typeQuantity input->shopping-cart#recalculate change->cart-line#settleQuantity">
+                  <button type="button" aria-label="One more Lemon Queen sunflower" data-cart-line-target="incrementButton" data-action="cart-line#increment shopping-cart#recalculate">+</button>
+                </div>
+                <div>
+                  <div class="line-subtotal" data-cart-line-target="subtotal"></div>
+                  <button type="button" class="quiet" data-action="shopping-cart#removeLine">Remove</button>
+                </div>
+              </li>
+              <li class="cart-line" data-controller="cart-line" data-shopping-cart-target="line"
+                  data-cart-line-unit-price-cents-value="295" data-cart-line-quantity-value="3" data-cart-line-stock-value="12">
+                <div>
+                  <h3>Genovese basil</h3>
+                  <p>Large-leaf, slow to bolt · 200 seeds per packet · $2.95</p>
+                  <p class="stock-note" data-cart-line-target="stockNote"></p>
+                </div>
+                <div class="quantity-stepper">
+                  <button type="button" aria-label="One fewer Genovese basil" data-cart-line-target="decrementButton" data-action="cart-line#decrement shopping-cart#recalculate">−</button>
+                  <input type="number" min="1" aria-label="Genovese basil packets" data-cart-line-target="quantityField"
+                         data-action="input->cart-line#typeQuantity input->shopping-cart#recalculate change->cart-line#settleQuantity">
+                  <button type="button" aria-label="One more Genovese basil" data-cart-line-target="incrementButton" data-action="cart-line#increment shopping-cart#recalculate">+</button>
+                </div>
+                <div>
+                  <div class="line-subtotal" data-cart-line-target="subtotal"></div>
+                  <button type="button" class="quiet" data-action="shopping-cart#removeLine">Remove</button>
+                </div>
+              </li>
+              <li class="cart-line" data-controller="cart-line" data-shopping-cart-target="line"
+                  data-cart-line-unit-price-cents-value="375" data-cart-line-quantity-value="1" data-cart-line-stock-value="5">
+                <div>
+                  <h3>Dragon Tongue bush bean</h3>
+                  <p>Purple-streaked wax bean, 60 days · 50 seeds per packet · $3.75</p>
+                  <p class="stock-note" data-cart-line-target="stockNote"></p>
+                </div>
+                <div class="quantity-stepper">
+                  <button type="button" aria-label="One fewer Dragon Tongue bush bean" data-cart-line-target="decrementButton" data-action="cart-line#decrement shopping-cart#recalculate">−</button>
+                  <input type="number" min="1" aria-label="Dragon Tongue bush bean packets" data-cart-line-target="quantityField"
+                         data-action="input->cart-line#typeQuantity input->shopping-cart#recalculate change->cart-line#settleQuantity">
+                  <button type="button" aria-label="One more Dragon Tongue bush bean" data-cart-line-target="incrementButton" data-action="cart-line#increment shopping-cart#recalculate">+</button>
+                </div>
+                <div>
+                  <div class="line-subtotal" data-cart-line-target="subtotal"></div>
+                  <button type="button" class="quiet" data-action="shopping-cart#removeLine">Remove</button>
+                </div>
+              </li>
+            </ul>
+            <p class="muted" data-shopping-cart-target="emptyNote" hidden>Your cart is empty. The spring catalog is full of ideas.</p>
+            <p class="cart-status" data-shopping-cart-target="status" aria-live="polite"></p>
+          </div>
+
+          <aside class="order-summary" aria-live="polite">
+            <dl>
+              <dt>Items</dt><dd data-shopping-cart-target="itemCount"></dd>
+              <dt>Subtotal</dt><dd data-shopping-cart-target="subtotal"></dd>
+              <dt>Shipping</dt><dd data-shopping-cart-target="shipping"></dd>
+              <dt class="grand">Total</dt><dd class="grand" data-shopping-cart-target="total"></dd>
+            </dl>
+            <progress data-shopping-cart-target="freeShippingProgress" aria-label="Progress toward free shipping"></progress>
+            <p class="muted" data-shopping-cart-target="freeShippingNote"></p>
+            <button type="button" data-shopping-cart-target="checkoutButton">Check out</button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="cart_line_controller.js"><code>cart_line_controller.js</code></a> — one instance per line; steps, types, and clamps its quantity</li>
+          <li><a href="shopping_cart_controller.js"><code>shopping_cart_controller.js</code></a> — adds up the lines, tracks free shipping, removes lines</li>
+          <li>This page's source — the two-controller <code>data-action</code> lists, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

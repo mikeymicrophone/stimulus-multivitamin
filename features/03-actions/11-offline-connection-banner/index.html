@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  Actions · 11 · Offline connection banner
+
+  Teaches:
+  - online and offline are fired on window only, so the descriptors say
+    online@window and offline@window. The same events with @document would
+    never run, and nothing would report the mistake. visibilitychange is
+    fired on document and bubbles to window, so either target hears it.
+  - Two controllers can answer the same global event. The banner and the
+    job notes both declare online@window, and each does its own job.
+  - Global events report changes, not state. Both controllers read
+    navigator.onLine when they need the current state, starting in connect().
+  - Notes queued while offline are cloned from a <template> whose Retry and
+    Discard buttons already carry data-action. Stimulus binds them as each
+    note arrives and unbinds them when the note is sent or discarded.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Offline connection banner · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .connection-banner { display: flex; align-items: center; gap: 0.6rem; border-radius: 8px; padding: 0.5rem 0.9rem; margin-bottom: 1rem; font-weight: 600; }
+      .connection-banner[data-connection="offline"] { background: #fbe3c4; color: #7a3d00; }
+      .connection-banner[data-connection="online"] { background: #e7efe6; color: var(--bottle-green, #1f3d2b); }
+      .work-order { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.3rem 1rem; margin: 0 0 1rem; font-size: 0.93rem; }
+      .work-order dt { font-weight: 700; color: var(--muted-ink, #555); font-size: 0.8rem; }
+      .work-order dd { margin: 0 0 0.4rem; }
+      .note-composer textarea { width: 100%; box-sizing: border-box; min-height: 4.5rem; }
+      .note-composer button { margin-top: 0.4rem; }
+      .outbox-section { margin-top: 1rem; border: 1px dashed var(--capsule-amber, #e8912d); border-radius: 10px; padding: 0.4rem 0.9rem 0.6rem; }
+      .outbox-section h3, .sent-section h3 { margin: 0.3rem 0; font-size: 1rem; }
+      .outbox, .sent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+      .queued-note { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.6rem; align-items: center; background: #fffaf0; border-radius: 8px; padding: 0.4rem 0.6rem; }
+      .queued-note small { color: var(--muted-ink, #555); }
+      .queued-note-actions { display: flex; gap: 0.3rem; }
+      .sent-section { margin-top: 1rem; }
+      .sent-list li { font-size: 0.9rem; border-bottom: 1px solid var(--rule, #ddd); padding: 0.25rem 0; }
+      .notes-status { min-height: 1.4em; font-size: 0.9rem; color: #7a3d00; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ConnectionBannerController from "./connection_banner_controller.js"
+      import JobNotesController from "./job_notes_controller.js"
+
+      const application = Application.start()
+      application.register("connection-banner", ConnectionBannerController)
+      application.register("job-notes", JobNotesController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>11 · Offline connection banner</span>
+      </nav>
+      <h1>Offline connection banner</h1>
+      <p class="lede">
+        A field technician's work order on a tablet that loses signal in
+        basements. A <code>connection-banner</code> and the
+        <code>job-notes</code> outbox both listen to the window for the
+        connection coming and going. Turn off your network (or use the
+        browser's developer tools) to try it.
+      </p>
+    </header>
+
+    <main>
+      <div class="connection-banner" role="status" data-controller="connection-banner"
+           data-connection-banner-reconnected-notice-seconds-value="4"
+           data-action="offline@window->connection-banner#showOffline online@window->connection-banner#showOnline" hidden>
+        <span aria-hidden="true">●</span>
+        <span data-connection-banner-target="message"></span>
+      </div>
+
+      <section class="scenario" data-controller="job-notes" data-job-notes-delivery-url-value="dispatch/note-received.json"
+               data-action="online@window->job-notes#sendQueuedNotes visibilitychange@document->job-notes#sendQueuedNotesIfVisible">
+        <h2>Northgate Heating &amp; Air · Work order 4471</h2>
+        <dl class="work-order">
+          <div><dt>Customer</dt><dd>Ruth Okonkwo · 18 Larch Court</dd></div>
+          <div><dt>Job</dt><dd>No heat; furnace inducer motor squealing</dd></div>
+          <div><dt>Technician</dt><dd>Dariusz Nowak · Van 12</dd></div>
+        </dl>
+
+        <form class="note-composer" data-action="job-notes#saveNote">
+          <label for="job-note"><strong>Add a note for dispatch</strong></label>
+          <textarea id="job-note" name="note" placeholder="Parts used, findings, follow-up needed…" data-job-notes-target="noteField"></textarea>
+          <button type="submit">Save note</button>
+        </form>
+        <p class="notes-status" data-job-notes-target="status" aria-live="polite"></p>
+
+        <section class="outbox-section" hidden>
+          <h3 data-job-notes-target="outboxHeading"></h3>
+          <ul class="outbox" data-job-notes-target="outbox"></ul>
+        </section>
+
+        <template data-job-notes-target="queuedNoteTemplate">
+          <li class="queued-note" data-job-notes-target="queuedNote">
+            <span data-note-text></span>
+            <span class="queued-note-actions">
+              <button type="button" class="quiet" data-action="job-notes#retryNote">Retry</button>
+              <button type="button" class="quiet" data-action="job-notes#discardNote">Discard</button>
+            </span>
+            <small><span data-note-time></span> · <span data-delivery-state>Waiting for a connection</span></small>
+          </li>
+        </template>
+
+        <section class="sent-section">
+          <h3>Sent to dispatch</h3>
+          <ul class="sent-list" data-job-notes-target="sentList">
+            <li>9:12 AM · Arrived on site. Customer reports grinding noise since Tuesday.</li>
+            <li>9:31 AM · Inducer motor bearings worn. Replacement on the van.</li>
+          </ul>
+        </section>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="connection_banner_controller.js"><code>connection_banner_controller.js</code></a> — shows the connection state from window events</li>
+          <li><a href="job_notes_controller.js"><code>job_notes_controller.js</code></a> — saves, queues, retries, and sends job notes</li>
+          <li><a href="dispatch/note-received.json"><code>dispatch/note-received.json</code></a> — the dispatch office's reply to a note</li>
+          <li>This page's source — the window and document actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

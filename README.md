@@ -46,6 +46,7 @@ catalog at `index.html`.
 
 ```
 index.html                         catalog of every feature and scenario
+DISCOVERIES.md                     Stimulus behaviors (by feature), a serving note, then browser gotchas that bite Stimulus code
 assets/multivitamin.css            shared styling (optional; scenarios work without it)
 serve.json                         keeps `npx serve` URLs ending in a slash so relative imports resolve
 features/
@@ -83,6 +84,13 @@ server and it runs on its own.
 
 The reference scenario that later ones copy is
 [Controllers · 01 · Invoice line-item editor](features/01-controllers/01-invoice-line-items/).
+
+## Discoveries
+
+Behaviors the official docs don't mention, found while building these
+scenarios, are collected in [DISCOVERIES.md](DISCOVERIES.md). Stimulus
+entries are grouped by feature. Browser and DOM gotchas that show up
+inside Stimulus code sit in their own section at the bottom.
 
 ## Contributing
 

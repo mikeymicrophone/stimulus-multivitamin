@@ -1,0 +1,169 @@
+<!doctype html>
+<!--
+  Actions · 06 · Unsaved-changes guard
+
+  Teaches:
+  - Name action methods for what they do. The descriptors read as a
+    sentence: input->unsaved-changes#trackChanges,
+    submit->unsaved-changes#saveProfile, reset->unsaved-changes#discardChanges,
+    beforeunload@window->unsaved-changes#warnBeforeUnload. Names like
+    handleInput or onSubmit would only repeat the event name.
+  - Method names are used exactly as written. Stimulus does not camelize
+    them, and a typo surfaces only when the event fires.
+  - One action on the form covers every field, including emergency
+    contacts added later from a <template>, because input and change bubble.
+  - A <form> defaults to submit, so reset has to be named explicitly. The
+    reset action prevents the native reset and restores the last save.
+  - beforeunload@window warns about a reload or closed tab; the dashboard
+    links ask first with a <dialog>, and leaving on purpose skips the
+    browser's warning.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Unsaved-changes guard · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .profile-form { max-width: 42rem; }
+      .profile-nav { display: flex; gap: 1rem; font-size: 0.92rem; margin-bottom: 0.6rem; }
+      .profile-heading { display: flex; align-items: center; gap: 0.8rem; }
+      .change-badge { background: #fbe3c4; color: #7a3d00; border-radius: 999px; padding: 0.05rem 0.6rem; font-size: 0.8rem; font-weight: 700; }
+      .profile-form fieldset { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.5rem 0.9rem 0.8rem; margin: 0 0 0.9rem; }
+      .profile-form legend { font-weight: 700; padding: 0 0.3rem; color: var(--bottle-green, #1f3d2b); }
+      .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.5rem 1rem; }
+      .field-grid label, .stacked-label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .profile-form input[type="tel"], .profile-form input[type="email"], .profile-form select, .profile-form textarea { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .checkbox-row { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; }
+      .checkbox-row label { font-weight: 400; }
+      .contact-list { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.5rem; }
+      .emergency-contact { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end; }
+      .form-actions { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+      .save-status { color: var(--bottle-green, #1f3d2b); font-size: 0.9rem; }
+      dialog { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; max-width: 24rem; }
+      dialog::backdrop { background: rgba(20, 24, 28, 0.45); }
+      .dialog-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import UnsavedChangesController from "./unsaved_changes_controller.js"
+
+      const application = Application.start()
+      application.register("unsaved-changes", UnsavedChangesController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>06 · Unsaved-changes guard</span>
+      </nav>
+      <h1>Unsaved-changes guard</h1>
+      <p class="lede">
+        A food bank volunteer's profile. The <code>unsaved-changes</code>
+        controller knows when the form differs from the last save, and
+        warns before a reload, a closed tab, or a click away to the
+        dashboard would throw edits away.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario profile-form" novalidate data-controller="unsaved-changes"
+            data-action="input->unsaved-changes#trackChanges change->unsaved-changes#trackChanges submit->unsaved-changes#saveProfile reset->unsaved-changes#discardChanges beforeunload@window->unsaved-changes#warnBeforeUnload">
+        <nav class="profile-nav" aria-label="Volunteer portal">
+          <a href="dashboard/" data-action="unsaved-changes#confirmLeaving">← Volunteer dashboard</a>
+          <a href="dashboard/#shift-calendar" data-action="unsaved-changes#confirmLeaving">Shift calendar</a>
+        </nav>
+        <div class="profile-heading">
+          <h2>Riverside Community Food Bank · Your volunteer profile</h2>
+          <span class="change-badge" data-unsaved-changes-target="changeBadge" hidden>Unsaved changes</span>
+        </div>
+
+        <fieldset>
+          <legend>Contact details</legend>
+          <div class="field-grid">
+            <label>Full name <input type="text" name="full_name" value="Abena Mensah" autocomplete="name"></label>
+            <label>Mobile phone <input type="tel" name="phone" value="(503) 555-0148" autocomplete="tel"></label>
+            <label>Email <input type="email" name="email" value="abena.mensah@fastmail.com" autocomplete="email"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Availability and role</legend>
+          <div class="checkbox-row">
+            <label><input type="checkbox" name="availability" value="monday-sort" checked> Monday morning sort</label>
+            <label><input type="checkbox" name="availability" value="wednesday-pantry"> Wednesday evening pantry</label>
+            <label><input type="checkbox" name="availability" value="saturday-delivery" checked> Saturday home delivery</label>
+          </div>
+          <div class="field-grid" style="margin-top: 0.6rem">
+            <label>Preferred role
+              <select name="preferred_role">
+                <option value="warehouse">Warehouse sorting</option>
+                <option value="pantry">Pantry distribution</option>
+                <option value="driver" selected>Delivery driver</option>
+                <option value="front-desk">Front desk and intake</option>
+              </select>
+            </label>
+            <label style="align-self: end"><span><input type="checkbox" name="forklift_certified" value="yes"> Forklift certified</span></label>
+          </div>
+          <label class="stacked-label" style="margin-top: 0.6rem">Notes for the volunteer coordinator
+            <textarea name="coordinator_notes" rows="3">I can bring my own hand truck on delivery days.</textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Emergency contacts</legend>
+          <ul class="contact-list" data-unsaved-changes-target="contactList">
+            <li class="emergency-contact" data-unsaved-changes-target="contact">
+              <label class="stacked-label">Name <input type="text" name="contact_name" value="Kwame Mensah"></label>
+              <label class="stacked-label">Phone <input type="tel" name="contact_phone" value="(503) 555-0193"></label>
+              <button type="button" class="quiet" data-action="unsaved-changes#removeEmergencyContact">Remove</button>
+            </li>
+          </ul>
+          <button type="button" class="quiet" data-action="unsaved-changes#addEmergencyContact">Add another contact</button>
+          <template data-unsaved-changes-target="contactTemplate">
+            <li class="emergency-contact" data-unsaved-changes-target="contact">
+              <label class="stacked-label">Name <input type="text" name="contact_name"></label>
+              <label class="stacked-label">Phone <input type="tel" name="contact_phone"></label>
+              <button type="button" class="quiet" data-action="unsaved-changes#removeEmergencyContact">Remove</button>
+            </li>
+          </template>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" data-unsaved-changes-target="saveButton">Save profile</button>
+          <button type="reset" class="quiet">Discard changes</button>
+          <span class="save-status" data-unsaved-changes-target="status" aria-live="polite"></span>
+        </div>
+
+        <dialog data-unsaved-changes-target="leaveDialog" aria-labelledby="leave-dialog-heading">
+          <h3 id="leave-dialog-heading">Leave without saving?</h3>
+          <p>Your profile has changes the volunteer coordinator won't see until you save them.</p>
+          <div class="dialog-actions">
+            <button type="button" class="quiet" data-action="unsaved-changes#leaveWithoutSaving">Leave without saving</button>
+            <button type="button" data-action="unsaved-changes#keepEditing">Keep editing</button>
+          </div>
+        </dialog>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="unsaved_changes_controller.js"><code>unsaved_changes_controller.js</code></a> — tracks, saves, discards, and guards unsaved changes</li>
+          <li><a href="dashboard/"><code>dashboard/</code></a> — the page the dashboard links go to</li>
+          <li>This page's source — the form's actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

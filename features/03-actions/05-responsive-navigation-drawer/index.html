@@ -1,0 +1,166 @@
+<!doctype html>
+<!--
+  Actions · 05 · Responsive navigation drawer
+
+  Teaches:
+  - An action only reaches a controller whose element contains it. The
+    navigation-drawer controller sits on the page shell, the nearest
+    element that holds both the header's menu button and the drawer.
+  - Anything outside that element can't call it. A data-action on the promo
+    strip above the shell would silently do nothing, with no console error.
+    The promo links to #departments, and hashchange@window->navigation-drawer#openForHash
+    turns the hash into an open drawer, with no script in the promo at all.
+  - @window and @document are the only global targets a descriptor can
+    name. There is no way to declare a listener on a MediaQueryList, so
+    resize@window->navigation-drawer#adaptToWidth reads matchMedia() instead.
+  - keydown@document closes the drawer from anywhere on the page.
+  - Department links call chooseDepartment and don't prevent the default,
+    so the link still navigates while the drawer gets out of the way.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Responsive navigation drawer · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .promo-strip { background: var(--bottle-green, #1f3d2b); color: #f3efe6; border-radius: 8px; padding: 0.45rem 0.9rem; margin-bottom: 0.8rem; font-size: 0.93rem; }
+      .promo-strip a { color: #ffd59e; }
+      .store-header { display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid var(--rule, #ddd); padding-bottom: 0.6rem; margin-bottom: 1rem; }
+      .store-header h2 { margin: 0; font-size: 1.25rem; }
+      .store-header .store-hours { margin-left: auto; font-size: 0.85rem; color: var(--muted-ink, #555); }
+      .menu-button { display: inline-flex; align-items: center; gap: 0.35rem; }
+      .department-drawer { background: #fffdf8; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; }
+      .department-drawer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; }
+      .department-drawer a { display: block; padding: 0.35rem 0.4rem; border-radius: 6px; text-decoration: none; }
+      .department-drawer a:hover, .department-drawer a:focus-visible { background: #f3ecdd; }
+      .drawer-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+      .drawer-heading h3 { margin: 0; font-size: 1rem; }
+      .department-section { border-bottom: 1px dashed var(--rule, #ddd); padding: 0.4rem 0 0.8rem; }
+      .department-section h3 { margin: 0.3rem 0; }
+      .drawer-scrim { position: fixed; inset: 0; background: rgba(20, 24, 28, 0.45); z-index: 15; }
+      .store-footer { margin-top: 1rem; display: flex; gap: 1rem; align-items: center; font-size: 0.9rem; }
+      @media (min-width: 60rem) {
+        .store-body { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+        .department-drawer { position: sticky; top: 1rem; }
+        .menu-button, .drawer-close { display: none; }
+      }
+      @media not (min-width: 60rem) {
+        .department-drawer { position: fixed; top: 0; bottom: 0; left: 0; width: 17rem; z-index: 20; border-radius: 0 10px 10px 0; transform: translateX(-105%); transition: transform 0.2s ease; overflow-y: auto; }
+        .department-drawer.open { transform: none; }
+      }
+      @media (prefers-reduced-motion: reduce) { .department-drawer { transition: none; } }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import NavigationDrawerController from "./navigation_drawer_controller.js"
+
+      const application = Application.start()
+      application.register("navigation-drawer", NavigationDrawerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>05 · Responsive navigation drawer</span>
+      </nav>
+      <h1>Responsive navigation drawer</h1>
+      <p class="lede">
+        A hardware store's department menu: a sidebar on wide screens and a
+        slide-out drawer on narrow ones. Make the window narrower than about
+        960 pixels to get the drawer. The promo strip sits outside the
+        <code>navigation-drawer</code> controller's element.
+      </p>
+    </header>
+
+    <main>
+      <aside class="promo-strip" aria-label="Promotion">
+        Spring tool sale: 20% off hand tools through Sunday.
+        <a href="#departments">Browse departments</a>
+      </aside>
+
+      <div class="scenario" data-controller="navigation-drawer"
+           data-navigation-drawer-wide-layout-query-value="(min-width: 60rem)"
+           data-action="keydown@document->navigation-drawer#closeOnEscape hashchange@window->navigation-drawer#openForHash resize@window->navigation-drawer#adaptToWidth">
+        <header class="store-header">
+          <button type="button" class="menu-button" aria-controls="departments" aria-expanded="false"
+                  data-navigation-drawer-target="menuButton" data-action="navigation-drawer#toggle">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2"/></svg>
+            Departments
+          </button>
+          <h2>Fernhill Hardware</h2>
+          <span class="store-hours">Open today 7 AM – 8 PM · 412 Alder Street</span>
+        </header>
+
+        <div class="store-body">
+          <nav class="department-drawer" id="departments" aria-label="Departments" data-navigation-drawer-target="drawer">
+            <div class="drawer-heading">
+              <h3>Departments</h3>
+              <button type="button" class="quiet drawer-close" data-action="navigation-drawer#close">Close</button>
+            </div>
+            <ul>
+              <li><a href="#department-hand-tools" data-action="navigation-drawer#chooseDepartment">Hand tools</a></li>
+              <li><a href="#department-paint" data-action="navigation-drawer#chooseDepartment">Paint &amp; stain</a></li>
+              <li><a href="#department-garden" data-action="navigation-drawer#chooseDepartment">Lawn &amp; garden</a></li>
+              <li><a href="#department-plumbing" data-action="navigation-drawer#chooseDepartment">Plumbing</a></li>
+              <li><a href="#department-electrical" data-action="navigation-drawer#chooseDepartment">Electrical</a></li>
+              <li><a href="#department-fasteners" data-action="navigation-drawer#chooseDepartment">Fasteners</a></li>
+            </ul>
+          </nav>
+
+          <div>
+            <section class="department-section" id="department-hand-tools">
+              <h3>Hand tools</h3>
+              <p>Hammers, chisels, hand saws, and the 20% sale on every Fernhill-brand screwdriver set.</p>
+            </section>
+            <section class="department-section" id="department-paint">
+              <h3>Paint &amp; stain</h3>
+              <p>Color matching while you wait. Exterior stains in 34 colors, and brushes rented for the weekend.</p>
+            </section>
+            <section class="department-section" id="department-garden">
+              <h3>Lawn &amp; garden</h3>
+              <p>Seed potatoes and onion sets are in. Bagged compost is three for $18.</p>
+            </section>
+            <section class="department-section" id="department-plumbing">
+              <h3>Plumbing</h3>
+              <p>Copper, PEX, and the hard-to-find washer for a 1970s faucet. Bring the old one in.</p>
+            </section>
+            <section class="department-section" id="department-electrical">
+              <h3>Electrical</h3>
+              <p>Outlets, breakers, and LED bulbs. Ask Dolores about wiring a three-way switch.</p>
+            </section>
+            <section class="department-section" id="department-fasteners">
+              <h3>Fasteners</h3>
+              <p>Loose screws, bolts, and nails by the pound, in a wall of 400 drawers.</p>
+            </section>
+            <footer class="store-footer">
+              <span class="muted">Can't find it? We probably have it.</span>
+              <button type="button" class="quiet" data-action="navigation-drawer#open">All departments</button>
+            </footer>
+          </div>
+        </div>
+
+        <div class="drawer-scrim" data-navigation-drawer-target="scrim" data-action="click->navigation-drawer#close" hidden></div>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="navigation_drawer_controller.js"><code>navigation_drawer_controller.js</code></a> — opens, closes, and adapts the drawer; answers the promo's hash</li>
+          <li>This page's source — the promo outside the controller, the global actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
