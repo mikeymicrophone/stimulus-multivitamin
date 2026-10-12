@@ -23,7 +23,7 @@ methods, cancel those defaults.
 
 | File | Role |
 | --- | --- |
-| [`index.html`](index.html) | Minutes form, Find bar, importmap, and registration |
+| [`index.html`](index.html) | Minutes form, Find panel, importmap, and registration |
 | [`minutes_editor_controller.js`](minutes_editor_controller.js) | Saves, finds, and closes Find |
 
 **Try it**

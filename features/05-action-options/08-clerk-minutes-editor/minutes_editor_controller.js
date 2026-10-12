@@ -11,7 +11,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["body", "findField", "findBar", "savedAt", "status", "matchCount"]
+  static targets = ["body", "findField", "findPanel", "savedAt", "status", "matchCount"]
 
   connect() {
     this.saveCount = 0
@@ -26,7 +26,7 @@ export default class extends Controller {
   }
 
   openFind() {
-    this.findBarTarget.hidden = false
+    this.findPanelTarget.hidden = false
     this.findFieldTarget.focus()
     this.statusTarget.textContent = "Find is open. Enter finds; Escape closes. Both use :prevent."
   }
@@ -45,8 +45,8 @@ export default class extends Controller {
   }
 
   closeFind(event) {
-    if (this.findBarTarget.hidden) return
-    this.findBarTarget.hidden = true
+    if (this.findPanelTarget.hidden) return
+    this.findPanelTarget.hidden = true
     this.statusTarget.textContent = `Find closed from Escape (defaultPrevented=${event.defaultPrevented}).`
     this.bodyTarget.focus()
   }
