@@ -1,0 +1,164 @@
+<!doctype html>
+<!--
+  Actions · 09 · Menu that closes on outside click
+
+  Teaches:
+  - click@document->dropdown-menu#closeIfOutside closes a menu when a click
+    lands anywhere else. Opening one menu closes the others for free,
+    because to them the click is outside.
+  - The order a click runs actions in: the clicked element's own actions,
+    then its ancestors' (innermost first), then @document, then @window.
+    toggle() has already opened the menu when closeIfOutside() runs for
+    the same click. stopPropagation() in toggle() would keep the other
+    menus open, because their @document actions would never hear it.
+  - Submenus are dropdown-menu controllers nested in a dropdown-menu. An
+    outer controller's actions, including its @document ones, skip events
+    that start inside a nested element with the same identifier. Escape
+    inside "Export" reaches only the submenu, and focus moving into it
+    doesn't look like focus leaving the outer menu.
+  - A submenu's opener belongs to the outer menu's scope, so the outer
+    menu opens it with openSubmenu(), and the submenu treats a click on its
+    opener as an inside click.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Menu that closes on outside click · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .issue-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 0.8rem; }
+      .issue-toolbar .issue-count { margin-left: auto; color: var(--muted-ink, #555); font-size: 0.9rem; }
+      .dropdown { position: relative; }
+      .dropdown-panel { position: absolute; top: calc(100% + 0.3rem); left: 0; z-index: 5; min-width: 13rem; list-style: none; margin: 0; padding: 0.3rem; background: #fff; border: 1px solid var(--rule, #ddd); border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); }
+      .dropdown-panel button { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; width: 100%; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
+      .dropdown-panel button:hover, .dropdown-panel button:focus-visible { background: #f3ecdd; }
+      .has-submenu { position: relative; }
+      .submenu .dropdown-panel { top: -0.3rem; left: calc(100% + 0.2rem); }
+      .issue-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+      .issue { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fffdf8; }
+      .issue[data-state="closed"] { opacity: 0.6; }
+      .issue-priority { font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 0 0.5rem; background: #f3ecdd; }
+      .issue-meta { font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .toolbar-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); font-size: 0.9rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DropdownMenuController from "./dropdown_menu_controller.js"
+      import IssueListController from "./issue_list_controller.js"
+
+      const application = Application.start()
+      application.register("dropdown-menu", DropdownMenuController)
+      application.register("issue-list", IssueListController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>09 · Menu that closes on outside click</span>
+      </nav>
+      <h1>Menu that closes on outside click</h1>
+      <p class="lede">
+        The toolbar above a team's issue list. Every menu, and the
+        "Export" submenu inside "More", is a <code>dropdown-menu</code>
+        controller that closes itself from <code>@document</code> actions.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="issue-list">
+        <h2>Tallyboard · Mobile app · Open issues</h2>
+        <div class="issue-toolbar">
+          <div class="dropdown" data-controller="dropdown-menu"
+               data-action="click@document->dropdown-menu#closeIfOutside focusin@document->dropdown-menu#closeIfFocusLeft keydown@document->dropdown-menu#closeOnEscape">
+            <button type="button" class="quiet" aria-expanded="false" aria-controls="sort-menu" data-dropdown-menu-target="toggleButton" data-action="dropdown-menu#toggle">
+              Sort: <span data-issue-list-target="sortLabel">Newest first</span> ▾
+            </button>
+            <ul class="dropdown-panel" id="sort-menu" data-dropdown-menu-target="panel" hidden>
+              <li><button type="button" data-sort-key="newest" data-action="issue-list#sortIssues dropdown-menu#closeMenuTree">Newest first</button></li>
+              <li><button type="button" data-sort-key="oldest" data-action="issue-list#sortIssues dropdown-menu#closeMenuTree">Oldest first</button></li>
+              <li><button type="button" data-sort-key="priority" data-action="issue-list#sortIssues dropdown-menu#closeMenuTree">Highest priority</button></li>
+            </ul>
+          </div>
+
+          <div class="dropdown" data-controller="dropdown-menu"
+               data-action="click@document->dropdown-menu#closeIfOutside focusin@document->dropdown-menu#closeIfFocusLeft keydown@document->dropdown-menu#closeOnEscape">
+            <button type="button" class="quiet" aria-expanded="false" aria-controls="assignee-menu" data-dropdown-menu-target="toggleButton" data-action="dropdown-menu#toggle">
+              Assignee: <span data-issue-list-target="assigneeLabel">Everyone</span> ▾
+            </button>
+            <ul class="dropdown-panel" id="assignee-menu" data-dropdown-menu-target="panel" hidden>
+              <li><button type="button" data-assignee="everyone" data-action="issue-list#filterByAssignee dropdown-menu#closeMenuTree">Everyone</button></li>
+              <li><button type="button" data-assignee="priya" data-action="issue-list#filterByAssignee dropdown-menu#closeMenuTree">Priya Raman</button></li>
+              <li><button type="button" data-assignee="marcus" data-action="issue-list#filterByAssignee dropdown-menu#closeMenuTree">Marcus Hale</button></li>
+              <li><button type="button" data-assignee="elena" data-action="issue-list#filterByAssignee dropdown-menu#closeMenuTree">Elena Sokolova</button></li>
+            </ul>
+          </div>
+
+          <div class="dropdown" data-controller="dropdown-menu"
+               data-action="click@document->dropdown-menu#closeIfOutside focusin@document->dropdown-menu#closeIfFocusLeft keydown@document->dropdown-menu#closeOnEscape">
+            <button type="button" class="quiet" aria-expanded="false" aria-controls="more-menu" data-dropdown-menu-target="toggleButton" data-action="dropdown-menu#toggle">More ▾</button>
+            <ul class="dropdown-panel" id="more-menu" data-dropdown-menu-target="panel" hidden>
+              <li><button type="button" data-action="issue-list#copyViewLink dropdown-menu#closeMenuTree">Copy link to this view</button></li>
+              <li class="has-submenu">
+                <button type="button" aria-expanded="false" aria-controls="export-menu" data-action="dropdown-menu#openSubmenu">Export <span aria-hidden="true">▸</span></button>
+                <div class="submenu" data-controller="dropdown-menu"
+                     data-action="click@document->dropdown-menu#closeIfOutside focusin@document->dropdown-menu#closeIfFocusLeft keydown@document->dropdown-menu#closeOnEscape">
+                  <ul class="dropdown-panel" id="export-menu" data-dropdown-menu-target="panel" hidden>
+                    <li><button type="button" data-export-format="CSV" data-action="issue-list#exportIssues dropdown-menu#closeMenuTree">CSV spreadsheet</button></li>
+                    <li><button type="button" data-export-format="PDF" data-action="issue-list#exportIssues dropdown-menu#closeMenuTree">PDF report</button></li>
+                    <li><button type="button" data-export-format="iCalendar" data-action="issue-list#exportIssues dropdown-menu#closeMenuTree">Due dates as iCalendar</button></li>
+                  </ul>
+                </div>
+              </li>
+              <li><button type="button" data-action="issue-list#archiveClosedIssues dropdown-menu#closeMenuTree">Archive closed issues</button></li>
+            </ul>
+          </div>
+
+          <span class="issue-count" data-issue-list-target="count"></span>
+        </div>
+
+        <ol class="issue-list" data-issue-list-target="list">
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-06-02" data-priority="2" data-assignee="priya" data-state="open">
+            <span class="issue-priority">P2</span><span>Push notifications arrive twice after reinstall</span><span class="issue-meta">Priya · Jun 2</span>
+          </li>
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-06-05" data-priority="1" data-assignee="marcus" data-state="open">
+            <span class="issue-priority">P1</span><span>Checkout crashes on Android 12 with a saved card</span><span class="issue-meta">Marcus · Jun 5</span>
+          </li>
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-05-28" data-priority="3" data-assignee="elena" data-state="closed">
+            <span class="issue-priority">P3</span><span>Dark mode: order history text is unreadable</span><span class="issue-meta">Elena · May 28 · closed</span>
+          </li>
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-06-07" data-priority="4" data-assignee="priya" data-state="open">
+            <span class="issue-priority">P4</span><span>Settings screen says “Notifcations”</span><span class="issue-meta">Priya · Jun 7</span>
+          </li>
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-05-30" data-priority="2" data-assignee="marcus" data-state="closed">
+            <span class="issue-priority">P2</span><span>Map pins drift when zooming out quickly</span><span class="issue-meta">Marcus · May 30 · closed</span>
+          </li>
+          <li class="issue" data-issue-list-target="issue" data-opened-on="2026-06-04" data-priority="1" data-assignee="elena" data-state="open">
+            <span class="issue-priority">P1</span><span>Login loops back to the start screen on iPad</span><span class="issue-meta">Elena · Jun 4</span>
+          </li>
+        </ol>
+        <p class="toolbar-status" data-issue-list-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dropdown_menu_controller.js"><code>dropdown_menu_controller.js</code></a> — opens, closes, and nests menus; closes on outside clicks, focus, and Escape</li>
+          <li><a href="issue_list_controller.js"><code>issue_list_controller.js</code></a> — sorts, filters, exports, and archives issues</li>
+          <li>This page's source — the menus' global actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
