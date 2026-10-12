@@ -23,6 +23,7 @@
     <title>Shipment tracking timeline · Controllers · Stimulus Multivitamin</title>
     <link rel="stylesheet" href="../../../assets/multivitamin.css">
     <style>
+      [hidden] { display: none !important; }
       .shipments { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 1rem; }
       .shipment { border: 1px solid var(--rule, #ddd); border-left: 6px solid #9aa39b; border-radius: 10px; padding: 0.75rem 1rem; }
       .shipment[data-shipment-status="delivered"] { border-left-color: var(--bottle-green, #1f3d2b); }
