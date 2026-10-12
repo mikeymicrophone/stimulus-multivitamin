@@ -26,7 +26,8 @@ including the NDC lookup that sits beside the dialog rather than inside it.
 
 **Try it**
 
-Press "Prepare refill", then Escape: the dialog closes and focus returns
-to the button. Open it again, click the NDC lookup, and press Escape: the
-dialog still closes, which a local `keydown.esc` on the dialog would not
-do. Open it once more and confirm the fill.
+Press "Prepare refill", then Escape: the confirmation closes and focus
+returns to the button. Open it again, click the NDC lookup beside the
+card (it is not covered by a full-page overlay), and press Escape: the
+confirmation still closes, which a local `keydown.esc` on the dialog
+would not do. Open it once more and confirm the fill.

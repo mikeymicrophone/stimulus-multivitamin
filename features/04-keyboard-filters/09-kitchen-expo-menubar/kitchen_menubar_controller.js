@@ -4,7 +4,7 @@
  * Teaches: a menubar's keyboard map, declared as filters. Left and right
  * move between Recall, Bump, Rush, and Print. Down / Enter / Space open
  * the focused menu; up opens on the last item. Home / End jump to the
- * first or last item (or menu, when the bar itself is focused). Escape
+ * first or last item (or menu, when the menubar itself is focused). Escape
  * closes. Alt+R / Alt+B / Alt+U / Alt+P open from anywhere on the board.
  *
  * Alt+letter compares event.key, so on macOS Option+R may produce a
@@ -99,7 +99,10 @@ export default class extends Controller {
     this.focusCurrent()
   }
 
-  runItem({ currentTarget: menuItem }) {
+  runItem(event) {
+    event.preventDefault()
+    event.stopPropagation()
+    const menuItem = event.currentTarget
     const ticketName = this.ticketTargets.find((ticket) => ticket.getAttribute("aria-pressed") === "true")
       ?.dataset.ticketName
     this.statusTarget.textContent = `${menuItem.dataset.commandLabel} · ${ticketName}.`
