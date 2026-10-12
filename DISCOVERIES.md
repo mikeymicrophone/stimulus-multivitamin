@@ -1,62 +1,15 @@
 # Discoveries
 
 Non-obvious or undocumented Stimulus behaviors found while bottling this
-catalog. Every entry was verified on **Stimulus 3.2.2** (the version every
-page pins) either by a scenario in this repository or by a scripted
-browser check against that scenario.
+catalog, plus a few browser and DOM gotchas that show up inside Stimulus
+code, and one note about serving the scenarios. Every entry was verified
+on **Stimulus 3.2.2** (the version every page pins) either by a scenario
+in this repository or by a scripted browser check against that scenario.
 
 Each entry has a short title, what happens, why it matters, what to do
-about it, and a link to the scenario that shows it.
-
-## Serving the catalog
-
-### `npx serve` without a trailing slash breaks relative imports
-
-**What happens.** Scenario pages load controllers with
-`import LineItemController from "./line_item_controller.js"`. That URL is
-resolved against the page URL. `python3 -m http.server` serves a folder
-at both `/path` and `/path/`. `npx serve` without configuration serves
-`/path` as the folder's `index.html` but leaves the URL at `/path`, so
-the browser asks for `/line_item_controller.js` at the repository root
-and gets a 404.
-
-**Why it matters.** Opening a catalog link that forgot the trailing slash
-fails silently in the page (a blank scenario and a console error) when
-someone follows the README's `npx serve .` instructions.
-
-**What to do.** This repository's [`serve.json`](serve.json) sets
-`"trailingSlash": true`, so `npx serve` redirects `/path` to `/path/`.
-Catalog links in `index.html` already include the slash
-(`features/01-controllers/01-invoice-line-items/`). Extra pages that
-must load under `npx serve` (a dashboard, a fetched fragment) live in
-their own folder as `index.html`, not as `dashboard.html`.
-
-**Seen in:** [CONTRIBUTING.md](CONTRIBUTING.md) (the trailing-slash
-rule), [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/)
-(the dashboard is `dashboard/`, not `dashboard.html`),
-[Spreadsheet-style cell editing](features/03-actions/13-spreadsheet-style-cell-editing/)
-(last week's extras are `last-week/extra-crops/`).
-
-### `[hidden]` loses to any author `display` rule
-
-**What happens.** The user-agent stylesheet hides `[hidden]` with
-`display: none`. A class or element rule that sets `display: flex`,
-`display: grid`, or `display: block` wins, and the element shows.
-
-**Why it matters.** A banner, drawer, dialog, or toolbar that uses
-`hidden` and also sets `display` in the page stylesheet appears on load
-even though the markup says it shouldn't.
-
-**What to do.** Every scenario page includes
-`[hidden] { display: none !important; }` in its own `<style>`. The shared
-stylesheet does not, because scenarios must still work if that file fails
-to load.
-
-**Seen in:** [Offline connection banner](features/03-actions/11-offline-connection-banner/)
-(the banner is `display: flex` and `[hidden]` on load), and every
-Controllers scenario from
-[Restaurant seat picker](features/01-controllers/02-restaurant-seat-picker/)
-onward.
+about it, and a link to the scenario that shows it. Entries that sit on
+the line between Stimulus and the platform get a one-line note saying
+why they are in the section they are in.
 
 ## Controllers
 
@@ -149,6 +102,10 @@ If the identifier might be removed while the element stays put, also
 check `this.element.matches('[data-controller~="…"]')`.
 
 **Seen in:** [Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/).
+
+**Why this section.** The element staying in the document is the DOM;
+the surprise is that Stimulus still runs `disconnect()` then `connect()`
+for that move.
 
 ### Re-inserting an element reuses the instance and skips `initialize()`
 
@@ -248,47 +205,9 @@ and dispatch there with `this.dispatch(name, { target: parentElement })`.
 
 **Seen in:** [Auction lot countdowns](features/02-lifecycle-callbacks/01-auction-lot-countdowns/).
 
-### Scroll position is already reset before `disconnect()`
-
-**What happens.** Moving an element resets its `scrollTop` as part of the
-move. Stimulus reacts after the move, so `disconnect()` reads `0`.
-
-**Why it matters.** Saving scroll in `disconnect()` and restoring it in
-`connect()` always restores `0`.
-
-**What to do.** Record the offset on every `scroll` event and restore it
-in `connect()`.
-
-**Seen in:** [Live support chat transcript](features/02-lifecycle-callbacks/08-live-support-chat-transcript/).
-
-### A moved element never gets `pointerleave`
-
-**What happens.** If you move or remove the element that is under the
-pointer, the browser does not fire `pointerleave` (or `mouseleave`) on
-it. The pointer is still "inside" as far as that element knows.
-
-**Why it matters.** A hover-to-pause flag kept across a reconnect stays
-true forever, and the carousel, tooltip, or menu never resumes.
-
-**What to do.** Recompute pointer state on `connect()`. Don't keep
-"the pointer is over me" across a move.
-
-**Seen in:** [Carousel that pauses offscreen](features/02-lifecycle-callbacks/09-carousel-that-pauses-offscreen/).
-
-### An already-aborted `AbortSignal` silently adds nothing
-
-**What happens.** `AbortController.abort()` can only happen once.
-`addEventListener(..., { signal })` with an already-aborted signal
-attaches no listener and throws nothing.
-
-**Why it matters.** An `AbortController` created in `initialize()` and
-aborted in `disconnect()` is spent. The next `connect()` adds no
-listeners, and the page looks fine until the feature just stops working.
-
-**What to do.** Make a new `AbortController` every time you start
-listening.
-
-**Seen in:** [Session timeout warning](features/02-lifecycle-callbacks/02-session-timeout-warning/).
+**Why this section.** The silent `closest()` / bubbling failure is the
+DOM; it's here because Stimulus calls `disconnect()` after the node has
+already left.
 
 ## Actions
 
@@ -325,34 +244,8 @@ reset-looking input does nothing. No error appears.
 
 **Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/).
 
-### A `<details>` rendered open fires `toggle` before Stimulus is listening
-
-**What happens.** The browser fires `toggle` when it applies the `open`
-attribute during parsing. Stimulus binds actions later, so that first
-event is missed.
-
-**Why it matters.** A `toggle` action that shows or hides related fields
-never sees the starting state of a `<details open>`.
-
-**What to do.** Read `.open` in `connect()` and render from that.
-
-**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/).
-
-### Setting `.value` or `.checked` from code fires no events
-
-**What happens.** Assigning to a field's `.value` or `.checked` does not
-dispatch `input` or `change`. None of that field's actions run.
-
-**Why it matters.** "Repeat last order", "use this address", and
-"restore the saved profile" update the fields and leave the rest of the
-UI stale if they wait for actions to catch up.
-
-**What to do.** Call the render method yourself, or dispatch the event
-you want (`field.dispatchEvent(new Event("input", { bubbles: true }))`)
-so the field's actions run in their usual order.
-
-**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/),
-[Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/).
+**Why this section.** The element never firing `input` is the browser;
+it's here because Stimulus is what assigned `input` as that default.
 
 ### `stopPropagation()` does not stop the next action on the same element
 
@@ -370,51 +263,6 @@ element. The invalid form is sent.
 actions on the same element. Put the guard first in the list.
 
 **Seen in:** [Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/).
-
-### The browser's own validation can swallow `submit` before any action sees it
-
-**What happens.** A field with `required` or `type="email"` and no
-`novalidate` on the form makes the browser cancel `submit`. No `submit`
-action runs.
-
-**Why it matters.** Your `validateSignup` and `saveProfile` never fire,
-and you get the browser's bubble instead of your own messages.
-
-**What to do.** Put `novalidate` on the form and validate in the action.
-
-**Seen in:** [Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/),
-[Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/).
-
-### `HTMLFormElement.submit()` never fires `submit`
-
-**What happens.** `form.submit()` from JavaScript submits (or, in this
-catalog, navigates) without dispatching a `submit` event.
-`form.requestSubmit()` and a clicked submit button do dispatch it.
-
-**Why it matters.** A `data-action` on the form that prevents the default
-and saves in place never runs if some other script calls `.submit()`.
-
-**What to do.** Use `requestSubmit()`, or click the submit button, or
-call the save method directly.
-
-**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/).
-
-### `event.currentTarget` is `null` after an `await` that waits for a later task
-
-**What happens.** The browser sets `event.currentTarget` only while the
-event is being dispatched. After `await navigator.clipboard.writeText()`,
-`await fetch(...)`, or `await` a timer, it is `null`.
-`await Promise.resolve()` can still look fine, because that promise
-settles before dispatch moves on.
-
-**Why it matters.** `event.currentTarget.disabled = true` after a fetch
-throws. The bug only shows up once real work is awaited, so it passes a
-check that `await`s a resolved promise.
-
-**What to do.** Take what you need from the event before the first
-`await`: `async rollSecret({ currentTarget: rollButton })`.
-
-**Seen in:** [API token copy button](features/03-actions/07-api-token-copy-button/).
 
 ### A rejected promise from an action never reaches `handleError`
 
@@ -462,21 +310,6 @@ banner that should follow `visualViewport`, silently never updates.
 `matchMedia()` or `visualViewport` inside the method.
 
 **Seen in:** [Responsive navigation drawer](features/03-actions/05-responsive-navigation-drawer/).
-
-### `online` and `offline` fire on `window` only
-
-**What happens.** The browser dispatches `online` and `offline` on
-`window`. They do not fire on `document` and they do not bubble there.
-`visibilitychange` fires on `document` and does bubble to `window`.
-
-**Why it matters.** `offline@document->…` never runs. A banner that used
-`@document` for both kinds of event would only ever see the tab hiding.
-
-**What to do.** Use `online@window` and `offline@window`. Read
-`navigator.onLine` in `connect()` for the state the page loaded in;
-these events report changes only.
-
-**Seen in:** [Offline connection banner](features/03-actions/11-offline-connection-banner/).
 
 ### An action outside the controller's element silently does nothing
 
@@ -568,21 +401,6 @@ for what they do (`saveProfile`, `trackChanges`), not for the event
 
 **Seen in:** [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/).
 
-### The `reset` event fires before the form resets
-
-**What happens.** A `reset` action runs while the fields still hold the
-edits. The native reset then puts back the values from the page's
-markup, not the last save. Even a microtask after the action is too
-early; a `setTimeout(0)` is late enough to see the markup values.
-
-**Why it matters.** "Discard changes" that lets the native reset through
-throws away a successful save and restores page-load data.
-
-**What to do.** `event.preventDefault()` and restore the last save
-yourself.
-
-**Seen in:** [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/).
-
 ### Hidden elements keep their actions
 
 **What happens.** `[hidden]` only affects display. Stimulus does not
@@ -599,19 +417,8 @@ when you mean to.
 
 **Seen in:** [Branching customer survey](features/03-actions/12-branching-customer-survey/).
 
-### Setting `location.hash` to the value it already has fires no `hashchange`
-
-**What happens.** Assigning `location.hash = "#departments"` when the
-hash is already `#departments` dispatches nothing.
-
-**Why it matters.** A promo link that opens the drawer through
-`hashchange@window` works once and then seems broken.
-
-**What to do.** After answering the hash, clear it with
-`history.replaceState(...)` so the next click is a real change. Also
-read the hash in `connect()` for a shared URL.
-
-**Seen in:** [Responsive navigation drawer](features/03-actions/05-responsive-navigation-drawer/).
+**Why this section.** `[hidden]` only hides the element; it's here
+because Stimulus is what leaves the actions bound.
 
 ### One click runs actions in a fixed order: element, ancestors, `@document`, `@window`
 
@@ -633,3 +440,258 @@ toggle that shares the page with other menus.
 
 **Seen in:** [Menu that closes on outside click](features/03-actions/09-menu-that-closes-on-outside-click/),
 [Spreadsheet-style cell editing](features/03-actions/13-spreadsheet-style-cell-editing/).
+
+## Running the examples
+
+### `npx serve` without a trailing slash breaks relative imports
+
+**What happens.** Scenario pages load controllers with
+`import LineItemController from "./line_item_controller.js"`. That URL is
+resolved against the page URL. `python3 -m http.server` serves a folder
+at both `/path` and `/path/`. `npx serve` without configuration serves
+`/path` as the folder's `index.html` but leaves the URL at `/path`, so
+the browser asks for `/line_item_controller.js` at the repository root
+and gets a 404.
+
+**Why it matters.** Opening a catalog link that forgot the trailing slash
+fails silently in the page (a blank scenario and a console error) when
+someone follows the README's `npx serve .` instructions.
+
+**What to do.** This repository's [`serve.json`](serve.json) sets
+`"trailingSlash": true`, so `npx serve` redirects `/path` to `/path/`.
+Catalog links in `index.html` already include the slash
+(`features/01-controllers/01-invoice-line-items/`). Extra pages that
+must load under `npx serve` (a dashboard, a fetched fragment) live in
+their own folder as `index.html`, not as `dashboard.html`.
+
+**Seen in:** [CONTRIBUTING.md](CONTRIBUTING.md) (the trailing-slash
+rule), [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/)
+(the dashboard is `dashboard/`, not `dashboard.html`),
+[Spreadsheet-style cell editing](features/03-actions/13-spreadsheet-style-cell-editing/)
+(last week's extras are `last-week/extra-crops/`).
+
+## Browser gotchas that bite Stimulus code
+
+These are the platform, not Stimulus. They belong here because they show
+up inside actions, callbacks, and `data-action` descriptors, and the
+fix is usually in the Stimulus code.
+
+### `[hidden]` loses to any author `display` rule
+
+**What happens.** The user-agent stylesheet hides `[hidden]` with
+`display: none`. A class or element rule that sets `display: flex`,
+`display: grid`, or `display: block` wins, and the element shows.
+
+**Why it matters.** A banner, drawer, dialog, or toolbar that uses
+`hidden` and also sets `display` in the page stylesheet appears on load
+even though the markup says it shouldn't.
+
+**What to do.** Every scenario page includes
+`[hidden] { display: none !important; }` in its own `<style>`. The shared
+stylesheet does not, because scenarios must still work if that file fails
+to load.
+
+**Seen in:** [Offline connection banner](features/03-actions/11-offline-connection-banner/)
+(the banner is `display: flex` and `[hidden]` on load), and every
+Controllers scenario from
+[Restaurant seat picker](features/01-controllers/02-restaurant-seat-picker/)
+onward.
+
+### Setting `.value` or `.checked` from code fires no events
+
+**What happens.** Assigning to a field's `.value` or `.checked` does not
+dispatch `input` or `change`. None of that field's actions run.
+
+**Why it matters.** "Repeat last order", "use this address", and
+"restore the saved profile" update the fields and leave the rest of the
+UI stale if they wait for actions to catch up.
+
+**What to do.** Call the render method yourself, or dispatch the event
+you want (`field.dispatchEvent(new Event("input", { bubbles: true }))`)
+so the field's actions run in their usual order.
+
+**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/),
+[Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/).
+
+### A `<details>` rendered open fires `toggle` before Stimulus is listening
+
+**What happens.** The browser fires `toggle` when it applies the `open`
+attribute during parsing. Stimulus binds actions later, so that first
+event is missed.
+
+**Why it matters.** A `toggle` action that shows or hides related fields
+never sees the starting state of a `<details open>`.
+
+**What to do.** Read `.open` in `connect()` and render from that.
+
+**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/).
+
+**Why this section.** The early `toggle` is the browser; the miss happens
+because Stimulus binds actions after parse.
+
+### The browser's own validation can swallow `submit` before any action sees it
+
+**What happens.** A field with `required` or `type="email"` and no
+`novalidate` on the form makes the browser cancel `submit`. No `submit`
+action runs.
+
+**Why it matters.** Your `validateSignup` and `saveProfile` never fire,
+and you get the browser's bubble instead of your own messages.
+
+**What to do.** Put `novalidate` on the form and validate in the action.
+
+**Seen in:** [Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/),
+[Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/).
+
+### `HTMLFormElement.submit()` never fires `submit`
+
+**What happens.** `form.submit()` from JavaScript submits (or, in this
+catalog, navigates) without dispatching a `submit` event.
+`form.requestSubmit()` and a clicked submit button do dispatch it.
+
+**Why it matters.** A `data-action` on the form that prevents the default
+and saves in place never runs if some other script calls `.submit()`.
+
+**What to do.** Use `requestSubmit()`, or click the submit button, or
+call the save method directly.
+
+**Seen in:** [Pizza order builder](features/03-actions/01-pizza-order-builder/).
+
+### `event.currentTarget` is `null` after an `await` that waits for a later task
+
+**What happens.** The browser sets `event.currentTarget` only while the
+event is being dispatched. After `await navigator.clipboard.writeText()`,
+`await fetch(...)`, or `await` a timer, it is `null`.
+`await Promise.resolve()` can still look fine, because that promise
+settles before dispatch moves on.
+
+**Why it matters.** `event.currentTarget.disabled = true` after a fetch
+throws. The bug only shows up once real work is awaited, so it passes a
+check that `await`s a resolved promise.
+
+**What to do.** Take what you need from the event before the first
+`await`: `async rollSecret({ currentTarget: rollButton })`.
+
+**Seen in:** [API token copy button](features/03-actions/07-api-token-copy-button/).
+
+**Why this section.** Clearing `currentTarget` is the Event object's
+lifetime; it shows up here because the usual trigger is an `async`
+Stimulus action.
+
+### `focus` and `blur` do not bubble
+
+**What happens.** `focus` and `blur` fire only on the element that gained
+or lost focus. They never reach an ancestor. `focusin` and `focusout`
+fire at the same moments and do bubble. The same split exists for
+`pointerenter` / `pointerleave` versus `pointerover` / `pointerout`, and
+for `mouseenter` / `mouseleave` versus `mouseover` / `mouseout`. `toggle`
+on `<details>` has no bubbling twin.
+
+**Why it matters.** `focus->product-review#highlightAspect` on the form
+never runs when a star row is focused, so the form has no idea which
+aspect is active.
+
+**What to do.** Put non-bubbling listeners on the element that actually
+fires them, or use the bubbling twin (`focusin`, `focusout`,
+`pointerover`, `pointerout`).
+
+**Seen in:** [Product star rating](features/03-actions/08-product-star-rating/).
+
+### The `reset` event fires before the form resets
+
+**What happens.** A `reset` action runs while the fields still hold the
+edits. The native reset then puts back the values from the page's
+markup, not the last save. Even a microtask after the action is too
+early; a `setTimeout(0)` is late enough to see the markup values.
+
+**Why it matters.** "Discard changes" that lets the native reset through
+throws away a successful save and restores page-load data.
+
+**What to do.** `event.preventDefault()` and restore the last save
+yourself.
+
+**Seen in:** [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/).
+
+### `online` and `offline` fire on `window` only
+
+**What happens.** The browser dispatches `online` and `offline` on
+`window`. They do not fire on `document` and they do not bubble there.
+`visibilitychange` fires on `document` and does bubble to `window`.
+
+**Why it matters.** `offline@document->…` never runs. A banner that used
+`@document` for both kinds of event would only ever see the tab hiding.
+
+**What to do.** Use `online@window` and `offline@window`. Read
+`navigator.onLine` in `connect()` for the state the page loaded in;
+these events report changes only.
+
+**Seen in:** [Offline connection banner](features/03-actions/11-offline-connection-banner/).
+
+**Why this section.** Where the browser fires the event is the platform;
+the silent miss is a Stimulus `@document` descriptor that looks valid.
+
+### Setting `location.hash` to the value it already has fires no `hashchange`
+
+**What happens.** Assigning `location.hash = "#departments"` when the
+hash is already `#departments` dispatches nothing.
+
+**Why it matters.** A promo link that opens the drawer through
+`hashchange@window` works once and then seems broken.
+
+**What to do.** After answering the hash, clear it with
+`history.replaceState(...)` so the next click is a real change. Also
+read the hash in `connect()` for a shared URL.
+
+**Seen in:** [Responsive navigation drawer](features/03-actions/05-responsive-navigation-drawer/).
+
+### Scroll position is already reset before `disconnect()`
+
+**What happens.** Moving an element resets its `scrollTop` as part of the
+move. Stimulus reacts after the move, so `disconnect()` reads `0`.
+
+**Why it matters.** Saving scroll in `disconnect()` and restoring it in
+`connect()` always restores `0`.
+
+**What to do.** Record the offset on every `scroll` event and restore it
+in `connect()`.
+
+**Seen in:** [Live support chat transcript](features/02-lifecycle-callbacks/08-live-support-chat-transcript/).
+
+**Why this section.** The scroll offset is already gone before Stimulus
+runs; `disconnect()` is just too late to read it.
+
+### A moved element never gets `pointerleave`
+
+**What happens.** If you move or remove the element that is under the
+pointer, the browser does not fire `pointerleave` (or `mouseleave`) on
+it. The pointer is still "inside" as far as that element knows.
+
+**Why it matters.** A hover-to-pause flag kept across a reconnect stays
+true forever, and the carousel, tooltip, or menu never resumes.
+
+**What to do.** Recompute pointer state on `connect()`. Don't keep
+"the pointer is over me" across a move.
+
+**Seen in:** [Carousel that pauses offscreen](features/02-lifecycle-callbacks/09-carousel-that-pauses-offscreen/).
+
+**Why this section.** Missing `pointerleave` is the browser; it bites
+because a Stimulus reconnect would otherwise restore a stale hover flag.
+
+### An already-aborted `AbortSignal` silently adds nothing
+
+**What happens.** `AbortController.abort()` can only happen once.
+`addEventListener(..., { signal })` with an already-aborted signal
+attaches no listener and throws nothing.
+
+**Why it matters.** An `AbortController` created in `initialize()` and
+aborted in `disconnect()` is spent. The next `connect()` adds no
+listeners, and the page looks fine until the feature just stops working.
+
+**What to do.** Make a new `AbortController` every time you start
+listening.
+
+**Seen in:** [Session timeout warning](features/02-lifecycle-callbacks/02-session-timeout-warning/).
+
+**Why this section.** `addEventListener` ignoring a spent signal is the
+platform; the usual victim is a controller that aborts in `disconnect()`
+and listens again in `connect()`.
