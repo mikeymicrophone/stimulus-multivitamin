@@ -1,0 +1,150 @@
+<!doctype html>
+<!--
+  Actions · 08 · Product star rating
+
+  Teaches:
+  - One element's actions can serve many children when the events bubble.
+    Each star row has pointermove, click, and keydown actions; the stars
+    themselves have none, and are built by the controller.
+  - event.target is usually an SVG <path>, and event.currentTarget is the
+    whole row. The star under the pointer is event.target.closest(), and
+    the half-star test measures that star's box.
+  - Non-bubbling events reach only the element they fire on. pointerleave,
+    focus, and blur work on the row because the row is what the pointer
+    leaves and what takes focus. To hear them from an ancestor, use their
+    bubbling twins: the review form listens for focusin and focusout, not
+    focus and blur.
+  - A child controller's custom event bubbles to the form like any other:
+    star-rating:rated->product-review#updateSummary.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Product star rating · Actions · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .review-form { max-width: 40rem; }
+      .product-summary { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+      .product-swatch { width: 4.5rem; height: 4.5rem; border-radius: 10px; background: linear-gradient(135deg, #3d5a40, #8aa17a); }
+      .product-summary p { margin: 0; }
+      .review-aspect { display: grid; grid-template-columns: 8rem auto 1fr; align-items: center; gap: 0.3rem 0.8rem; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid transparent; }
+      .review-aspect.active { border-color: var(--capsule-amber, #e8912d); background: #fffaf0; }
+      .review-aspect label { font-weight: 600; }
+      .star-row { display: inline-flex; gap: 0.15rem; cursor: pointer; border-radius: 6px; padding: 0.1rem 0.2rem; touch-action: none; }
+      .star-row:focus-visible { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .star { position: relative; display: inline-block; width: 1.8rem; height: 1.8rem; }
+      .star svg { width: 1.8rem; height: 1.8rem; display: block; fill: #ddd5c4; }
+      .star-fill { position: absolute; inset: 0 auto 0 0; overflow: hidden; width: 0; }
+      .star-fill svg { fill: #e8a317; }
+      .previewing .star-fill svg { fill: #f2c25b; }
+      .rating-readout { font-size: 0.88rem; color: var(--muted-ink, #555); }
+      .keyboard-hint { grid-column: 2 / -1; font-size: 0.8rem; color: var(--muted-ink, #555); margin: 0; }
+      .review-form textarea { width: 100%; box-sizing: border-box; min-height: 5rem; margin-top: 0.3rem; }
+      .rating-summary { font-weight: 600; color: var(--bottle-green, #1f3d2b); }
+      .review-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ProductReviewController from "./product_review_controller.js"
+      import StarRatingController from "./star_rating_controller.js"
+
+      const application = Application.start()
+      application.register("product-review", ProductReviewController)
+      application.register("star-rating", StarRatingController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#actions">Actions</a> /
+        <span>08 · Product star rating</span>
+      </nav>
+      <h1>Product star rating</h1>
+      <p class="lede">
+        A gear shop's review form, with a half-star rating for each aspect of
+        the product. Each row of stars is a <code>star-rating</code>
+        controller whose actions sit on the row, not on the stars.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario review-form" data-controller="product-review"
+            data-action="star-rating:rated->product-review#updateSummary focusin->product-review#highlightAspect focusout->product-review#clearHighlight submit->product-review#submitReview">
+        <h2>Bramble &amp; Birch · Review your purchase</h2>
+        <div class="product-summary">
+          <div class="product-swatch" aria-hidden="true"></div>
+          <p><strong>Ridgeline 2 backpacking tent</strong><br><span class="muted">Moss green · delivered June 3</span></p>
+        </div>
+
+        <div class="review-aspect" data-product-review-target="aspect" data-controller="star-rating" data-star-rating-aspect-value="overall">
+          <label id="overall-label">Overall</label>
+          <span class="star-row" tabindex="0" role="slider" aria-labelledby="overall-label" aria-valuemin="0" aria-valuemax="5"
+                data-star-rating-target="stars"
+                data-action="pointermove->star-rating#showPreview pointerleave->star-rating#endPreview click->star-rating#chooseRating keydown->star-rating#adjustWithKeys focus->star-rating#showKeyboardHint blur->star-rating#hideKeyboardHint"></span>
+          <span class="rating-readout" data-star-rating-target="readout"></span>
+          <p class="keyboard-hint" data-star-rating-target="keyboardHint" hidden>Arrow keys change the rating by half a star.</p>
+          <input type="hidden" name="rating_overall" data-aspect-label="Overall" value="0" data-star-rating-target="valueField" data-product-review-target="ratingField">
+        </div>
+
+        <div class="review-aspect" data-product-review-target="aspect" data-controller="star-rating" data-star-rating-aspect-value="weather">
+          <label id="weather-label">Weather protection</label>
+          <span class="star-row" tabindex="0" role="slider" aria-labelledby="weather-label" aria-valuemin="0" aria-valuemax="5"
+                data-star-rating-target="stars"
+                data-action="pointermove->star-rating#showPreview pointerleave->star-rating#endPreview click->star-rating#chooseRating keydown->star-rating#adjustWithKeys focus->star-rating#showKeyboardHint blur->star-rating#hideKeyboardHint"></span>
+          <span class="rating-readout" data-star-rating-target="readout"></span>
+          <p class="keyboard-hint" data-star-rating-target="keyboardHint" hidden>Arrow keys change the rating by half a star.</p>
+          <input type="hidden" name="rating_weather" data-aspect-label="Weather" value="0" data-star-rating-target="valueField" data-product-review-target="ratingField">
+        </div>
+
+        <div class="review-aspect" data-product-review-target="aspect" data-controller="star-rating" data-star-rating-aspect-value="setup">
+          <label id="setup-label">Ease of setup</label>
+          <span class="star-row" tabindex="0" role="slider" aria-labelledby="setup-label" aria-valuemin="0" aria-valuemax="5"
+                data-star-rating-target="stars"
+                data-action="pointermove->star-rating#showPreview pointerleave->star-rating#endPreview click->star-rating#chooseRating keydown->star-rating#adjustWithKeys focus->star-rating#showKeyboardHint blur->star-rating#hideKeyboardHint"></span>
+          <span class="rating-readout" data-star-rating-target="readout"></span>
+          <p class="keyboard-hint" data-star-rating-target="keyboardHint" hidden>Arrow keys change the rating by half a star.</p>
+          <input type="hidden" name="rating_setup" data-aspect-label="Setup" value="0" data-star-rating-target="valueField" data-product-review-target="ratingField">
+        </div>
+
+        <div class="review-aspect" data-product-review-target="aspect" data-controller="star-rating" data-star-rating-aspect-value="weight">
+          <label id="weight-label">Packed weight</label>
+          <span class="star-row" tabindex="0" role="slider" aria-labelledby="weight-label" aria-valuemin="0" aria-valuemax="5"
+                data-star-rating-target="stars"
+                data-action="pointermove->star-rating#showPreview pointerleave->star-rating#endPreview click->star-rating#chooseRating keydown->star-rating#adjustWithKeys focus->star-rating#showKeyboardHint blur->star-rating#hideKeyboardHint"></span>
+          <span class="rating-readout" data-star-rating-target="readout"></span>
+          <p class="keyboard-hint" data-star-rating-target="keyboardHint" hidden>Arrow keys change the rating by half a star.</p>
+          <input type="hidden" name="rating_weight" data-aspect-label="Weight" value="0" data-star-rating-target="valueField" data-product-review-target="ratingField">
+        </div>
+
+        <div class="review-aspect" data-product-review-target="aspect">
+          <label for="review-text">Your review</label>
+          <textarea id="review-text" name="review_text" style="grid-column: 2 / -1" placeholder="Pitched it in the rain at Lost Lake…" data-product-review-target="reviewText"></textarea>
+        </div>
+
+        <p class="rating-summary" data-product-review-target="summary" aria-live="polite"></p>
+        <button type="submit" data-product-review-target="submitButton">Post review</button>
+        <p class="review-status" data-product-review-target="status" aria-live="polite"></p>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="star_rating_controller.js"><code>star_rating_controller.js</code></a> — one row of stars; previews, chooses, and steps half-star ratings</li>
+          <li><a href="product_review_controller.js"><code>product_review_controller.js</code></a> — highlights the focused aspect, sums up ratings, and posts the review</li>
+          <li>This page's source — the row-level actions, the importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
