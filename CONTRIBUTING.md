@@ -100,6 +100,23 @@ features/01-controllers/
   scenario must still work if the stylesheet fails to load.
 - Include a breadcrumb back to `index.html` and links to each controller file.
 
+## Planned `quirked` branch
+
+A future `quirked` branch will keep every Stimulus technique and the same
+thirteen-per-feature structure, but swap the scenarios for more obscure,
+esoteric, and playful subject matter: still readable and real, never
+gibberish. Rule 1 applies there too.
+
+To make that reskin a matter of renaming rather than restructuring, keep each
+scenario self-contained:
+
+- Scenario-specific names, copy, and sample data live only in that
+  scenario's folder (its markup, controllers, fragments, and README), never
+  in `assets/multivitamin.css` or shared files.
+- Put the Stimulus lesson in the structure (which controllers exist, how they
+  find each other, what they expose), not in domain details, so a new domain
+  can map onto the same structure one name at a time.
+
 ## Adding a scenario
 
 1. Pick the next open slot in the feature's `README.md`. The planned titles
