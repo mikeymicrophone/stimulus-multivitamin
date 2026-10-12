@@ -26,8 +26,8 @@
     <title>Session timeout warning · Lifecycle callbacks · Stimulus Multivitamin</title>
     <link rel="stylesheet" href="../../../assets/multivitamin.css">
     <style>
-      .session-bar { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule, #ddd); margin-bottom: 1rem; }
-      .session-bar button { margin-left: auto; }
+      .session-header { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule, #ddd); margin-bottom: 1rem; }
+      .session-header button { margin-left: auto; }
       .timeout-warning { border: 2px solid #b3261e; background: #fbe9e6; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
       .timeout-warning h3 { margin: 0 0 0.35rem; color: #8c1d18; }
       .timeout-warning strong { font-variant-numeric: tabular-nums; }
@@ -83,7 +83,7 @@
           <div class="signed-in" data-controller="session-timeout"
                data-session-timeout-timeout-seconds-value="45" data-session-timeout-warning-seconds-value="15"
                data-action="session-timeout:expired->online-banking#signOut visibilitychange@document->session-timeout#checkDeadline focus@window->session-timeout#checkDeadline">
-            <div class="session-bar">
+            <div class="session-header">
               <span>Signed in as <strong>Dana Okafor</strong></span>
               <span class="muted" data-session-timeout-target="idleStatus" aria-live="polite">Signs out after 45 seconds of inactivity.</span>
               <button type="button" class="quiet" data-action="online-banking#signOut">Sign out</button>

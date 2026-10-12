@@ -1,7 +1,7 @@
 <div class="signed-in" data-controller="session-timeout"
      data-session-timeout-timeout-seconds-value="45" data-session-timeout-warning-seconds-value="15"
      data-action="session-timeout:expired->online-banking#signOut visibilitychange@document->session-timeout#checkDeadline focus@window->session-timeout#checkDeadline">
-  <div class="session-bar">
+  <div class="session-header">
     <span>Signed in as <strong>Dana Okafor</strong></span>
     <span class="muted" data-session-timeout-target="idleStatus" aria-live="polite">Signs out after 45 seconds of inactivity.</span>
     <button type="button" class="quiet" data-action="online-banking#signOut">Sign out</button>
