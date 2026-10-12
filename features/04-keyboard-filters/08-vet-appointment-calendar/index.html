@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+  Keyboard filters · 08 · Vet appointment calendar
+
+  Teaches:
+  - keydown.up / down / left / right move the focus by week or day.
+  - keydown.page_up and keydown.page_down change the month. The filter
+    names use an underscore (page_up), matching the schema. page-up is
+    not a built-in name and would throw as an unknown filter.
+  - keydown.alt+page_up and keydown.alt+page_down change the year.
+    Alt+PageDown does not match page_down, because every modifier flag
+    has to match.
+  - keydown.home and keydown.end jump to the first and last day of the
+    visible month. keydown.enter books the focused day; keydown.esc
+    clears the booking.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Vet appointment calendar · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .calendar-toolbar { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+      .weekday-row, .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
+      .weekday-row span { text-align: center; font-size: 0.78rem; color: var(--muted-ink, #555); font-weight: 600; }
+      .day-grid button { width: 100%; min-height: 2.4rem; border-radius: 8px; background: #fffdf8; border-color: #cfc6b3; color: inherit; font-weight: 600; }
+      .day-grid button[data-state="closed"], .day-grid button[data-state="booked"] { background: #ece7dc; color: #8a8478; }
+      .day-grid button[aria-pressed="true"] { background: var(--capsule-amber, #e8912d); border-color: var(--capsule-amber-deep, #b5651d); color: #1d1205; }
+      .day-grid button:focus-visible { outline: 3px solid var(--bottle-green, #1f3d2b); }
+      .booking { font-weight: 600; margin: 0.8rem 0 0.2rem; }
+      .cal-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .legend { display: flex; flex-wrap: wrap; gap: 0.8rem; font-size: 0.85rem; color: var(--muted-ink, #555); margin: 0.4rem 0 0.8rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import AppointmentCalendarController from "./appointment_calendar_controller.js"
+
+      const application = Application.start()
+      application.register("appointment-calendar", AppointmentCalendarController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>08 · Vet appointment calendar</span>
+      </nav>
+      <h1>Vet appointment calendar</h1>
+      <p class="lede">
+        Cedar Ridge Veterinary Clinic's surgery board. Dr. Inés Valcourt is
+        holding a spay slot for Mochi. Arrows move by day, Page Up and
+        Page Down by month, Alt+Page Up by year.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="appointment-calendar"
+               data-action="keydown.left->appointment-calendar#moveByDay keydown.right->appointment-calendar#moveByDay keydown.up->appointment-calendar#moveByDay keydown.down->appointment-calendar#moveByDay keydown.page_up->appointment-calendar#moveByMonth keydown.page_down->appointment-calendar#moveByMonth keydown.alt+page_up->appointment-calendar#moveByYear keydown.alt+page_down->appointment-calendar#moveByYear keydown.home->appointment-calendar#moveToMonthStart keydown.end->appointment-calendar#moveToMonthEnd keydown.enter->appointment-calendar#bookFocusedDay keydown.esc->appointment-calendar#clearBooking">
+        <h2>Cedar Ridge Veterinary Clinic · Surgery board</h2>
+        <p class="muted">Mochi · 2-year-old rabbit · spay. Sundays closed. The 14th, 15th, and 22nd of October are already booked.</p>
+        <div class="calendar-toolbar">
+          <strong data-appointment-calendar-target="monthLabel"></strong>
+          <span class="muted">Focus a day, then use the keys</span>
+        </div>
+        <div class="weekday-row" aria-hidden="true">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="day-grid" data-appointment-calendar-target="grid" role="grid" aria-label="Surgery dates"></div>
+        <p class="legend"><span>Arrows: day</span><span>Page Up/Down: month</span><span>Alt+Page Up/Down: year</span><span>Home/End: first/last</span><span>Enter: hold</span><span>Escape: clear</span></p>
+        <p class="booking" data-appointment-calendar-target="booking">No surgery date held.</p>
+        <p class="cal-status" data-appointment-calendar-target="status" aria-live="polite">October 12 is focused.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="appointment_calendar_controller.js"><code>appointment_calendar_controller.js</code></a> — day, month, and year moves plus Enter and Escape</li>
+          <li>This page's source — grid, the full set of filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

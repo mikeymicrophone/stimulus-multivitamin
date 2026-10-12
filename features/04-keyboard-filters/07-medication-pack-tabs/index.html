@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  Keyboard filters · 07 · Medication pack tabs
+
+  Teaches:
+  - A tablist with roving tabindex. keydown.left and keydown.right move
+    between Morning, Noon, Evening, and Bedtime. The selected tab is
+    tabindex="0"; the others are -1, so Tab leaves the list in one stop.
+  - keydown.home and keydown.end jump to the first and last tab. The
+    filter names are home and end, matching event.key "Home" and "End".
+  - keydown.space and keydown.enter activate the focused tab. The arrows
+    already activate (automatic activation). Space still needs
+    preventDefault() so a focused tab does not scroll the page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Medication pack tabs · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .pack-tabs { display: flex; gap: 0.25rem; margin: 0 0 0.8rem; }
+      .pack-tabs button { border-radius: 8px 8px 0 0; background: #fffdf8; border-color: #cfc6b3; color: inherit; font-weight: 600; }
+      .pack-tabs button[aria-selected="true"] { background: var(--bottle-green, #1f3d2b); color: #f4f7f4; border-color: var(--bottle-green, #1f3d2b); }
+      .pack-panel { border: 1px solid var(--rule, #ddd); border-radius: 0 10px 10px 10px; padding: 0.8rem 1rem; background: #fff; }
+      .pack-panel h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+      .dose-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
+      .pack-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .patient-meta { color: var(--muted-ink, #555); margin: 0 0 0.8rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MedicationPackController from "./medication_pack_controller.js"
+
+      const application = Application.start()
+      application.register("medication-pack", MedicationPackController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>07 · Medication pack tabs</span>
+      </nav>
+      <h1>Medication pack tabs</h1>
+      <p class="lede">
+        Harold Quimby's blister pack at Oakridge Pharmacy. Left and right
+        move between times of day; Home and End jump to Morning and
+        Bedtime. Only the selected tab is in the tab order.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="medication-pack">
+        <h2>Oakridge Pharmacy · 7-day blister pack</h2>
+        <p class="patient-meta">Harold Quimby · DOB 14 Mar 1948 · Pack starting Monday 13 Oct</p>
+
+        <div class="pack-tabs" role="tablist" aria-label="Times of day"
+             data-action="keydown.left->medication-pack#movePrevious keydown.right->medication-pack#moveNext keydown.home->medication-pack#moveFirst keydown.end->medication-pack#moveLast keydown.space->medication-pack#activateFocused keydown.enter->medication-pack#activateFocused">
+          <button type="button" role="tab" id="pack-tab-morning" data-medication-pack-target="tab" data-action="medication-pack#selectTab" aria-controls="pack-panel-morning" aria-selected="true" tabindex="0">Morning</button>
+          <button type="button" role="tab" id="pack-tab-noon" data-medication-pack-target="tab" data-action="medication-pack#selectTab" aria-controls="pack-panel-noon" aria-selected="false" tabindex="-1">Noon</button>
+          <button type="button" role="tab" id="pack-tab-evening" data-medication-pack-target="tab" data-action="medication-pack#selectTab" aria-controls="pack-panel-evening" aria-selected="false" tabindex="-1">Evening</button>
+          <button type="button" role="tab" id="pack-tab-bedtime" data-medication-pack-target="tab" data-action="medication-pack#selectTab" aria-controls="pack-panel-bedtime" aria-selected="false" tabindex="-1">Bedtime</button>
+        </div>
+
+        <div class="pack-panel" role="tabpanel" id="pack-panel-morning" data-medication-pack-target="panel" aria-labelledby="pack-tab-morning">
+          <h3>Morning · with breakfast</h3>
+          <ul class="dose-list">
+            <li>Lisinopril 10 mg · 1 tablet</li>
+            <li>Metformin 500 mg · 1 tablet</li>
+            <li>Aspirin 81 mg · 1 tablet</li>
+          </ul>
+        </div>
+        <div class="pack-panel" role="tabpanel" id="pack-panel-noon" data-medication-pack-target="panel" aria-labelledby="pack-tab-noon" hidden>
+          <h3>Noon · with lunch</h3>
+          <ul class="dose-list">
+            <li>Metformin 500 mg · 1 tablet</li>
+          </ul>
+        </div>
+        <div class="pack-panel" role="tabpanel" id="pack-panel-evening" data-medication-pack-target="panel" aria-labelledby="pack-tab-evening" hidden>
+          <h3>Evening · with dinner</h3>
+          <ul class="dose-list">
+            <li>Atorvastatin 20 mg · 1 tablet</li>
+            <li>Metformin 500 mg · 1 tablet</li>
+          </ul>
+        </div>
+        <div class="pack-panel" role="tabpanel" id="pack-panel-bedtime" data-medication-pack-target="panel" aria-labelledby="pack-tab-bedtime" hidden>
+          <h3>Bedtime</h3>
+          <ul class="dose-list">
+            <li>Trazodone 50 mg · 1 tablet</li>
+            <li>Vitamin D3 2000 IU · 1 capsule</li>
+          </ul>
+        </div>
+        <p class="pack-status" data-medication-pack-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="medication_pack_controller.js"><code>medication_pack_controller.js</code></a> — roving tabindex, Home/End, left/right, Space/Enter</li>
+          <li>This page's source — tablist, panels, filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

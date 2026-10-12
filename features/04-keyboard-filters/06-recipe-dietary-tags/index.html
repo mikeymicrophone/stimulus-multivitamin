@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  Keyboard filters · 06 · Recipe dietary tags
+
+  Teaches:
+  - Keyboard filters on an <input>. keydown.enter commits a tag.
+    preventDefault() stops the wrapping form from submitting.
+  - keydown.tab commits a non-empty draft and moves focus to Save.
+    Tab with an empty draft is left alone so the browser can move on.
+  - keydown.esc clears the draft without touching the chips.
+  - comma and Backspace are not in the default keyMappings. A plain
+    keydown action reads event.key for those. Writing keydown.comma would
+    throw "contains unknown key filter: comma" the first time any key
+    reached that action.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Recipe dietary tags · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .recipe-card { display: grid; gap: 0.7rem; }
+      .chip-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .chip-list li { display: flex; align-items: center; gap: 0.35rem; background: #e7efe6; border-radius: 999px; padding: 0.15rem 0.25rem 0.15rem 0.7rem; font-size: 0.9rem; }
+      .tag-field label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .tag-field input { width: min(24rem, 100%); box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .tag-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .card-actions { display: flex; gap: 0.6rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DietaryTagsController from "./dietary_tags_controller.js"
+
+      const application = Application.start()
+      application.register("dietary-tags", DietaryTagsController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>06 · Recipe dietary tags</span>
+      </nav>
+      <h1>Recipe dietary tags</h1>
+      <p class="lede">
+        Millet &amp; Sage's recipe lab. Tag "Charred broccoli with chili
+        crisp" from the field: Enter, Tab, or comma commits a tag, Escape
+        clears the draft, and Backspace on an empty field removes the last
+        chip.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario">
+        <h2>Millet &amp; Sage · Recipe lab</h2>
+        <form class="recipe-card" data-controller="dietary-tags" data-dietary-tags-target="card" data-action="submit->dietary-tags#saveCard" novalidate>
+          <p><strong>Charred broccoli with chili crisp</strong> · Yields 4 · Sheet pan</p>
+          <ul class="chip-list" data-dietary-tags-target="chipList">
+            <li data-dietary-tags-target="chip" data-tag="vegetarian">
+              <span>vegetarian</span>
+              <button type="button" class="quiet" data-action="dietary-tags#removeFromButton" aria-label="Remove vegetarian">Remove</button>
+            </li>
+            <li data-dietary-tags-target="chip" data-tag="gluten-free">
+              <span>gluten-free</span>
+              <button type="button" class="quiet" data-action="dietary-tags#removeFromButton" aria-label="Remove gluten-free">Remove</button>
+            </li>
+          </ul>
+          <div class="tag-field">
+            <label>
+              Add a dietary tag
+              <input type="text" name="tag-draft" data-dietary-tags-target="draft" autocomplete="off"
+                     data-action="keydown.enter->dietary-tags#commitTag keydown.tab->dietary-tags#commitTagAndAdvance keydown.esc->dietary-tags#clearDraft keydown->dietary-tags#handleSpecialKeys"
+                     placeholder="nut-free, vegan, dairy-free">
+            </label>
+          </div>
+          <p class="tag-status" data-dietary-tags-target="status" aria-live="polite">Enter, Tab, or comma commits a tag.</p>
+          <div class="card-actions">
+            <button type="submit">Save recipe card</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dietary_tags_controller.js"><code>dietary_tags_controller.js</code></a> — commits on Enter, Tab, and comma; Backspace removes the last chip</li>
+          <li>This page's source — chips, the tag field's filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
