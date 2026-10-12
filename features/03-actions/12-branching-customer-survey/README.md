@@ -8,7 +8,7 @@ Breakfast only appears as a follow-up if they used it.
 
 **What it teaches**
 
-- The earlier action patterns composed on one form. The cabin `<select>`
+- Action patterns from the earlier scenarios composed on one form. The cabin `<select>`
   defaults to `change`, the radios and checkboxes to `input`, the form to
   `submit`, and "Next" / "Back" / "Add another reason" to `click`.
 - Follow-up questions are revealed, not rebuilt. Their `data-action`

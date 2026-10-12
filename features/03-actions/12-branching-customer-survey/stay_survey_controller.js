@@ -1,7 +1,7 @@
 /*
  * stay_survey_controller.js — registered as "stay-survey"
  *
- * Teaches: composing the action patterns from the earlier examples on one
+ * Teaches: composing the action patterns from the earlier scenarios on one
  * form. Radios, checkboxes, a select, text fields, and the form itself all
  * use default events. Follow-up questions are revealed, not rebuilt, so
  * their actions are bound from the start and fire the moment a hidden

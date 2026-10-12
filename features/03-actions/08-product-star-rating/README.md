@@ -15,7 +15,7 @@ on, sums up the ratings, and posts the review.
 - The element you need isn't always `target` or `currentTarget`. A click
   usually starts on an SVG `<path>` (`event.target`), and the action belongs
   to the row (`event.currentTarget`). The star is
-  `event.target.closest("[data-star-position]")`, and the half-star test
+  `event.target.closest("[data-star-position]")`, and the half-star check
   measures that star's box.
 - Non-bubbling events only reach the element they fire on.
   `pointerleave->star-rating#endPreview`, `focus->…`, and `blur->…` work

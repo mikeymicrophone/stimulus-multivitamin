@@ -35,7 +35,7 @@ clipboard, and rolls it for a new one from the API.
   `application.handleError()`. Stimulus catches errors thrown while it
   calls the method, but an `async` method returns before its body fails, so
   the rejection becomes an `unhandledrejection` on `window` instead.
-  [Error handling](../../15-error-handling/) has a planned example on this.
+  [Error handling](../../15-error-handling/) has a planned scenario on this.
 
 **Files**
 

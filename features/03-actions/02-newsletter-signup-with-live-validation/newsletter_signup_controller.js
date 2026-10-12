@@ -98,7 +98,7 @@ export default class extends Controller {
   get emailProblem() {
     const email = this.emailTarget.value
     if (email === "") return "Enter your email address."
-    if (!emailPattern.test(email)) return "That doesn't look like an email address."
+    if (!emailPattern.exec(email)) return "That doesn't look like an email address."
     return null
   }
 

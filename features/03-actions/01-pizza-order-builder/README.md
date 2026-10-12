@@ -30,7 +30,7 @@ all call it, and almost every descriptor leaves out the event name.
   last order runs none of the field actions. The method renders directly.
 - The link's action calls `event.preventDefault()` so the page doesn't jump
   to `#allergen-guide`, and the form's `submit` action does the same so the
-  demo stays on the page.
+  order stays on this page.
 
 **Stimulus behavior worth knowing**
 
@@ -43,6 +43,9 @@ all call it, and almost every descriptor leaves out the event name.
   customer schedules), and `connect()` reads `.open` itself.
 - Only `type="submit"` maps to `click`, and the comparison is exact:
   `type="SUBMIT"` falls back to `input`.
+- `HTMLFormElement.submit()` does not fire a `submit` event, so a
+  `data-action` on the form never sees it. `requestSubmit()` and a clicked
+  submit button do. This page always submits through the button.
 
 **Files**
 
