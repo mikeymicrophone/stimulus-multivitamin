@@ -1,0 +1,156 @@
+<!doctype html>
+<!--
+  Lifecycle callbacks · 08 · Live support chat transcript
+
+  Teaches:
+  - A MutationObserver watches content that something else changes. The chat
+    stream appends messages the way Turbo Streams would; connect() starts
+    observing the message list and disconnect() stops.
+  - disconnect() must undo connect() exactly. "Pop out" moves the panel,
+    which disconnects and reconnects the transcript; an observer left running
+    would mean two observers after the move, and every message would be
+    counted twice.
+  - Undo global side effects. The unread count goes in document.title, which
+    belongs to the whole page; connect() remembers the title and
+    disconnect() restores it when the chat ends.
+  - Record state as it changes, not in disconnect(). A moved element loses
+    its scroll position, and by the time disconnect() runs the element has
+    already moved, so the transcript records its position on every scroll
+    and restores it in connect().
+  - Server HTML that replaces the panel ("End chat") disconnects it for good.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Live support chat transcript · Lifecycle callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      .account-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.5rem 1rem; margin: 0 0 1rem; }
+      .account-summary div { border-left: 3px solid var(--rule, #ddd); padding-left: 0.6rem; }
+      .account-summary dt { font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .account-summary dd { margin: 0; font-weight: 600; }
+      .chat-panel { border: 1px solid var(--rule, #ddd); border-radius: 12px; background: var(--card, #fff); max-width: 30rem; box-shadow: 0 6px 18px rgb(31 61 43 / 0.12); }
+      .chat-header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding: 0.5rem 0.75rem; background: var(--bottle-green, #1f3d2b); color: #fff; border-radius: 12px 12px 0 0; }
+      .chat-header h3 { margin: 0; font-size: 0.95rem; color: #fff; margin-right: auto; }
+      .chat-header button { font-size: 0.75rem; padding: 0.05rem 0.55rem; }
+      .minimized-summary { font-size: 0.8rem; font-weight: 600; color: #ffd9a8; }
+      .chat-body { position: relative; padding: 0 0.75rem 0.75rem; }
+      .chat-body[hidden] { display: none; }
+      .chat-messages { list-style: none; margin: 0; padding: 0.75rem 0; height: 16rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+      .chat-message { max-width: 85%; padding: 0.35rem 0.6rem; border-radius: 10px; background: #f3efe6; }
+      .chat-message p { margin: 0; font-size: 0.9rem; }
+      .chat-message.from-customer { align-self: flex-end; background: #e7efe6; }
+      .chat-byline { font-size: 0.72rem; color: var(--muted-ink, #555); }
+      .new-messages { position: absolute; left: 50%; transform: translateX(-50%); bottom: 5.2rem; font-size: 0.8rem; padding: 0.15rem 0.75rem; box-shadow: 0 2px 6px rgb(0 0 0 / 0.2); }
+      .new-messages[hidden] { display: none; }
+      .chat-composer { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+      .chat-composer input { flex: 1; }
+      .end-chat { margin-top: 0.5rem; }
+      .chat-dock { position: fixed; right: 1rem; bottom: 1rem; width: min(26rem, calc(100vw - 2rem)); z-index: 10; }
+      .chat-dock:empty { display: none; }
+      .chat-slot:empty::before { content: "The chat is popped out to the corner of the window."; color: var(--muted-ink, #555); font-size: 0.9rem; }
+      .chat-summary { border: 1px solid var(--rule, #ddd); border-radius: 12px; padding: 0.75rem 1rem; max-width: 30rem; }
+      .chat-summary h3 { margin-top: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SupportChatController from "./support_chat_controller.js"
+      import ChatTranscriptController from "./chat_transcript_controller.js"
+      import { startChatStream } from "./chat_stream.js"
+
+      const application = Application.start()
+      application.register("support-chat", SupportChatController)
+      application.register("chat-transcript", ChatTranscriptController)
+
+      startChatStream({
+        messageListId: "chat-messages",
+        agentName: "Priya",
+        secondsBetweenReplies: 5,
+        acknowledgement: "Thanks, I've added that to your ticket.",
+        scriptedReplies: [
+          "I'm running a line test on your modem now. It takes about a minute.",
+          "The test shows signal noise starting around 7 PM each evening, which matches the slowdowns you described.",
+          "Have you added any splitters or new coax cables in the last few weeks?",
+          "Noise like this usually comes from a corroded connector at the tap outside. A technician can replace it.",
+          "I can book Thursday between 1 and 3 PM. Someone 18 or older needs to be home.",
+          "I've also put a $15 credit on your next bill for the trouble.",
+        ],
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#lifecycle-callbacks">Lifecycle callbacks</a> /
+        <span>08 · Live support chat transcript</span>
+      </nav>
+      <h1>Live support chat transcript</h1>
+      <p class="lede">
+        An internet provider's support chat. A push channel appends the
+        agent's messages to the transcript, and the
+        <code>chat-transcript</code> controller watches for them with a
+        MutationObserver. The <code>support-chat</code> controller pops the
+        chat out to the corner, sends your messages, and ends the chat.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="support-chat">
+        <h2>Brightline Internet · My account</h2>
+        <dl class="account-summary">
+          <div><dt>Account</dt><dd>4471-0928 · Ana Ruiz</dd></div>
+          <div><dt>Service address</dt><dd>48 Linden Court</dd></div>
+          <div><dt>Plan</dt><dd>Fiber 500</dd></div>
+        </dl>
+
+        <div class="chat-slot" data-support-chat-target="inlineSlot"><article class="chat-panel" data-controller="chat-transcript" data-support-chat-target="chatPanel"
+                   data-action="visibilitychange@document->chat-transcript#visibilityChanged">
+            <header class="chat-header">
+              <h3>Chat with Priya · Brightline support</h3>
+              <span class="minimized-summary" data-chat-transcript-target="minimizedSummary" aria-live="polite"></span>
+              <button type="button" class="quiet" data-support-chat-target="popOutButton" data-action="support-chat#togglePopOut">Pop out</button>
+              <button type="button" class="quiet" data-chat-transcript-target="minimizeButton" data-action="chat-transcript#toggleMinimized">Minimize</button>
+            </header>
+            <div class="chat-body" data-chat-transcript-target="body">
+              <ol class="chat-messages" id="chat-messages" aria-live="polite" data-chat-transcript-target="messageList" data-action="scroll->chat-transcript#trackScroll">
+                <li class="chat-message from-agent" data-sender="agent" data-message-number="1"><span class="chat-byline">Priya · 7:41 PM</span><p>Hi Ana, I'm Priya. I see you're having slow speeds in the evenings. Is that right?</p></li>
+                <li class="chat-message from-customer" data-sender="customer" data-message-number="2"><span class="chat-byline">You · 7:41 PM</span><p>Yes. Every night after about 7 it drops to almost nothing.</p></li>
+                <li class="chat-message from-agent" data-sender="agent" data-message-number="3"><span class="chat-byline">Priya · 7:42 PM</span><p>Sorry about that. Are you on Wi-Fi or plugged in when it happens?</p></li>
+                <li class="chat-message from-customer" data-sender="customer" data-message-number="4"><span class="chat-byline">You · 7:42 PM</span><p>Both. My desktop is wired and it's just as slow.</p></li>
+                <li class="chat-message from-agent" data-sender="agent" data-message-number="5"><span class="chat-byline">Priya · 7:43 PM</span><p>That helps. It points to the line rather than your Wi-Fi.</p></li>
+                <li class="chat-message from-agent" data-sender="agent" data-message-number="6"><span class="chat-byline">Priya · 7:43 PM</span><p>Give me a moment to pull up your modem's history.</p></li>
+              </ol>
+              <button type="button" class="new-messages" data-chat-transcript-target="newMessagesButton" data-action="chat-transcript#jumpToLatest" hidden></button>
+              <form class="chat-composer" data-action="support-chat#sendMessage">
+                <input type="text" name="chat_message" aria-label="Message" placeholder="Type a message" autocomplete="off" data-support-chat-target="composerInput">
+                <button type="submit">Send</button>
+              </form>
+              <button type="button" class="quiet end-chat" data-action="support-chat#endChat">End chat</button>
+            </div>
+          </article></div>
+        <div class="chat-dock" data-support-chat-target="dock"></div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="chat_transcript_controller.js"><code>chat_transcript_controller.js</code></a> — observes the message list, scrolls or counts unread, and restores the page title</li>
+          <li><a href="support_chat_controller.js"><code>support_chat_controller.js</code></a> — pops the chat out, sends messages, and ends the chat</li>
+          <li><a href="chat_stream.js"><code>chat_stream.js</code></a> — stands in for the server's push channel; appends messages by element id</li>
+          <li><a href="chat-ended.html"><code>chat-ended.html</code></a> — the server's summary that replaces the chat</li>
+          <li>This page's source — markup, importmap, controller registration, and the stream's script</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
