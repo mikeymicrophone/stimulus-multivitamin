@@ -41,13 +41,17 @@ export default class extends Controller {
     this.waitlistStatusTarget.textContent = "Added to the winter waitlist. This click was on the card itself."
   }
 
-  logValidate(event) {
+  logValidate() {
     this.appendLog("validateShare")
-    event.stopImmediatePropagation()
   }
 
   logAnnounce() {
     this.appendLog("announceHold")
+  }
+
+  logGuard(event) {
+    this.appendLog("validateShare")
+    event.stopImmediatePropagation()
   }
 
   logReceipt() {

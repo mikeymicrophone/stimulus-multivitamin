@@ -677,18 +677,21 @@ the file).
 option, including `:prevent`, `:stop`, `:self`, and custom names. In
 Stimulus 3.2.2 that is not limited to `capture` / `once` / `passive`.
 `click->csa-signup#logValidate:prevent click->csa-signup#logAnnounce` are
-two listeners. `stopImmediatePropagation()` in the first does not skip
-the second. The same pair without `:prevent` shares one listener, so that
-call *does* skip the later method.
+two `addEventListener` calls, so both methods run. `:stop` on the first
+would not skip the second: `stopPropagation()` hides the event from
+ancestors, not from other listeners on the same element.
+`stopImmediatePropagation()` in a method *does* skip remaining listeners
+on that target, including ones with a different option set.
 
-**Why it matters.** A "validate, then announce" button that adds `:prevent`
-to the first action only looks like the newsletter-signup pattern. The
-announce still runs after an invalid check.
+**Why it matters.** Adding `:prevent` to the first of two actions does
+not by itself stop the second. Assuming "different options mean
+`stopImmediatePropagation()` can't see the other action" is also wrong;
+that call is native and applies to the target.
 
-**What to do.** Give cooperating actions on one element the same option
-set, or do the later work from the first method. Do not rely on
-`stopImmediatePropagation()` across `:prevent` / `:stop` / `:self` /
-custom options.
+**What to do.** If two actions on one control must both run, don't call
+`stopImmediatePropagation()`. If the first must skip the second, call it
+— or do the later work from the first method. Don't rely on `:stop` to
+skip a sibling action.
 
 **Seen in:** [CSA share signup](features/05-action-options/07-csa-share-signup/).
 

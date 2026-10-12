@@ -23,9 +23,10 @@ options which differ put actions on different native listeners.
     changes.
 - `:prevent` / `:stop` / `:self` are also keys in the object that identifies
   a native listener. `click->…#logValidate:prevent click->…#logAnnounce`
-  are two listeners. `stopImmediatePropagation()` in `logValidate` does
-  not skip `logAnnounce`. The pair without `:prevent` shares one listener,
-  so the same call *does* skip `logReceipt`.
+  are two `addEventListener` calls, so both methods run. `:stop` would not
+  skip the second either (`stopPropagation` hides ancestors, not siblings).
+  `stopImmediatePropagation()` in `logGuard` *does* skip `logReceipt`, even
+  on the same-option pair that shares one listener.
 
 **Files**
 
@@ -41,6 +42,6 @@ stays on this page. Join again: the join count stays 1. Click "What's a
 hold?" — the hash does not become `#hold-info` and no hold is placed.
 Click "What's a waitlist?" — the hash becomes `#waitlist-info` and the
 waitlist status is unchanged. Then click the card background of each.
-Finally press both "Check the share…" buttons: the log shows
-`validateShare` *and* `announceHold` on the mixed-option button, and only
-`validateShare` on the same-option button.
+Finally press both "Check the share…" buttons: the mixed-option button
+logs `validateShare` then `announceHold`; the same-option button logs
+only `validateShare`, because `logGuard` calls `stopImmediatePropagation()`.

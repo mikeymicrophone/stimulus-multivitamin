@@ -11,11 +11,11 @@
     the nested "What's a hold?" link, then :self rejects so holdShare()
     does not run. On the waitlist card, :self:prevent does the reverse:
     :self fails on the child, :prevent never runs, and the hash changes.
-  - :prevent, :stop, and :self are Stimulus filters, but they still land
-    in the eventOptions object that keys native listeners. Two actions on
-    the same button whose options differ (one has :prevent, one does not)
-    are different listeners. stopImmediatePropagation() in the first does
-    not skip the second.
+  - :prevent, :stop, and :self still land in the eventOptions object that
+    keys native listeners. Two actions on the same button whose options
+    differ are two addEventListener calls. Both run unless a method calls
+    stopImmediatePropagation(), which is native and does skip the other
+    listener. :stop (stopPropagation) does not.
 -->
 <html lang="en">
   <head>
@@ -112,7 +112,7 @@
               <button type="button" data-action="click->csa-signup#logValidate:prevent click->csa-signup#logAnnounce">Check the share, then announce</button>
             </p>
             <p>
-              <button type="button" data-action="click->csa-signup#logValidate click->csa-signup#logReceipt">Check the share, then print</button>
+              <button type="button" data-action="click->csa-signup#logGuard click->csa-signup#logReceipt">Check the share, then print</button>
             </p>
             <ol class="action-log" data-csa-signup-target="actionLog"></ol>
           </div>
