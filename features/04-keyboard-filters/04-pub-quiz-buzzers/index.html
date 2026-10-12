@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Keyboard filters · 04 · Pub quiz buzzers
+
+  Teaches:
+  - a–z and 0–9 are built-in filters. keydown.a@window and keydown.1@window
+    both lock in the Nile. The letters and digits are separate descriptors
+    that call the same method.
+  - The listeners sit on window, so they fire even while the team-name
+    field has focus: keydown bubbles to window. lockAnswer() ignores the
+    key when the event started in an input, otherwise typing "Aardvarks"
+    would lock answer A.
+  - Caps Lock still matches keydown.a. Stimulus compares event.key
+    case-insensitively, and Caps Lock does not set shiftKey. Shift+A does
+    not match, because the filter did not name shift.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pub quiz buzzers · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .question { font-size: 1.15rem; margin: 0 0 0.8rem; }
+      .choices { list-style: none; margin: 0 0 0.8rem; padding: 0; display: grid; gap: 0.45rem; }
+      .choices button { width: 100%; text-align: left; border-radius: 10px; background: #fffdf8; border-color: #cfc6b3; color: inherit; font-weight: 600; display: grid; grid-template-columns: 2.2rem 1fr; gap: 0.6rem; align-items: center; }
+      .choices button[aria-pressed="true"] { background: var(--capsule-amber, #e8912d); border-color: var(--capsule-amber-deep, #b5651d); }
+      .choice-key { font-variant-numeric: tabular-nums; color: var(--muted-ink, #555); }
+      .locked-banner { background: #e7efe6; color: var(--bottle-green, #1f3d2b); font-weight: 700; border-radius: 8px; padding: 0.35rem 0.7rem; margin: 0 0 0.7rem; }
+      .quiz-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: end; }
+      .quiz-toolbar label { display: grid; gap: 0.15rem; font-size: 0.85rem; font-weight: 600; }
+      .quiz-toolbar input { padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .quiz-status { min-height: 1.4em; margin: 0.7rem 0 0; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import QuizBoardController from "./quiz_board_controller.js"
+
+      const application = Application.start()
+      application.register("quiz-board", QuizBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>04 · Pub quiz buzzers</span>
+      </nav>
+      <h1>Pub quiz buzzers</h1>
+      <p class="lede">
+        Round 3 at The Anchor &amp; Quill. The table locks an answer with
+        A–D or 1–4 from anywhere on the page, except while someone is
+        typing the team name.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="quiz-board"
+               data-action="keydown.a@window->quiz-board#lockAnswer keydown.b@window->quiz-board#lockAnswer keydown.c@window->quiz-board#lockAnswer keydown.d@window->quiz-board#lockAnswer keydown.1@window->quiz-board#lockAnswer keydown.2@window->quiz-board#lockAnswer keydown.3@window->quiz-board#lockAnswer keydown.4@window->quiz-board#lockAnswer">
+        <h2>The Anchor &amp; Quill · Geography, question 7</h2>
+        <p class="question">Which river runs through Cairo?</p>
+        <p class="locked-banner" data-quiz-board-target="lockedBanner" hidden></p>
+        <ul class="choices">
+          <li>
+            <button type="button" data-quiz-board-target="choice" data-action="quiz-board#pickChoice" data-choice="nile" data-choice-label="the Nile" aria-pressed="false">
+              <span class="choice-key">A / 1</span>
+              <span>The Nile</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-quiz-board-target="choice" data-action="quiz-board#pickChoice" data-choice="thames" data-choice-label="the Thames" aria-pressed="false">
+              <span class="choice-key">B / 2</span>
+              <span>The Thames</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-quiz-board-target="choice" data-action="quiz-board#pickChoice" data-choice="danube" data-choice-label="the Danube" aria-pressed="false">
+              <span class="choice-key">C / 3</span>
+              <span>The Danube</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" data-quiz-board-target="choice" data-action="quiz-board#pickChoice" data-choice="seine" data-choice-label="the Seine" aria-pressed="false">
+              <span class="choice-key">D / 4</span>
+              <span>The Seine</span>
+            </button>
+          </li>
+        </ul>
+        <div class="quiz-toolbar">
+          <label>
+            Team name
+            <input type="text" name="team" value="The Aardvarks" data-quiz-board-target="teamName" autocomplete="off">
+          </label>
+          <button type="button" data-action="quiz-board#reveal">Host reveals</button>
+          <button type="button" class="quiet" data-action="quiz-board#unlock">Clear lock</button>
+        </div>
+        <p class="quiz-status" data-quiz-board-target="status" aria-live="polite">Buzzers are live. Press A–D or 1–4.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="quiz_board_controller.js"><code>quiz_board_controller.js</code></a> — locks A–D and 1–4 from <code>@window</code>, skipping the team-name field</li>
+          <li>This page's source — choices, global filters, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

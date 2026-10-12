@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  Keyboard filters · 02 · Clinic message composer
+
+  Teaches:
+  - Keyboard filters match modifiers exactly. keydown.enter does not run
+    for Shift+Enter, because shiftKey is true and the filter did not name
+    shift. keydown.shift+enter is a separate descriptor.
+  - Both filters sit on the note <textarea>, not on the composer. Enter in
+    the subject <input> never reaches them, so it cannot send the note.
+  - sendNote() calls preventDefault() so Enter does not insert a newline
+    (and does not submit a wrapping form). insertLineBreak() does not, so
+    Shift+Enter keeps the browser's newline in the textarea.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Clinic message composer · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .chart-header { display: flex; flex-wrap: wrap; gap: 0.3rem 1.2rem; margin: 0 0 1rem; }
+      .chart-header dt { font-size: 0.8rem; color: var(--muted-ink, #555); }
+      .chart-header dd { margin: 0; font-weight: 600; }
+      .message-thread { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 0.7rem; max-height: 16rem; overflow: auto; }
+      .message-thread li { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.5rem 0.75rem; background: #fffdf8; }
+      .message-thread p { margin: 0.3rem 0 0; white-space: pre-wrap; }
+      .incoming { background: #eef3ec; }
+      .composer { display: grid; gap: 0.45rem; }
+      .composer label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .composer input, .composer textarea { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; font: inherit; }
+      .composer textarea { min-height: 6rem; }
+      .composer-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+      .composer-hint { margin: 0; font-size: 0.85rem; }
+      .composer-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ClinicMessageController from "./clinic_message_controller.js"
+
+      const application = Application.start()
+      application.register("clinic-message", ClinicMessageController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>02 · Clinic message composer</span>
+      </nav>
+      <h1>Clinic message composer</h1>
+      <p class="lede">
+        Nurse Priya Nandakumar's inbox at Riverside Family Clinic. Enter
+        in the note sends it; Shift+Enter keeps a newline. The filters sit
+        on the <code>textarea</code>, so Enter in the subject line does
+        not send.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="clinic-message">
+        <h2>Riverside Family Clinic · Message Owen Havelock</h2>
+        <dl class="chart-header">
+          <div><dt>Patient</dt><dd>Owen Havelock · 47</dd></div>
+          <div><dt>Chart</dt><dd>RFC-18402</dd></div>
+          <div><dt>Thread</dt><dd>Cholesterol panel, 12 Oct 2026</dd></div>
+        </dl>
+
+        <ul class="message-thread" data-clinic-message-target="thread">
+          <li class="incoming">
+            <strong>Owen Havelock · Fasting labs</strong>
+            <p>Do I still need to fast before Thursday's cholesterol draw, or is that only for the glucose?</p>
+          </li>
+        </ul>
+
+        <div class="composer">
+          <label>
+            Subject
+            <input type="text" name="subject" value="Thursday cholesterol draw" data-clinic-message-target="subject" autocomplete="off">
+          </label>
+          <label>
+            Note
+            <textarea name="note" data-clinic-message-target="note" data-action="keydown.enter->clinic-message#sendNote keydown.shift+enter->clinic-message#insertLineBreak" placeholder="Reply to Owen">Please fast 12 hours before the cholesterol panel. Water is fine. The glucose order was cancelled.</textarea>
+          </label>
+          <div class="composer-actions">
+            <button type="button" data-action="clinic-message#sendNote">Send note</button>
+            <p class="composer-hint muted">Enter sends · Shift+Enter inserts a newline</p>
+          </div>
+        </div>
+        <p class="composer-status" data-clinic-message-target="status" aria-live="polite">Draft ready. Enter sends the note.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="clinic_message_controller.js"><code>clinic_message_controller.js</code></a> — sends on Enter, leaves Shift+Enter to the textarea</li>
+          <li>This page's source — subject field, note, filters, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

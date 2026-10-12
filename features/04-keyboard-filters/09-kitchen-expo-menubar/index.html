@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  Keyboard filters · 09 · Kitchen expo menubar
+
+  Teaches:
+  - A menubar's keyboard map, declared as filters. Left and right move
+    between Recall, Bump, Rush, and Print. Down / Enter / Space open the
+    focused menu; up opens on the last item. Home / End jump to the first
+    or last item (or menu). Escape closes.
+  - Alt+R / Alt+B / Alt+U / Alt+P are keydown.alt+r@window and friends.
+    They compare event.key, so on macOS Option+R may produce a different
+    character and miss the filter.
+  - keydown@window->kitchen-menubar#openFromCode matches event.code
+    (KeyR) instead, which stays stable when Option rewrites event.key.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Kitchen expo menubar · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .menubar { display: flex; gap: 0.2rem; margin: 0 0 0.8rem; }
+      .menu { position: relative; }
+      .menubar > .menu > button { border-radius: 8px; background: #fffdf8; border-color: #cfc6b3; color: inherit; }
+      .menubar > .menu > button[aria-expanded="true"] { background: var(--bottle-green, #1f3d2b); color: #f4f7f4; }
+      .menu-panel { position: absolute; top: calc(100% + 0.2rem); left: 0; z-index: 5; min-width: 14rem; margin: 0; padding: 0.3rem; list-style: none; background: #fff; border: 1px solid var(--rule, #ddd); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+      .menu-panel button { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
+      .menu-panel button:hover, .menu-panel button:focus-visible { background: #f3ecdd; }
+      .rail { display: grid; gap: 0.45rem; }
+      .ticket { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fffdf8; text-align: left; color: inherit; font-weight: 600; }
+      .ticket[aria-pressed="true"] { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .ticket small { font-weight: 400; color: var(--muted-ink, #555); }
+      .expo-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import KitchenMenubarController from "./kitchen_menubar_controller.js"
+
+      const application = Application.start()
+      application.register("kitchen-menubar", KitchenMenubarController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>09 · Kitchen expo menubar</span>
+      </nav>
+      <h1>Kitchen expo menubar</h1>
+      <p class="lede">
+        Hearth &amp; Rye's expo screen. Recall, Bump, Rush, and Print are
+        a menubar: arrows, Home, End, Enter, Space, and Escape, plus Alt
+        mnemonics that also have an <code>event.code</code> fallback for
+        macOS Option.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="kitchen-menubar"
+               data-action="keydown.alt+r@window->kitchen-menubar#openFromMnemonic keydown.alt+b@window->kitchen-menubar#openFromMnemonic keydown.alt+u@window->kitchen-menubar#openFromMnemonic keydown.alt+p@window->kitchen-menubar#openFromMnemonic keydown@window->kitchen-menubar#openFromCode">
+        <h2>Hearth &amp; Rye · Expo rail</h2>
+
+        <div class="menubar" role="menubar" aria-label="Ticket actions"
+             data-action="keydown.left->kitchen-menubar#moveAlongBar keydown.right->kitchen-menubar#moveAlongBar keydown.down->kitchen-menubar#openDown keydown.up->kitchen-menubar#openUp keydown.enter->kitchen-menubar#openDown keydown.space->kitchen-menubar#openDown keydown.home->kitchen-menubar#moveToEdge keydown.end->kitchen-menubar#moveToEdge keydown.esc->kitchen-menubar#closeMenu">
+          <div class="menu">
+            <button type="button" role="menuitem" data-kitchen-menubar-target="menu" data-action="kitchen-menubar#focusMenu" data-menu="recall" aria-haspopup="true" aria-expanded="false" tabindex="0">Recall</button>
+            <ul class="menu-panel" role="menu" data-menu-panel="recall" hidden data-action="keydown.up->kitchen-menubar#moveAmongItems keydown.down->kitchen-menubar#moveAmongItems keydown.home->kitchen-menubar#moveToEdge keydown.end->kitchen-menubar#moveToEdge keydown.esc->kitchen-menubar#closeMenu keydown.left->kitchen-menubar#moveAlongBar keydown.right->kitchen-menubar#moveAlongBar">
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="recall" data-command-label="Recalled from pass">Last bumped ticket</button></li>
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="recall" data-command-label="Recalled 86'd item">86 list</button></li>
+            </ul>
+          </div>
+          <div class="menu">
+            <button type="button" role="menuitem" data-kitchen-menubar-target="menu" data-action="kitchen-menubar#focusMenu" data-menu="bump" aria-haspopup="true" aria-expanded="false" tabindex="-1">Bump</button>
+            <ul class="menu-panel" role="menu" data-menu-panel="bump" hidden data-action="keydown.up->kitchen-menubar#moveAmongItems keydown.down->kitchen-menubar#moveAmongItems keydown.home->kitchen-menubar#moveToEdge keydown.end->kitchen-menubar#moveToEdge keydown.esc->kitchen-menubar#closeMenu keydown.left->kitchen-menubar#moveAlongBar keydown.right->kitchen-menubar#moveAlongBar">
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="bump" data-command-label="Bumped to pass">Selected ticket</button></li>
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="bump" data-command-label="Bumped all fired">All fired tickets</button></li>
+            </ul>
+          </div>
+          <div class="menu">
+            <button type="button" role="menuitem" data-kitchen-menubar-target="menu" data-action="kitchen-menubar#focusMenu" data-menu="rush" aria-haspopup="true" aria-expanded="false" tabindex="-1">Rush</button>
+            <ul class="menu-panel" role="menu" data-menu-panel="rush" hidden data-action="keydown.up->kitchen-menubar#moveAmongItems keydown.down->kitchen-menubar#moveAmongItems keydown.home->kitchen-menubar#moveToEdge keydown.end->kitchen-menubar#moveToEdge keydown.esc->kitchen-menubar#closeMenu keydown.left->kitchen-menubar#moveAlongBar keydown.right->kitchen-menubar#moveAlongBar">
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="rush" data-command-label="Marked rush">Mark rush</button></li>
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="rush" data-command-label="Fired now">Fire now</button></li>
+            </ul>
+          </div>
+          <div class="menu">
+            <button type="button" role="menuitem" data-kitchen-menubar-target="menu" data-action="kitchen-menubar#focusMenu" data-menu="print" aria-haspopup="true" aria-expanded="false" tabindex="-1">Print</button>
+            <ul class="menu-panel" role="menu" data-menu-panel="print" hidden data-action="keydown.up->kitchen-menubar#moveAmongItems keydown.down->kitchen-menubar#moveAmongItems keydown.home->kitchen-menubar#moveToEdge keydown.end->kitchen-menubar#moveToEdge keydown.esc->kitchen-menubar#closeMenu keydown.left->kitchen-menubar#moveAlongBar keydown.right->kitchen-menubar#moveAlongBar">
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="print" data-command-label="Printed chit">Chit</button></li>
+              <li><button type="button" role="menuitem" data-kitchen-menubar-target="item" data-action="kitchen-menubar#runItem keydown.enter->kitchen-menubar#runItem keydown.space->kitchen-menubar#runItem" data-menu="print" data-command-label="Printed packing slip">Packing slip</button></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="rail">
+          <button type="button" class="ticket" data-kitchen-menubar-target="ticket" data-action="kitchen-menubar#selectTicket" data-ticket-name="12 · Cacio e pepe" aria-pressed="true">
+            <span>12</span>
+            <span>Cacio e pepe <small>Table 4 · fired 6 min</small></span>
+            <span>Hot</span>
+          </button>
+          <button type="button" class="ticket" data-kitchen-menubar-target="ticket" data-action="kitchen-menubar#selectTicket" data-ticket-name="14 · Half chicken" aria-pressed="false">
+            <span>14</span>
+            <span>Half chicken <small>Table 9 · fired 3 min</small></span>
+            <span>Hot</span>
+          </button>
+          <button type="button" class="ticket" data-kitchen-menubar-target="ticket" data-action="kitchen-menubar#selectTicket" data-ticket-name="15 · Beet salad" aria-pressed="false">
+            <span>15</span>
+            <span>Beet salad <small>Table 2 · cold</small></span>
+            <span>Cold</span>
+          </button>
+        </div>
+        <p class="expo-status" data-kitchen-menubar-target="status" aria-live="polite">12 · Cacio e pepe is on the rail.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="kitchen_menubar_controller.js"><code>kitchen_menubar_controller.js</code></a> — menubar navigation, Alt mnemonics, and the event.code fallback</li>
+          <li>This page's source — menus, tickets, filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

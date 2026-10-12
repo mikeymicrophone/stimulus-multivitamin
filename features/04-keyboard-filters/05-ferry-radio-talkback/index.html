@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Keyboard filters · 05 · Ferry radio talkback
+
+  Teaches:
+  - Keyboard filters work on keydown, keyup, and keypress. The same Space
+    key is wired three ways: keydown.space starts talkback, keyup.space
+    ends it, keypress.space only writes to the event log.
+  - keypress.esc is declared too and never runs. Browsers do not fire
+    keypress for Escape (or Tab, arrows, Home, End, PageUp, PageDown).
+    keydown.esc is what cancels talkback.
+  - The built-in space filter maps to event.key " " (a space character),
+    not "Space". keydown repeats while the key is held; startTalkback()
+    is a no-op when already transmitting.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ferry radio talkback · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .radio-face { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.8rem 1.2rem; align-items: center; background: #1f2a28; color: #e8efe9; border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 0.8rem; }
+      .tx-lamp { width: 4.5rem; height: 4.5rem; border-radius: 50%; display: grid; place-items: center; font-weight: 800; letter-spacing: 0.04em; background: #3d5a4c; }
+      .tx-lamp[data-state="live"] { background: #d94a2a; color: #fff; }
+      .radio-readout dt { font-size: 0.8rem; color: #b7c4bc; }
+      .radio-readout dd { margin: 0 0 0.35rem; font-size: 1.1rem; }
+      .event-log { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; min-height: 1.4em; color: var(--bottle-green, #1f3d2b); background: #eef3ec; border-radius: 8px; padding: 0.35rem 0.6rem; }
+      .radio-notes label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; margin-top: 0.7rem; }
+      .radio-notes input { padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .radio-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FerryRadioController from "./ferry_radio_controller.js"
+
+      const application = Application.start()
+      application.register("ferry-radio", FerryRadioController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>05 · Ferry radio talkback</span>
+      </nav>
+      <h1>Ferry radio talkback</h1>
+      <p class="lede">
+        Len Cho's desk at Portage Bay Ferry. Hold Space to talk to the
+        wheelhouse; release to listen. The same key is wired on
+        <code>keydown</code>, <code>keyup</code>, and <code>keypress</code>.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="ferry-radio"
+               data-action="keydown.space@window->ferry-radio#startTalkback keyup.space@window->ferry-radio#endTalkback keypress.space@window->ferry-radio#recordSpaceKeypress keydown.esc@window->ferry-radio#cancelTalkback keypress.esc@window->ferry-radio#recordEscKeypress">
+        <h2>Portage Bay Ferry · Operations desk</h2>
+        <div class="radio-face">
+          <div class="tx-lamp" data-ferry-radio-target="indicator" data-state="clear" aria-live="polite">RX</div>
+          <dl class="radio-readout">
+            <dt>Channel</dt><dd data-ferry-radio-target="channel">16 · Calling</dd>
+            <dt>To</dt><dd>M/V Issaquah · Wheelhouse</dd>
+            <dt>Dispatcher</dt><dd>Len Cho</dd>
+          </dl>
+        </div>
+        <p class="muted">Hold Space anywhere except the log field. Escape cancels while you are transmitting.</p>
+        <p class="event-log" data-ferry-radio-target="log" aria-live="polite">No radio keys yet.</p>
+        <p class="radio-status" data-ferry-radio-target="status">Channel clear. Press Space to talk.</p>
+        <div class="radio-notes">
+          <label>
+            Incident log
+            <input type="text" name="incident" placeholder="Space here types a space" autocomplete="off">
+          </label>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="ferry_radio_controller.js"><code>ferry_radio_controller.js</code></a> — starts on keydown.space, ends on keyup.space, logs keypress</li>
+          <li>This page's source — radio face, the three Space filters, Escape, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  Keyboard filters · 11 · Legal brief editor
+
+  Teaches:
+  - There is no cmdorctrl modifier. Save is declared twice:
+    keydown.meta+s@window and keydown.ctrl+s@window. Command+S on macOS
+    and Control+S elsewhere both reach saveBrief(). Meta is Command on
+    macOS and the Windows key elsewhere; Ctrl is Control on every
+    platform.
+  - The same pair exists for Shift+S (exhibit stamp) and B (bold).
+    keydown.ctrl+shift+s does not match keydown.ctrl+s, because shift
+    must be listed.
+  - The listeners sit on window, so they run while the caret is in the
+    contenteditable affidavit, the caption <input>, or the notes
+    <textarea>. preventDefault() stops the browser's Save dialog.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Legal brief editor · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .brief-form { display: grid; gap: 0.7rem; }
+      .brief-form label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .brief-form input, .brief-form textarea { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; font: inherit; }
+      .affidavit { min-height: 9rem; padding: 0.6rem 0.7rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .affidavit:focus { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .brief-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+      .saved-at, .brief-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .shortcut-hint { font-size: 0.85rem; color: var(--muted-ink, #555); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LegalBriefController from "./legal_brief_controller.js"
+
+      const application = Application.start()
+      application.register("legal-brief", LegalBriefController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>11 · Legal brief editor</span>
+      </nav>
+      <h1>Legal brief editor</h1>
+      <p class="lede">
+        Northshore Legal Aid's affidavit editor. Ctrl+S and Meta+S both
+        save, from the contenteditable affidavit, the caption field, or
+        the notes. There is no combined "cmdorctrl" filter.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="legal-brief"
+               data-action="keydown.meta+s@window->legal-brief#saveBrief keydown.ctrl+s@window->legal-brief#saveBrief keydown.meta+shift+s@window->legal-brief#stampExhibit keydown.ctrl+shift+s@window->legal-brief#stampExhibit keydown.meta+b@window->legal-brief#toggleBold keydown.ctrl+b@window->legal-brief#toggleBold">
+        <h2>Northshore Legal Aid · Affidavit of Tomasz Wierzbicki</h2>
+        <div class="brief-form">
+          <label>
+            Caption
+            <input type="text" name="caption" value="Affidavit of Tomasz Wierzbicki in support of a stay" data-legal-brief-target="caption" autocomplete="off">
+          </label>
+          <div>
+            <span class="visually-hidden" id="affidavit-label">Affidavit body</span>
+            <div class="affidavit" role="textbox" aria-multiline="true" aria-labelledby="affidavit-label" contenteditable="true" data-legal-brief-target="affidavit">
+              <p>I, Tomasz Wierzbicki, live at 418 Sycamore Court. I have rented Unit 4B at Harborview Arms since March 2019. On 3 October 2026 the landlord posted a 14-day notice that misstates the rent then due.</p>
+            </div>
+          </div>
+          <label>
+            Internal notes
+            <textarea name="notes" rows="3" data-legal-brief-target="notes">Need the March 2019 lease and the October ledger before filing.</textarea>
+          </label>
+        </div>
+        <div class="brief-toolbar">
+          <button type="button" data-action="legal-brief#saveBrief">Save brief</button>
+          <span class="saved-at" data-legal-brief-target="savedAt">Not saved this session</span>
+        </div>
+        <p class="shortcut-hint">Ctrl+S or ⌘S saves · Ctrl+Shift+S stamps an exhibit · Ctrl+B bolds a selection in the affidavit</p>
+        <p class="brief-status" data-legal-brief-target="status" aria-live="polite">Unsaved draft.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="legal_brief_controller.js"><code>legal_brief_controller.js</code></a> — Meta/Ctrl save, stamp, and bold from any field</li>
+          <li>This page's source — caption, affidavit, notes, filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

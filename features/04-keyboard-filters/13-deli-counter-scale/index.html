@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  Keyboard filters · 13 · Deli counter scale
+
+  Teaches:
+  - Custom key names come from Application's schema, not from the
+    controller. The page spreads defaultSchema.keyMappings and adds plus,
+    minus, star, slash, dot, equals, backspace, f2, and f4. Replacing the
+    map outright would drop enter and esc.
+  - Numpad + is event.key "+" with shiftKey false, so keydown.plus
+    matches it. The main-keyboard "+" is Shift+"=", so it needs
+    keydown.shift+plus. Both call bumpQuantity().
+  - Unknown names throw when a keyboard event hits the action, not when
+    the page parses. keydown.comma would throw "contains unknown key
+    filter: comma" unless comma is added to the map.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Deli counter scale · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .scale-face { display: grid; grid-template-columns: minmax(0, 1fr) 12rem; gap: 1rem; }
+      .plu-readout { background: #1f2a28; color: #e8efe9; border-radius: 12px; padding: 0.9rem 1rem; display: grid; gap: 0.25rem; }
+      .plu-readout .qty { font-size: 2rem; font-variant-numeric: tabular-nums; }
+      .plu-readout .total { font-size: 1.4rem; color: var(--capsule-amber, #e8912d); }
+      .ticket { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+      .keymap { font-size: 0.85rem; color: var(--muted-ink, #555); display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.2rem 1rem; }
+      .scale-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .scenario[data-controller="deli-scale"]:focus { outline: 3px solid var(--capsule-amber, #e8912d); outline-offset: 4px; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application, defaultSchema } from "@hotwired/stimulus"
+      import DeliScaleController from "./deli_scale_controller.js"
+
+      const deliSchema = {
+        ...defaultSchema,
+        keyMappings: {
+          ...defaultSchema.keyMappings,
+          plus: "+",
+          minus: "-",
+          star: "*",
+          slash: "/",
+          dot: ".",
+          equals: "=",
+          backspace: "Backspace",
+          f2: "F2",
+          f4: "F4",
+        },
+      }
+
+      const application = Application.start(document.documentElement, deliSchema)
+      application.register("deli-scale", DeliScaleController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>13 · Deli counter scale</span>
+      </nav>
+      <h1>Deli counter scale</h1>
+      <p class="lede">
+        Birch &amp; Brine's counter scale. Plus and minus, the star and
+        slash, F2 and F4 are not built-in filter names — they are added
+        through the application's <code>keyMappings</code>.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="deli-scale" tabindex="0"
+               data-action="keydown.plus->deli-scale#bumpQuantity keydown.shift+plus->deli-scale#bumpQuantity keydown.minus->deli-scale#bumpQuantity keydown.star->deli-scale#voidLastLine keydown.shift+star->deli-scale#voidLastLine keydown.slash->deli-scale#applyDiscount keydown.dot->deli-scale#typeDot keydown.equals->deli-scale#bumpQuantity keydown.backspace->deli-scale#deleteDigit keydown.f2->deli-scale#cyclePlu keydown.f4->deli-scale#managerVoid keydown.enter->deli-scale#addToTicket keydown.esc->deli-scale#clearEntry keydown.0->deli-scale#typeDigit keydown.1->deli-scale#typeDigit keydown.2->deli-scale#typeDigit keydown.3->deli-scale#typeDigit keydown.4->deli-scale#typeDigit keydown.5->deli-scale#typeDigit keydown.6->deli-scale#typeDigit keydown.7->deli-scale#typeDigit keydown.8->deli-scale#typeDigit keydown.9->deli-scale#typeDigit">
+        <h2>Birch &amp; Brine · Counter 2</h2>
+        <div class="scale-face">
+          <div class="plu-readout">
+            <strong data-deli-scale-target="pluName">Smoked turkey</strong>
+            <span data-deli-scale-target="unitPrice"></span>
+            <span class="qty" data-deli-scale-target="quantity">1.00 lb</span>
+            <span data-deli-scale-target="entry" class="muted"></span>
+            <span class="total" data-deli-scale-target="lineTotal"></span>
+          </div>
+          <div>
+            <h3>Ticket</h3>
+            <ul class="ticket" data-deli-scale-target="ticket"></ul>
+          </div>
+        </div>
+        <p class="keymap">
+          <span>+ / − quantity</span>
+          <span>0–9 and . key a weight</span>
+          <span>Enter add to ticket</span>
+          <span>Esc clear</span>
+          <span>Backspace edit</span>
+          <span>* void last line</span>
+          <span>/ staff discount</span>
+          <span>F2 next PLU</span>
+          <span>F4 manager void</span>
+        </p>
+        <p class="scale-status" data-deli-scale-target="status" aria-live="polite">Scale on smoked turkey at 1.00 lb.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="deli_scale_controller.js"><code>deli_scale_controller.js</code></a> — quantity, PLU, ticket, and the mapped keys</li>
+          <li>This page's source — custom schema, filters, importmap, and registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<!--
+  Keyboard filters · 03 · Darkroom contact sheet
+
+  Teaches:
+  - keydown.left and keydown.right are the built-in filter names for
+    ArrowLeft and ArrowRight. The mapping is left → "ArrowLeft", not
+    "left" or "Left".
+  - The actions sit on the filmstrip, which is a roving-tabindex group.
+    They run only while the strip has focus. They are not @window or
+    @document listeners, so arrows in the roll-label field do nothing.
+  - showPrevious() and showNext() call preventDefault() so the arrows do
+    not scroll the page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Darkroom contact sheet · Keyboard filters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .viewer { background: #1b1b1b; border-radius: 10px; padding: 0.8rem; display: grid; justify-items: center; gap: 0.4rem; color: #f3efe6; margin-bottom: 0.8rem; }
+      .viewer img { display: block; width: min(100%, 28rem); height: 16rem; object-fit: cover; background: #111; }
+      .viewer figcaption { text-align: center; }
+      .filmstrip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem; padding: 0.4rem; border-radius: 10px; background: #2a2420; }
+      .filmstrip:focus-visible { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .frame-button { all: unset; cursor: pointer; display: grid; gap: 0.2rem; color: #d9d0c4; }
+      .frame-button img { width: 100%; height: 4.2rem; object-fit: cover; display: block; border: 2px solid transparent; border-radius: 4px; }
+      .frame-button[aria-selected="true"] img { border-color: var(--capsule-amber, #e8912d); }
+      .frame-button:focus-visible img { outline: 2px solid #fff; outline-offset: 1px; }
+      .frame-number { font-size: 0.75rem; text-align: center; font-variant-numeric: tabular-nums; }
+      .roll-meta { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: end; margin: 0.8rem 0 0; }
+      .roll-meta label { display: grid; gap: 0.15rem; font-size: 0.85rem; font-weight: 600; }
+      .roll-meta input { padding: 0.3rem 0.45rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .sheet-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ContactSheetController from "./contact_sheet_controller.js"
+
+      const application = Application.start()
+      application.register("contact-sheet", ContactSheetController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#keyboard-filters">Keyboard filters</a> /
+        <span>03 · Darkroom contact sheet</span>
+      </nav>
+      <h1>Darkroom contact sheet</h1>
+      <p class="lede">
+        Jules Amaro is proofing roll 26 at Copperplate Darkroom. The
+        filmstrip listens for <code>keydown.left</code> and
+        <code>keydown.right</code> only while it has focus.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="contact-sheet">
+        <h2>Copperplate Darkroom · Roll 26 · Tri-X 400</h2>
+        <figure class="viewer">
+          <img data-contact-sheet-target="viewer" src="frames/market-awning.svg" alt="">
+          <figcaption>
+            <strong data-contact-sheet-target="frameNumber">Frame 14</strong>
+            <span data-contact-sheet-target="caption"></span>
+          </figcaption>
+        </figure>
+
+        <div class="filmstrip" role="listbox" aria-label="Contact sheet frames" data-action="keydown.left->contact-sheet#showPrevious keydown.right->contact-sheet#showNext">
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="14" data-frame-caption="Saturday awning, Pike Place" data-frame-exposure="1/250 · f/8" data-frame-alt="A striped market awning over crates of peaches" aria-selected="true" tabindex="0">
+            <img src="frames/market-awning.svg" alt="">
+            <span class="frame-number">14</span>
+          </button>
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="15" data-frame-caption="Fishmonger icing a king salmon" data-frame-exposure="1/125 · f/5.6" data-frame-alt="A fishmonger packing ice around a salmon" aria-selected="false" tabindex="-1">
+            <img src="frames/king-salmon.svg" alt="">
+            <span class="frame-number">15</span>
+          </button>
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="16" data-frame-caption="Steam from the coffee cart" data-frame-exposure="1/60 · f/4" data-frame-alt="Steam rising from a coffee cart against brick" aria-selected="false" tabindex="-1">
+            <img src="frames/coffee-steam.svg" alt="">
+            <span class="frame-number">16</span>
+          </button>
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="17" data-frame-caption="Bouquet wrap, last bunch" data-frame-exposure="1/250 · f/8" data-frame-alt="Hands wrapping dahlias in brown paper" aria-selected="false" tabindex="-1">
+            <img src="frames/dahlia-wrap.svg" alt="">
+            <span class="frame-number">17</span>
+          </button>
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="18" data-frame-caption="Ferry line in the rain" data-frame-exposure="1/125 · f/5.6" data-frame-alt="People with umbrellas waiting for a ferry" aria-selected="false" tabindex="-1">
+            <img src="frames/ferry-line.svg" alt="">
+            <span class="frame-number">18</span>
+          </button>
+          <button type="button" class="frame-button" role="option" data-contact-sheet-target="frame" data-action="contact-sheet#selectFrame" data-frame-number="19" data-frame-caption="Neon reflection, First Avenue" data-frame-exposure="1/30 · f/2.8" data-frame-alt="Red neon reflecting in a wet street" aria-selected="false" tabindex="-1">
+            <img src="frames/neon-street.svg" alt="">
+            <span class="frame-number">19</span>
+          </button>
+        </div>
+
+        <div class="roll-meta">
+          <label>
+            Sleeve label
+            <input type="text" name="sleeve" value="TX400 · Pike Place · 12 Oct" autocomplete="off">
+          </label>
+          <p class="sheet-status" data-contact-sheet-target="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="contact_sheet_controller.js"><code>contact_sheet_controller.js</code></a> — steps through frames on left and right</li>
+          <li><a href="frames/market-awning.svg"><code>frames/</code></a> — the six proof frames</li>
+          <li>This page's source — filmstrip, filters, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
