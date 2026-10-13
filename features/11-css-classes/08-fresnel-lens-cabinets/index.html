@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  CSS classes · 08 · Fresnel lens cabinets
+
+  Teaches:
+  - The same controller, three cabinets. Each cabinet's lit and
+    dark attributes name a different stack.
+  - litClass is the first token. litClasses is the stack.
+  - On watch adds the lit stack and removes the dark stack, on
+    that element only.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Fresnel lens cabinets · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .loft { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .cabinet { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .cabinet h2 { margin: 0; font-size: 1.15rem; }
+      .cabinet p { margin: 0; }
+      .cabinet.lens-white { background: #f7f4ea; }
+      .cabinet.lens-red { background: #f8d9d2; }
+      .cabinet.lens-green { background: #dcecd6; }
+      .cabinet.beam-wide { box-shadow: inset 0 0 0 4px #e8c56b; }
+      .cabinet.beam-narrow { box-shadow: inset 0 0 0 2px #8c2f1b; }
+      .cabinet.beam-occult { box-shadow: inset 0 0 0 3px #1f3d2b; }
+      .cabinet.lens-dark { background: #2a2e33; color: #f3ecdd; }
+      .cabinet.lens-dark h2 { color: #f3ecdd; }
+      .reading { min-height: 4.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LensCabinetController from "./lens_cabinet_controller.js"
+
+      const application = Application.start()
+      application.register("lens-cabinet", LensCabinetController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>08 · Fresnel lens cabinets</span>
+      </nav>
+      <h1>Fresnel lens cabinets</h1>
+      <p class="lede">
+        Three cabinets in the depot loft. Admiralty Head is a white
+        fixed light, Cattle Point a red flash, Marrowstone a green
+        occulting. Each cabinet names the classes for lit and dark.
+      </p>
+    </header>
+
+    <main>
+      <div class="loft">
+        <article
+          class="scenario cabinet"
+          data-controller="lens-cabinet"
+          data-lens-cabinet-lit-class="lens-white beam-wide"
+          data-lens-cabinet-dark-class="lens-dark"
+        >
+          <h2 data-lens-cabinet-target="lightName">Admiralty Head</h2>
+          <p>Fourth-order fixed white. The cabinet is shut.</p>
+          <div class="actions">
+            <button type="button" data-action="lens-cabinet#putOnWatch">Put the lens on watch</button>
+            <button type="button" data-action="lens-cabinet#secure">Secure the cabinet</button>
+          </div>
+          <p class="reading" data-lens-cabinet-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario cabinet"
+          data-controller="lens-cabinet"
+          data-lens-cabinet-lit-class="lens-red beam-narrow"
+          data-lens-cabinet-dark-class="lens-dark"
+        >
+          <h2 data-lens-cabinet-target="lightName">Cattle Point</h2>
+          <p>Fifth-order red flash. Two panels out for cleaning.</p>
+          <div class="actions">
+            <button type="button" data-action="lens-cabinet#putOnWatch">Put the lens on watch</button>
+            <button type="button" data-action="lens-cabinet#secure">Secure the cabinet</button>
+          </div>
+          <p class="reading" data-lens-cabinet-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario cabinet"
+          data-controller="lens-cabinet"
+          data-lens-cabinet-lit-class="lens-green beam-occult"
+          data-lens-cabinet-dark-class="lens-dark"
+        >
+          <h2 data-lens-cabinet-target="lightName">Marrowstone</h2>
+          <p>Sixth-order green occulting. The spare chimney is in the drawer.</p>
+          <div class="actions">
+            <button type="button" data-action="lens-cabinet#putOnWatch">Put the lens on watch</button>
+            <button type="button" data-action="lens-cabinet#secure">Secure the cabinet</button>
+          </div>
+          <p class="reading" data-lens-cabinet-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lens_cabinet_controller.js"><code>lens_cabinet_controller.js</code></a> — swaps each cabinet's own lit and dark stacks</li>
+          <li>This page's source — three different lit stacks, one dark token</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

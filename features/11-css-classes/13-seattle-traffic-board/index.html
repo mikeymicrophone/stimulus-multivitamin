@@ -1,0 +1,187 @@
+<!doctype html>
+<!--
+  CSS classes · 13 · Seattle traffic board
+
+  Teaches:
+  - crowdedValueChanged paints the board from quiet or crowded
+    classes, and paints vessel targets from the priority stack.
+  - Seattle and the Strait name different tokens for the same
+    logical classes. The controller does not contain those strings.
+  - callingClass toggles on one vessel.
+  - The lane slip's value callback reads a missing alarm class.
+    The Error is not prefixed. handleError stays quiet. The bell
+    book after the slip never connects.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Seattle traffic board · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .watch-floor { display: grid; gap: 0.8rem; max-width: 48rem; }
+      .sector, .slip { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .sector h2, .slip h2 { margin: 0; font-size: 1.15rem; }
+      .sector p, .slip p { margin: 0; }
+      .board { border-radius: 8px; padding: 0.6rem 0.7rem; background: #f3ecdd; }
+      .board.sector-quiet, .board.strait-calm { background: #e4efe0; }
+      .board.sector-crowded, .board.strait-thick { background: #f6d7c3; }
+      .vessels { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+      .vessel { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; padding: 0.35rem 0.5rem; border-radius: 6px; background: #fffdf8; }
+      .vessel.ink-red, .vessel.chalk-amber { font-weight: 700; }
+      .vessel.rule-thick { border: 2px solid #8c2f1b; }
+      .vessel.hang-high { letter-spacing: 0.03em; }
+      .vessel.vessel-calling, .vessel.vessel-hailing { outline: 3px solid #1d4e89; }
+      .status, .log { min-height: 4.6rem; }
+      .log { min-height: 1.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TrafficBoardController from "./traffic_board_controller.js"
+      import LaneSlipController from "./lane_slip_controller.js"
+      import BellBookController from "./bell_book_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        document.querySelector("[data-handled]").textContent = `${message} :: ${error.name}: ${error.message}`
+      }
+      window.addEventListener("unhandledrejection", (event) => {
+        const fault = event.reason
+        document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
+      })
+      window.addEventListener("error", (event) => {
+        const fault = event.error
+        if (!fault) return
+        document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
+      })
+      application.register("traffic-board", TrafficBoardController)
+      application.register("lane-slip", LaneSlipController)
+      application.register("bell-book", BellBookController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>13 · Seattle traffic board</span>
+      </nav>
+      <h1>Seattle traffic board</h1>
+      <p class="lede">
+        Vessel Traffic Service, Seattle Traffic and the Strait sector.
+        Crowded paints the board and marks every vessel with that
+        sector's priority stack. A lane slip after the boards reads a
+        class the card never named.
+      </p>
+    </header>
+
+    <main>
+      <div class="watch-floor">
+        <article
+          class="scenario sector"
+          data-controller="traffic-board"
+          data-traffic-board-crowded-value="false"
+          data-traffic-board-watch-value="morning"
+          data-traffic-board-quiet-class="sector-quiet"
+          data-traffic-board-crowded-class="sector-crowded"
+          data-traffic-board-priority-class="ink-red rule-thick"
+          data-traffic-board-calling-class="vessel-calling"
+        >
+          <h2 data-traffic-board-target="sectorName">Seattle Traffic</h2>
+          <p>Watch <span data-traffic-board-target="watchName"></span></p>
+          <div class="board" data-traffic-board-target="board">
+            <ul class="vessels">
+              <li class="vessel" data-traffic-board-target="vessel" data-vessel-name="Andrew Foss">
+                <span>Andrew Foss</span>
+                <button type="button" data-action="traffic-board#toggleCalling">Toggle calling</button>
+              </li>
+              <li class="vessel" data-traffic-board-target="vessel" data-vessel-name="Kitsap">
+                <span>Kitsap</span>
+                <button type="button" data-action="traffic-board#toggleCalling">Toggle calling</button>
+              </li>
+            </ul>
+          </div>
+          <div class="actions">
+            <button type="button" data-action="traffic-board#markCrowded">Mark the sector crowded</button>
+            <button type="button" data-action="traffic-board#markQuiet">Mark the sector quiet</button>
+          </div>
+          <p class="status" data-traffic-board-target="status" aria-live="polite"></p>
+          <p class="log" data-traffic-board-target="log" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario sector"
+          data-controller="traffic-board"
+          data-traffic-board-crowded-value="true"
+          data-traffic-board-watch-value="forenoon"
+          data-traffic-board-quiet-class="strait-calm"
+          data-traffic-board-crowded-class="strait-thick"
+          data-traffic-board-priority-class="chalk-amber hang-high"
+          data-traffic-board-calling-class="vessel-hailing"
+        >
+          <h2 data-traffic-board-target="sectorName">Strait sector</h2>
+          <p>Watch <span data-traffic-board-target="watchName"></span></p>
+          <div class="board" data-traffic-board-target="board">
+            <ul class="vessels">
+              <li class="vessel" data-traffic-board-target="vessel" data-vessel-name="Sapphire">
+                <span>Sapphire</span>
+                <button type="button" data-action="traffic-board#toggleCalling">Toggle calling</button>
+              </li>
+              <li class="vessel" data-traffic-board-target="vessel" data-vessel-name="Westrac">
+                <span>Westrac</span>
+                <button type="button" data-action="traffic-board#toggleCalling">Toggle calling</button>
+              </li>
+            </ul>
+          </div>
+          <div class="actions">
+            <button type="button" data-action="traffic-board#markCrowded">Mark the sector crowded</button>
+            <button type="button" data-action="traffic-board#markQuiet">Mark the sector quiet</button>
+          </div>
+          <p class="status" data-traffic-board-target="status" aria-live="polite"></p>
+          <p class="log" data-traffic-board-target="log" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario slip"
+          data-controller="lane-slip"
+          data-lane-slip-lane-value="two"
+        >
+          <h2>Lane slip</h2>
+          <p>The alarm class was never written on the slip.</p>
+          <p class="reading" data-lane-slip-target="reading">Lane slip has not painted.</p>
+        </article>
+
+        <article class="scenario slip" data-controller="bell-book">
+          <h2>Bell book</h2>
+          <p class="reading" data-bell-book-target="reading">Bell book has not connected.</p>
+        </article>
+      </div>
+
+      <section>
+        <h2>What the page caught</h2>
+        <p data-fault>No uncaught error.</p>
+        <p data-handled>handleError quiet.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="traffic_board_controller.js"><code>traffic_board_controller.js</code></a> — crowded paints the board and the vessels</li>
+          <li><a href="lane_slip_controller.js"><code>lane_slip_controller.js</code></a> — a value callback that reads a missing class</li>
+          <li><a href="bell_book_controller.js"><code>bell_book_controller.js</code></a> — the controller after the slip</li>
+          <li>This page's source — two sectors, two class vocabularies, and the lane slip</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

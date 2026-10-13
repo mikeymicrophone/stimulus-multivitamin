@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  CSS classes · 03 · Netshed mend flags
+
+  Teaches:
+  - urgent is one logical class whose attribute lists several
+    tokens. Extra spaces are not tokens.
+  - this.urgentClass is only the first token.
+  - this.urgentClasses is the whole list.
+  - classList.add(this.urgentClass) paints the first token.
+    classList.add(...this.urgentClasses) paints the stack.
+    The gillnet and the purse seine name different stacks.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Netshed mend flags · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .shed { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .net { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .net h2 { margin: 0; font-size: 1.15rem; }
+      .net p { margin: 0; }
+      .flag { min-height: 2.4rem; border-radius: 8px; padding: 0.45rem 0.7rem; background: #f3ecdd; }
+      .flag.ink-red { color: #8c2f1b; }
+      .flag.rule-thick { border: 3px solid currentColor; }
+      .flag.hang-high { font-weight: 700; letter-spacing: 0.02em; }
+      .flag.chalk-blue { color: #1d4e89; }
+      .flag.stitch-tight { outline: 2px dashed currentColor; outline-offset: 2px; }
+      .reading { min-height: 3.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MendFlagController from "./mend_flag_controller.js"
+
+      const application = Application.start()
+      application.register("mend-flag", MendFlagController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>03 · Netshed mend flags</span>
+      </nav>
+      <h1>Netshed mend flags</h1>
+      <p class="lede">
+        La Conner netshed, mending week. A torn gillnet gets the full
+        urgent stack: red ink, a thick rule, hung high. Flagging with
+        the singular property leaves only the first of those on the card.
+      </p>
+    </header>
+
+    <main>
+      <div class="shed">
+        <article
+          class="scenario net"
+          data-controller="mend-flag"
+          data-mend-flag-urgent-class="ink-red   rule-thick  hang-high"
+        >
+          <h2 data-mend-flag-target="netName">Gillnet</h2>
+          <p>Twenty fathom cork line, a tear at the tenth fathom.</p>
+          <p class="flag" data-mend-flag-target="flag">Hang at the door.</p>
+          <div class="actions">
+            <button type="button" data-action="mend-flag#flagFirst">Flag the first class</button>
+            <button type="button" data-action="mend-flag#flagStack">Flag the whole stack</button>
+            <button type="button" data-action="mend-flag#clearStack">Clear the flag</button>
+          </div>
+          <p class="reading" data-mend-flag-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario net"
+          data-controller="mend-flag"
+          data-mend-flag-urgent-class="chalk-blue stitch-tight"
+        >
+          <h2 data-mend-flag-target="netName">Purse seine</h2>
+          <p>Bunt end, two broken hangings. Chalk it and stitch it tight.</p>
+          <p class="flag" data-mend-flag-target="flag">Leave on the bench.</p>
+          <div class="actions">
+            <button type="button" data-action="mend-flag#flagFirst">Flag the first class</button>
+            <button type="button" data-action="mend-flag#flagStack">Flag the whole stack</button>
+            <button type="button" data-action="mend-flag#clearStack">Clear the flag</button>
+          </div>
+          <p class="reading" data-mend-flag-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="mend_flag_controller.js"><code>mend_flag_controller.js</code></a> — urgentClass against urgentClasses</li>
+          <li>This page's source — the gillnet stack and the purse seine stack</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

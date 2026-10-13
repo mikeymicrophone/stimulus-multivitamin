@@ -1,0 +1,126 @@
+<!doctype html>
+<!--
+  CSS classes · 04 · Kelp dryer trays
+
+  Teaches:
+  - Dulse has scorching and steady. hasScorchingClass is true.
+    scorchingClass is tray-scorch. scorchingClasses is one token.
+  - Wing kelp has no scorching attribute. hasScorchingClass is
+    false. scorchingClasses is [] and does not throw. The tray
+    falls back to steadyClass. Reading scorchingClass from the
+    button throws, and handleError reports the action.
+  - Nori is unguarded. connect() reads scorchingClass, stops,
+    and handleError reports "Error connecting controller".
+    The fallback line is never written.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Kelp dryer trays · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .dryer { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .tray { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .tray h2 { margin: 0; font-size: 1.15rem; }
+      .tray p { margin: 0; }
+      .tray.tray-scorch { background: #f6d0c0; border-color: #8c2f1b; }
+      .tray.tray-steady { background: #e4efe0; border-color: #1f3d2b; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .faults { margin: 0.8rem 0 0; padding-left: 1.2rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DryerTrayController from "./dryer_tray_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        const item = document.createElement("li")
+        item.textContent = `${message} :: ${error.name}: ${error.message}`
+        document.querySelector("[data-faults]").append(item)
+      }
+      application.register("dryer-tray", DryerTrayController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>04 · Kelp dryer trays</span>
+      </nav>
+      <h1>Kelp dryer trays</h1>
+      <p class="lede">
+        Fidalgo Island dryer. Dulse has a scorching class on the card.
+        Wing kelp does not, so the watch falls back to the steady
+        class. Nori's card reads the missing class anyway.
+      </p>
+    </header>
+
+    <main>
+      <div class="dryer">
+        <article
+          class="scenario tray"
+          data-controller="dryer-tray"
+          data-dryer-tray-guard-value="true"
+          data-dryer-tray-scorching-class="tray-scorch"
+          data-dryer-tray-steady-class="tray-steady"
+        >
+          <h2 data-dryer-tray-target="trayName">Dulse</h2>
+          <p>Rack 2, pulled at dawn. The scorch mark is on the card.</p>
+          <div class="actions">
+            <button type="button" data-action="dryer-tray#readScorching">Read the scorching class</button>
+          </div>
+          <p class="reading" data-dryer-tray-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario tray"
+          data-controller="dryer-tray"
+          data-dryer-tray-guard-value="true"
+          data-dryer-tray-steady-class="tray-steady"
+        >
+          <h2 data-dryer-tray-target="trayName">Wing kelp</h2>
+          <p>Rack 5. Nobody wrote a scorching class. Steady is on the card.</p>
+          <div class="actions">
+            <button type="button" data-action="dryer-tray#readScorching">Read the scorching class</button>
+          </div>
+          <p class="reading" data-dryer-tray-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario tray"
+          data-controller="dryer-tray"
+          data-dryer-tray-guard-value="false"
+        >
+          <h2 data-dryer-tray-target="trayName">Nori</h2>
+          <p>Rack 8. The card names neither class, and the watch does not check.</p>
+          <p class="reading" data-dryer-tray-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section>
+        <h2>Handled errors</h2>
+        <ul class="faults" data-faults></ul>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="dryer_tray_controller.js"><code>dryer_tray_controller.js</code></a> — hasScorchingClass, the empty list, and the throw</li>
+          <li>This page's source — dulse, wing kelp, and the unguarded nori tray</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

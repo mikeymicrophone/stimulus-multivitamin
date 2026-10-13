@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+  CSS classes · 11 · Terminal shed lamps
+
+  Teaches:
+  - wharf's shedLamp and wharf-shed's lamp are both
+    data-wharf-shed-lamp-class. Both read shed-green.
+  - wharf's pile is data-wharf-pile-class. wharf-shed's pile is
+    data-wharf-shed-pile-class. They do not move together.
+  - Amber copies amberClass into the shared attribute. The next
+    read on both controllers is that token. Nothing observes the
+    class attribute, so the action paints both.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Terminal shed lamps · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .timber { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.7rem; max-width: 44rem; }
+      .timber h2 { margin: 0; font-size: 1.2rem; }
+      .timber p { margin: 0; }
+      .lamps { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .lamp-card { display: grid; gap: 0.3rem; }
+      .lamp { width: 4.5rem; height: 2.2rem; border-radius: 999px; background: #d9d3c5; }
+      .lamp.shed-green { background: #2f7d4a; }
+      .lamp.shed-amber { background: #e0a100; }
+      .lamp.pile-oak { background: #8a5a2b; }
+      .lamp.pile-cedar { background: #a6543c; }
+      .lamp.pile-fir { background: #c4a574; }
+      .lamp.pile-spruce { background: #6e4a32; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WharfController from "./wharf_controller.js"
+      import WharfShedController from "./wharf_shed_controller.js"
+
+      const application = Application.start()
+      application.register("wharf", WharfController)
+      application.register("wharf-shed", WharfShedController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>11 · Terminal shed lamps</span>
+      </nav>
+      <h1>Terminal shed lamps</h1>
+      <p class="lede">
+        Fishermen's Terminal, the shed on the wharf. The shed lamp was
+        named twice, once from the wharf and once from the shed, and
+        both names land on one attribute. The pile lamps were not.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="scenario timber"
+        data-controller="wharf wharf-shed"
+        data-wharf-shed-lamp-class="shed-green"
+        data-wharf-pile-class="pile-oak"
+        data-wharf-shed-pile-class="pile-cedar"
+        data-wharf-amber-class="shed-amber"
+        data-wharf-fir-class="pile-fir"
+        data-wharf-shed-spruce-class="pile-spruce"
+      >
+        <h2>Shed 4, west face</h2>
+        <div class="lamps">
+          <div class="lamp-card">
+            <span class="lamp" data-wharf-target="sharedLamp"></span>
+            <span>Wharf name for the shed lamp</span>
+          </div>
+          <div class="lamp-card">
+            <span class="lamp" data-wharf-shed-target="sharedLamp"></span>
+            <span>Shed name for the shed lamp</span>
+          </div>
+          <div class="lamp-card">
+            <span class="lamp" data-wharf-target="pileLamp"></span>
+            <span>Wharf pile</span>
+          </div>
+          <div class="lamp-card">
+            <span class="lamp" data-wharf-shed-target="pileLamp"></span>
+            <span>Shed pile</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="wharf#amberSharedLamp">Amber the shared lamp</button>
+          <button type="button" data-action="wharf#swapPiles">Swap the piles</button>
+        </div>
+        <p class="reading" data-wharf-target="reading" aria-live="polite"></p>
+        <p class="reading" data-wharf-shed-target="reading" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="wharf_controller.js"><code>wharf_controller.js</code></a> — shedLamp, pile, amber, and fir</li>
+          <li><a href="wharf_shed_controller.js"><code>wharf_shed_controller.js</code></a> — lamp, pile, and spruce</li>
+          <li>This page's source — one shared lamp attribute, two pile attributes</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

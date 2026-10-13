@@ -1,0 +1,90 @@
+<!doctype html>
+<!--
+  CSS classes · 06 · Buoy depot paint rack
+
+  Teaches:
+  - low and fresh are class attributes on the rack, the element
+    with data-controller.
+  - The same attributes are applied to can targets, not to the rack.
+  - A data-paint-rack-low-class on the nun can is ignored.
+    this.lowClass stays can-low, the rack's token.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Buoy depot paint rack · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .rack { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.6rem; max-width: 40rem; }
+      .rack h2 { margin: 0; font-size: 1.2rem; }
+      .rack p { margin: 0; }
+      .cans { display: flex; flex-wrap: wrap; gap: 0.6rem; padding: 0; list-style: none; }
+      .can { width: 7rem; min-height: 4.5rem; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.5rem; background: #f3ecdd; display: grid; align-content: end; }
+      .can.can-low { background: #f6d0c0; border-color: #8c2f1b; }
+      .can.can-fresh { background: #d7ebc8; border-color: #1f3d2b; }
+      .reading { min-height: 4.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PaintRackController from "./paint_rack_controller.js"
+
+      const application = Application.start()
+      application.register("paint-rack", PaintRackController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>06 · Buoy depot paint rack</span>
+      </nav>
+      <h1>Buoy depot paint rack</h1>
+      <p class="lede">
+        Port Angeles buoy depot. The rack names the low paint and the
+        fresh paint. The cans only wear those classes. A leftover
+        attribute on the nun can is not the rack's class.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="scenario rack"
+        data-controller="paint-rack"
+        data-paint-rack-low-class="can-low"
+        data-paint-rack-fresh-class="can-fresh"
+      >
+        <h2>International orange, south wall</h2>
+        <ul class="cans">
+          <li class="can" data-paint-rack-target="can nun" data-buoy-name="Nun" data-paint-rack-low-class="stray-low">Nun 6</li>
+          <li class="can" data-paint-rack-target="can" data-buoy-name="Can">Can 4</li>
+          <li class="can" data-paint-rack-target="can" data-buoy-name="Special">Special purpose</li>
+        </ul>
+        <div class="actions">
+          <button type="button" data-action="paint-rack#markNunLow">Mark the nun low</button>
+          <button type="button" data-action="paint-rack#markAllFresh">Mark every can fresh</button>
+        </div>
+        <p class="reading" data-paint-rack-target="reading" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="paint_rack_controller.js"><code>paint_rack_controller.js</code></a> — applies the rack's classes to can targets</li>
+          <li>This page's source — can-low and can-fresh on the rack, stray-low on the nun</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
