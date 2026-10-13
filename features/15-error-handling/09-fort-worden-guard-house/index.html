@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Error handling · 09 · Fort Worden guard house
+
+  Teaches:
+  - hasAdvisoryTarget, hasTideFeetValue, hasAlarmClass, and
+    hasBellOutlet are false when the markup omits them.
+    The singular getters are not read.
+  - Reading the singular target, class, or outlet throws
+    through handleError. Code after the getter does not run.
+  - try/catch in the action sets faultValue and adds the
+    fault class. handleError does not see that throw.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Fort Worden guard house · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .slip-fault { outline: 2px solid #b5651d; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SlipBoardController from "./slip_board_controller.js"
+      import BellWatchController from "./bell_watch_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message) => {
+        handled.push(`${message} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+        document.getElementById("handled-count").textContent = `Handled ${handled.length}.`
+      }
+
+      application.register("slip-board", SlipBoardController)
+      application.register("bell", BellWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>09 · Fort Worden guard house</span>
+      </nav>
+      <h1>Fort Worden guard house</h1>
+      <p class="lede">
+        The slip board at Fort Worden asks before it reads an advisory,
+        a tide, an alarm class, or the parade bell. Unguarded reads
+        are reported. A drift that the action catches becomes a fault
+        class instead.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Handled</h2>
+          <p id="handled" class="reading">No handled error.</p>
+          <p id="handled-count" class="reading">Handled 0.</p>
+          <p id="class-note" class="reading">Fault class off.</p>
+        </section>
+
+        <article id="slip-board" class="card" data-controller="slip-board" data-slip-board-fault-class="slip-fault">
+          <h2>Slip board</h2>
+          <p id="guard-reading" class="reading" data-slip-board-target="status">Guards have not been read.</p>
+          <p id="after-reading" class="reading" data-slip-board-target="after">After the read has not run.</p>
+          <div class="actions">
+            <button type="button" id="read-advisory" data-action="slip-board#readAdvisory">Read the advisory anyway</button>
+            <button type="button" id="read-alarm" data-action="slip-board#readAlarm">Read the alarm class</button>
+            <button type="button" id="read-outlet" data-action="slip-board#readOutlet">Read the bell outlet</button>
+            <button type="button" id="post-drift" data-action="slip-board#postDrift">Post the drift</button>
+          </div>
+        </article>
+
+        <article id="parade-bell" class="card" data-controller="bell">
+          <h2>Parade bell</h2>
+          <p class="reading">Parade bell is waiting.</p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="slip_board_controller.js"><code>slip_board_controller.js</code></a> — the guards and the caught drift</li>
+          <li><a href="bell_watch_controller.js"><code>bell_watch_controller.js</code></a> — a bell the board does not outlet</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

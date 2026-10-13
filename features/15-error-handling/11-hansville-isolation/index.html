@@ -1,0 +1,148 @@
+<!doctype html>
+<!--
+  Error handling · 11 · Hansville isolation
+
+  Teaches:
+  - A throw inside connect() is caught. The shore bell
+    before it and the point clock after it still connect.
+    The lamp's action still runs.
+  - A throw from a value callback during connect is not
+    handleError. It rejects start(), skips every later
+    controller, and leaves this controller's actions
+    bound. The fax button still rings. The after bell
+    does not connect.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Hansville isolation · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ShoreBellController from "./shore_bell_controller.js"
+      import MidLampController from "./mid_lamp_controller.js"
+      import PointClockController from "./point_clock_controller.js"
+      import BadFaxController from "./bad_fax_controller.js"
+      import AfterBellController from "./after_bell_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message, detail) => {
+        handled.push(`${message} | ${detail.identifier} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+      }
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason
+        document.getElementById("rejection").textContent = reason instanceof Error ? reason.message : String(reason)
+      })
+
+      let afterClicks = 0
+      document.getElementById("ring-after").addEventListener("click", () => {
+        afterClicks += 1
+        document.getElementById("after-clicks").textContent = `Button clicks ${afterClicks}.`
+      })
+
+      application.register("shore-bell", ShoreBellController)
+      application.register("mid-lamp", MidLampController)
+      application.register("point-clock", PointClockController)
+      application.register("bad-fax", BadFaxController)
+      application.register("after-bell", AfterBellController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>11 · Hansville isolation</span>
+      </nav>
+      <h1>Hansville isolation</h1>
+      <p class="lede">
+        At Hansville the mid lamp throws from <code>connect()</code>
+        and the point clock still comes up. The fax after the clock
+        throws from a value callback, and the bell after the fax
+        never connects. The fax button still rings.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Reports</h2>
+          <p id="handled" class="reading">No handled error.</p>
+          <p id="rejection" class="reading">No rejection.</p>
+        </section>
+
+        <article id="shore-bell" class="card" data-controller="shore-bell">
+          <h2>Shore bell</h2>
+          <p id="shore-reading" class="reading" data-shore-bell-target="reading">Shore bell is waiting.</p>
+          <div class="actions">
+            <button type="button" id="ring-shore" data-action="shore-bell#ring">Ring the shore bell</button>
+          </div>
+        </article>
+
+        <article id="mid-lamp" class="card" data-controller="mid-lamp">
+          <h2>Mid lamp</h2>
+          <p id="mid-reading" class="reading" data-mid-lamp-target="reading">Mid lamp is waiting.</p>
+          <div class="actions">
+            <button type="button" id="trim-mid" data-action="mid-lamp#trim">Trim the mid lamp</button>
+          </div>
+        </article>
+
+        <article id="point-clock" class="card" data-controller="point-clock">
+          <h2>Point clock</h2>
+          <p id="point-reading" class="reading" data-point-clock-target="reading">Point clock is waiting.</p>
+          <div class="actions">
+            <button type="button" id="tick-point" data-action="point-clock#tick">Tick the point clock</button>
+          </div>
+        </article>
+
+        <article id="bad-fax" class="card" data-controller="bad-fax" data-bad-fax-menu-value="chowder, pilot bread">
+          <h2>Hatchery fax</h2>
+          <p id="fax-reading" class="reading" data-bad-fax-target="reading">Fax is waiting.</p>
+          <div class="actions">
+            <button type="button" id="ring-fax" data-action="bad-fax#ring">Ring the fax button</button>
+          </div>
+        </article>
+
+        <article id="after-bell" class="card" data-controller="after-bell">
+          <h2>After bell</h2>
+          <p id="after-reading" class="reading" data-after-bell-target="reading">After bell is waiting.</p>
+          <p id="after-clicks" class="reading">Button clicks 0.</p>
+          <div class="actions">
+            <button type="button" id="ring-after" data-action="after-bell#ring">Ring the after bell</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="shore_bell_controller.js"><code>shore_bell_controller.js</code></a> — before the connect throw</li>
+          <li><a href="mid_lamp_controller.js"><code>mid_lamp_controller.js</code></a> — throws in connect()</li>
+          <li><a href="point_clock_controller.js"><code>point_clock_controller.js</code></a> — still connects</li>
+          <li><a href="bad_fax_controller.js"><code>bad_fax_controller.js</code></a> — bad JSON, actions still bound</li>
+          <li><a href="after_bell_controller.js"><code>after_bell_controller.js</code></a> — skipped by the scan</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

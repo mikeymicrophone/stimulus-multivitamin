@@ -1,0 +1,130 @@
+<!doctype html>
+<!--
+  Error handling · 05 · Partridge Point watch faults
+
+  Teaches:
+  - initialize(), connect(), and disconnect() are each
+    wrapped. The messages are "Error initializing
+    controller", "Error connecting controller", and
+    "Error disconnecting controller".
+  - A throw in initialize() does not skip connect().
+  - A throw in connect() leaves actions bound. The next
+    controller in the document still connects.
+  - A throw in disconnect() still stops the observers.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Partridge Point watch faults · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import InitLampController from "./init_lamp_controller.js"
+      import ConnectLampController from "./connect_lamp_controller.js"
+      import PointLampController from "./point_lamp_controller.js"
+      import DiscLampController from "./disc_lamp_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message, detail) => {
+        handled.push(`${message} | ${detail.identifier} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+      }
+
+      let discClicks = 0
+      document.getElementById("trim-disc").addEventListener("click", () => {
+        discClicks += 1
+        document.getElementById("disc-clicks").textContent = `Button clicks ${discClicks}.`
+      })
+
+      application.register("init-lamp", InitLampController)
+      application.register("connect-lamp", ConnectLampController)
+      application.register("point-lamp", PointLampController)
+      application.register("disc-lamp", DiscLampController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>05 · Partridge Point watch faults</span>
+      </nav>
+      <h1>Partridge Point watch faults</h1>
+      <p class="lede">
+        Three lamps at Partridge Point fail in
+        <code>initialize()</code>, <code>connect()</code>, and
+        <code>disconnect()</code>. The point lamp after the connect
+        fault still comes up.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Handled</h2>
+          <p id="handled" class="reading">No handled error.</p>
+        </section>
+
+        <article id="init-lamp" class="card" data-controller="init-lamp">
+          <h2>Init lamp</h2>
+          <p id="init-reading" class="reading" data-init-lamp-target="reading">Init lamp is waiting.</p>
+          <div class="actions">
+            <button type="button" id="trim-init" data-action="init-lamp#trim">Trim the wick</button>
+          </div>
+        </article>
+
+        <article id="connect-lamp" class="card" data-controller="connect-lamp">
+          <h2>Connect lamp</h2>
+          <p id="connect-reading" class="reading" data-connect-lamp-target="reading">Connect lamp is waiting.</p>
+          <div class="actions">
+            <button type="button" id="trim-connect" data-action="connect-lamp#trim">Trim the connect lamp</button>
+          </div>
+        </article>
+
+        <article id="point-lamp" class="card" data-controller="point-lamp">
+          <h2>Point lamp</h2>
+          <p id="point-reading" class="reading" data-point-lamp-target="reading">Point lamp is waiting.</p>
+        </article>
+
+        <article id="disc-lamp" class="card" data-controller="disc-lamp">
+          <h2>Disc lamp</h2>
+          <p id="disc-reading" class="reading" data-disc-lamp-target="reading">Disc lamp is waiting.</p>
+          <p id="disc-clicks" class="reading">Button clicks 0.</p>
+          <div class="actions">
+            <button type="button" id="pull-disc" data-action="disc-lamp#pull">Pull the lamp</button>
+            <button type="button" id="trim-disc" data-action="disc-lamp#trim">Trim the pulled lamp</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="init_lamp_controller.js"><code>init_lamp_controller.js</code></a> — throw in initialize()</li>
+          <li><a href="connect_lamp_controller.js"><code>connect_lamp_controller.js</code></a> — throw in connect()</li>
+          <li><a href="point_lamp_controller.js"><code>point_lamp_controller.js</code></a> — the lamp after that throw</li>
+          <li><a href="disc_lamp_controller.js"><code>disc_lamp_controller.js</code></a> — throw in disconnect()</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

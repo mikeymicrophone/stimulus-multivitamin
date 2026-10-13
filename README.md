@@ -8,6 +8,7 @@ Thirteen samples of healthy code for each feature of the
 | Serving size | 1 scenario |
 | Servings per feature | 13 |
 | Features | 15 |
+| Scenarios | 195 |
 | Active ingredient | Stimulus 3.2.2 |
 | Build step | 0 mg |
 
@@ -25,6 +26,8 @@ in thirteen different shapes.
 
 Every scenario uses real, domain-meaningful names for controllers, targets,
 values, actions, and variables. You will not find placeholder names here.
+
+The bottle is full: 15 features, 13 scenarios each, 195 pages.
 
 ## Run the examples locally
 

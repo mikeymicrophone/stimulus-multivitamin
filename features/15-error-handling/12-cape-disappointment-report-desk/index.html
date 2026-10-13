@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Error handling · 12 · Cape Disappointment report desk
+
+  Teaches:
+  - handleError can group a report: identifier, message,
+    element id, action index, and error.message.
+  - The same message inside one second is filed once.
+    A different message is filed immediately.
+  - The page mirror matches the console.groupCollapsed
+    group the desk opens for each filed report.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cape Disappointment report desk · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FogHornController from "./fog_horn_controller.js"
+
+      const application = Application.start()
+      const filedAt = new Map()
+      const groups = []
+      let throwsSeen = 0
+      let filed = 0
+
+      const paint = () => {
+        document.getElementById("seen").textContent = `Throws ${throwsSeen}.`
+        document.getElementById("filed").textContent = `Filed ${filed}.`
+        document.getElementById("groups").textContent = groups.length ? groups.join("\n\n") : "No group filed."
+      }
+
+      application.handleError = (error, message, detail) => {
+        throwsSeen += 1
+        const now = Date.now()
+        const previous = filedAt.get(message) || 0
+        if (now - previous < 1000) {
+          paint()
+          return
+        }
+        filedAt.set(message, now)
+        filed += 1
+        const elementId = detail.element ? detail.element.id : ""
+        const index = Object.prototype.hasOwnProperty.call(detail, "index") ? detail.index : "none"
+        const block = [
+          `group ${detail.identifier} # ${message}`,
+          `element ${elementId}`,
+          `index ${index}`,
+          `error ${error instanceof Error ? error.message : String(error)}`,
+          "group end"
+        ].join("\n")
+        groups.push(block)
+        console.groupCollapsed(`${detail.identifier} # ${message}`)
+        console.error(error)
+        console.log(detail.element)
+        console.groupEnd()
+        paint()
+      }
+
+      application.register("fog-horn", FogHornController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>12 · Cape Disappointment report desk</span>
+      </nav>
+      <h1>Cape Disappointment report desk</h1>
+      <p class="lede">
+        A stuck foghorn at Cape Disappointment throws on every click.
+        The desk groups each report and files the same message only
+        once per second. A cracked lens is a different message.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Report desk</h2>
+          <p id="seen" class="reading">Throws 0.</p>
+          <p id="filed" class="reading">Filed 0.</p>
+          <p id="groups" class="reading">No group filed.</p>
+        </section>
+
+        <article id="fog-horn" class="card" data-controller="fog-horn">
+          <h2>Foghorn</h2>
+          <p id="horn-reading" class="reading" data-fog-horn-target="reading">Horn is waiting.</p>
+          <div class="actions">
+            <button type="button" id="stick-horn" data-action="fog-horn#stick">Sound the stuck horn</button>
+            <button type="button" id="crack-lens" data-action="fog-horn#crack">Crack the lens</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fog_horn_controller.js"><code>fog_horn_controller.js</code></a> — the stuck horn and the lens</li>
+          <li>This page's source — the throttle and the group</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

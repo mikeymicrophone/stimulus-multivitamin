@@ -1,0 +1,146 @@
+<!doctype html>
+<!--
+  Error handling · 03 · Patos lens tape
+
+  Teaches:
+  - The default handleError logs through logger.error with
+    the format "%s\n\n%o\n\n%o", then calls window.onerror
+    (message, "", 0, 0, error). It does not dispatch an
+    error event.
+  - A connect() throw's detail has identifier, controller,
+    and element. It has no index and no event. The message
+    is "Error connecting controller", with no identifier
+    in that string.
+  - An action throw's detail also has index and event.
+    element is the controller element. event.target is the
+    button. The message includes the descriptor and omits
+    action options.
+  - Returning true from window.onerror does not remove the
+    logger line. The next action on the button still runs.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Patos lens tape · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WickLampController from "./wick_lamp_controller.js"
+      import LensCabinetController from "./lens_cabinet_controller.js"
+
+      const application = Application.start()
+      const tape = []
+      const onerrorTape = []
+      let errorEvents = 0
+
+      application.logger = {
+        log() {},
+        warn() {},
+        groupCollapsed() {},
+        groupEnd() {},
+        error(format, message, error, detail) {
+          const keys = detail ? Object.keys(detail).join(", ") : ""
+          const elementId = detail && detail.element ? detail.element.id : ""
+          const targetId = detail && detail.event && detail.event.target ? detail.event.target.id : ""
+          const index = detail && Object.prototype.hasOwnProperty.call(detail, "index") ? detail.index : "none"
+          const eventType = detail && detail.event ? detail.event.type : "none"
+          tape.push(
+            [
+              `format ${format}`,
+              `message ${message}`,
+              `error ${error && error.message}`,
+              `keys ${keys}`,
+              `element ${elementId}`,
+              `index ${index}`,
+              `event ${eventType}`,
+              `target ${targetId}`
+            ].join("\n")
+          )
+          document.getElementById("lens-tape").textContent = tape.join("\n\n")
+          document.getElementById("logger-count").textContent = `Logger lines ${tape.length}.`
+        }
+      }
+
+      window.onerror = (message, source, lineno, colno, error) => {
+        onerrorTape.push(`onerror ${message} | ${source} | ${lineno} | ${colno} | ${error && error.message}`)
+        document.getElementById("onerror-tape").textContent = onerrorTape.join("\n")
+        return true
+      }
+      window.addEventListener("error", () => {
+        errorEvents += 1
+        document.getElementById("event-note").textContent = `Error events ${errorEvents}.`
+      })
+
+      application.register("wick-lamp", WickLampController)
+      application.register("lens-cabinet", LensCabinetController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>03 · Patos lens tape</span>
+      </nav>
+      <h1>Patos lens tape</h1>
+      <p class="lede">
+        The lens cabinet at Patos Island keeps the default
+        <code>handleError</code>. The tape is the logger. A buried
+        wick fails in <code>connect()</code>. Cracking the prism
+        fails in an action, and the bench stamp after it still runs.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Lens tape</h2>
+          <p id="lens-tape" class="reading">Tape is empty.</p>
+          <p id="logger-count" class="reading">Logger lines 0.</p>
+          <p id="onerror-tape" class="reading">No onerror call.</p>
+          <p id="event-note" class="reading">Error events 0.</p>
+        </section>
+
+        <article id="wick-lamp" class="card" data-controller="wick-lamp">
+          <h2>Wick lamp</h2>
+          <p id="wick-reading" class="reading" data-wick-lamp-target="reading">Wick lamp is waiting.</p>
+        </article>
+
+        <article id="lens-cabinet" class="card" data-controller="lens-cabinet">
+          <h2>Lens cabinet</h2>
+          <p id="bench-reading" class="reading" data-lens-cabinet-target="bench">Bench is waiting.</p>
+          <p id="stamp-reading" class="reading" data-lens-cabinet-target="stamp">Stamp is waiting.</p>
+          <div class="actions">
+            <button type="button" id="break-prism" data-action="lens-cabinet#breakPrism lens-cabinet#stampBench">Break the prism</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="wick_lamp_controller.js"><code>wick_lamp_controller.js</code></a> — throw in connect()</li>
+          <li><a href="lens_cabinet_controller.js"><code>lens_cabinet_controller.js</code></a> — throw in an action, then stamp</li>
+          <li>This page's source — the logger and <code>window.onerror</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

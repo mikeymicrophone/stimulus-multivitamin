@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  Error handling · 07 · Ozette callback gap
+
+  Teaches:
+  - Target, value, and outlet callbacks are not wrapped
+    by handleError. The handled line stays quiet.
+  - A throw from a target callback leaves that observer
+    stopped, so the next slip is not numbered.
+  - A throw from a value callback after connect, and a
+    throw from an outlet callback after connect, are
+    error events. The host stays connected.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ozette callback gap · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideBookController from "./tide_book_controller.js"
+      import RangeLampController from "./range_lamp_controller.js"
+      import HornDeskController from "./horn_desk_controller.js"
+      import PassBellController from "./pass_bell_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      const faults = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message) => {
+        handled.push(`${message} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+      }
+      window.addEventListener("error", (event) => {
+        const text = event.error && event.error.message ? event.error.message : event.message
+        faults.push(text)
+        document.getElementById("fault").textContent = faults.join("\n")
+      })
+
+      application.register("tide-book", TideBookController)
+      application.register("range-lamp", RangeLampController)
+      application.register("horn-desk", HornDeskController)
+      application.register("pass-bell", PassBellController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>07 · Ozette callback gap</span>
+      </nav>
+      <h1>Ozette callback gap</h1>
+      <p class="lede">
+        The tide book, range lamp, and horn desk at Ozette each throw
+        from a callback Stimulus does not wrap. The handled line stays
+        quiet. The fault line hears the browser.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Reports</h2>
+          <p id="handled" class="reading">No handled error.</p>
+          <p id="fault" class="reading">No fault.</p>
+        </section>
+
+        <article id="tide-book" class="card" data-controller="tide-book">
+          <h2>Tide book</h2>
+          <p id="tide-reading" class="reading" data-tide-book-target="reading">Tide book is waiting.</p>
+          <div class="actions">
+            <button type="button" id="add-bad-slip" data-action="tide-book#addSlip" data-tide-book-torn-param="yes">Add the torn slip</button>
+            <button type="button" id="add-second-slip" data-action="tide-book#addSlip" data-tide-book-torn-param="no">Add the next slip</button>
+          </div>
+        </article>
+
+        <article id="range-lamp" class="card" data-controller="range-lamp" data-range-lamp-bearing-value="clear">
+          <h2>Range lamp</h2>
+          <p id="bearing-reading" class="reading" data-range-lamp-target="reading">Range lamp is waiting.</p>
+          <div class="actions">
+            <button type="button" id="foul-bearing" data-action="range-lamp#foul">Foul the bearing</button>
+          </div>
+        </article>
+
+        <article id="horn-desk" class="card" data-controller="horn-desk">
+          <h2>Horn desk</h2>
+          <p id="horn-reading" class="reading" data-horn-desk-target="reading">Horn desk is waiting.</p>
+          <div class="actions">
+            <button type="button" id="tie-bell" data-action="horn-desk#tie">Tie the pass bell</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_book_controller.js"><code>tide_book_controller.js</code></a> — a target callback that throws</li>
+          <li><a href="range_lamp_controller.js"><code>range_lamp_controller.js</code></a> — a value callback that throws</li>
+          <li><a href="horn_desk_controller.js"><code>horn_desk_controller.js</code></a> — an outlet callback that throws</li>
+          <li><a href="pass_bell_controller.js"><code>pass_bell_controller.js</code></a> — the bell that gets tied</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

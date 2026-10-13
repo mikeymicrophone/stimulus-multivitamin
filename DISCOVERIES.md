@@ -3230,6 +3230,124 @@ token and expect a second instance. Catch a rejected
 
 **Seen in:** [Ediz Hook pitfalls](features/14-application-setup/13-ediz-hook-pitfalls/).
 
+## Error handling
+
+The handbook says every call from Stimulus into application code is wrapped in `try/catch`, logged, and forwarded to `window.onerror` when that property is set. The wraps are `initialize()`, `connect()`, `disconnect()`, and action invocation. The callback and promise cases below are the calls that wrapper does not cover; each one already has a section, and the pages here only show the `handleError` side of it.
+
+### Default `handleError` calls `window.onerror` with an empty source and does not dispatch an `error` event
+
+**What happens.** The default method calls `logger.error("%s\n\n%o\n\n%o", message, error, detail)` and then `window.onerror.call(window, message, "", 0, 0, error)`. The first argument is the Stimulus message, not `error.message`. The source is an empty string. The line and column are 0. `this` inside `window.onerror` is `window`.
+
+An `error` listener added with `addEventListener` does not run. `unhandledrejection` does not run. Returning `true` from `window.onerror` does not remove the logger line, because the logger already ran.
+
+Lifecycle messages are `Error initializing controller`, `Error connecting controller`, and `Error disconnecting controller`. Those strings do not include the identifier. An action message does: `Error invoking action "click->identifier#method"`. Action options such as `:prevent` and `:stop` are not part of that string.
+
+`detail` is not passed to `window.onerror`. The identifier for a lifecycle throw is only on `detail`.
+
+**Why it matters.** Patos records the connect failure as `onerror Error connecting controller |  | 0 | 0 | wick buried` and an error-event count of 0. Waadah's horn lights the property wire only. A tracker that listens for the `error` event, or that groups by filename, does not see a handled Stimulus throw, and a lifecycle throw's message does not say which controller failed.
+
+**What to do.** Read `detail` inside `handleError` when you need the identifier, the element, or the action index. Treat a `window.onerror` call whose source is empty and whose line is 0 as Stimulus's own call. Don't expect an `error` event for a throw Stimulus caught.
+
+**Seen in:** [Patos lens tape](features/15-error-handling/03-patos-lens-tape/),
+[Waadah error wire](features/15-error-handling/04-waadah-error-wire/).
+
+### Replacing `handleError` skips the logger and `window.onerror`
+
+**What happens.** `window.onerror` is called from inside the default method. Assigning `application.handleError` replaces that method. The logger is not called, and the property is not called, unless the new function calls them.
+
+**Why it matters.** Tatoosh files the foul reading and stays at "Onerror calls 0." A reporter that only posts to a service does not also notify a `window.onerror` hook that was installed for something else.
+
+**What to do.** Call the previous method, or call `window.onerror` yourself, if those side effects should stay. Keep the three arguments.
+
+**Seen in:** [Tatoosh incident book](features/15-error-handling/01-tatoosh-incident-book/).
+
+### Action `detail` carries `index` and `event`; lifecycle `detail` does not
+
+**What happens.** Every report's `detail` has `identifier`, `controller`, and `element`. `controller` is the instance (`detail.controller.identifier` matches). `element` is the controller's element, not `event.target`.
+
+An action report also has `index` and `event`. `index` is the token's position in the `data-action` attribute on the element that declared it. Two buttons can both report index 0. `event` is the event the action is running, with `params` already assigned. `event.target` is the element that received the event.
+
+The action's string form omits `:prevent`, `:stop`, and the other options. `click->pass-bell#jam:prevent` and `click->pass-bell#jam:stop` both produce `Error invoking action "click->pass-bell#jam"`. They are different listeners when their options differ, so both still run. `detail.index` is 0 for the first token and 1 for the second.
+
+**Why it matters.** Patos's prism error names the cabinet, not the button. Cape Disappointment's horn and lens are both index 0, on different buttons. Deception Pass's two bell jams share one message and are told apart by index.
+
+**What to do.** Read `detail.element` for the controller element and `detail.event.target` for the control that was used. Don't parse options out of `message`. Use `detail.index` only within one element's attribute.
+
+**Seen in:** [Patos lens tape](features/15-error-handling/03-patos-lens-tape/),
+[Cape Disappointment report desk](features/15-error-handling/12-cape-disappointment-report-desk/),
+[Deception Pass fault line](features/15-error-handling/13-deception-pass-fault-line/).
+
+### A missing method is reported when the event fires
+
+**What happens.** A descriptor whose method is not a function on the controller is still parsed. The first event that invokes it throws `Action "click->identifier#method" references undefined method "method"` from inside the action `try`. `handleError` reports it as `Error invoking action "click->identifier#method"`. Later actions on that listener still run. The page load does not throw.
+
+**Why it matters.** Sekiu's missing horn is quiet until the click. The order and the deck stamp from the other button are already done, and the harbor clock still advances.
+
+**What to do.** Don't treat a clean load as proof the method exists. Read `error.message` for the undefined-method sentence; the Stimulus `message` only names the descriptor.
+
+**Seen in:** [Sekiu pilot orders](features/15-error-handling/06-sekiu-pilot-orders/).
+
+### A throw in `initialize()` still connects, a throw in `connect()` leaves actions live, and a throw in `disconnect()` still stops them
+
+**What happens.** `initialize()` runs in the context constructor, inside its own `try`, before the observers start. A throw is `Error initializing controller`. `connect()` still runs. The controller is in `application.controllers`.
+
+`connect()` starts the binding, value, target, and outlet observers before it calls `controller.connect()` inside a second `try`. A throw there is `Error connecting controller`. The rest of `connect()` does not run. Actions bound in that first step still run. Controllers later in the document still connect. This is not the scan skip in [A throw from a value callback skips the rest of the connect scan](#a-throw-from-a-value-callback-skips-the-rest-of-the-connect-scan).
+
+`disconnect()` calls `controller.disconnect()` inside a `try`, then stops the four observers. A throw is `Error disconnecting controller`, and the observers still stop. A later click does not run the action.
+
+**Why it matters.** Partridge Point's init lamp ends on "Init lamp connected." and still trims. The connect lamp still trims, and the point lamp after it connects. Pulling the disc lamp files the disconnect error and the trim does nothing. Hansville's mid lamp is the same connect shape: the shore bell and the point clock stay up.
+
+**What to do.** Don't use a throw in `initialize()` as a way to refuse `connect()`. Don't assume a failed `connect()` unbound the click. Do assume a failed `disconnect()` finished tearing the listeners down.
+
+**Seen in:** [Partridge Point watch faults](features/15-error-handling/05-partridge-point-watch-faults/),
+[Hansville isolation](features/15-error-handling/11-hansville-isolation/).
+
+### An `async` lifecycle method rejects outside `handleError`, and the scan continues
+
+**What happens.** An `async` function never throws into the caller's `try`, even when the `throw` is the first line. `initialize()`, `connect()`, `disconnect()`, and an action all follow the action rule in [A rejected promise from an action never reaches `handleError`](#a-rejected-promise-from-an-action-never-reaches-handleerror). The failure is an `unhandledrejection`. `window.onerror` is not called. `handleError` is not called.
+
+Because `connect()` returns a promise instead of throwing, the scan continues. Controllers later in the document connect. Observers were started before `controller.connect()`, so actions on that controller still run. Lines before the `throw` have run.
+
+`async disconnect()` returns a promise too, so the observers still stop, and the rejection arrives after that. A click afterward does not run the action.
+
+A non-async method that `return`s `Promise.reject(...)` is the same rejection, not `handleError`.
+
+**Why it matters.** Westport's early save, late save, and returned refusal never increment Handled. The kettle writes its slate, the floor clock connects, and Mark the kettle still runs. Deception Pass's async lamp connects, the gate book connects, and pulling the lamp rejects `async disconnect tore` with the trim left unbound.
+
+**What to do.** Don't mark `connect()` or `initialize()` `async` and expect `handleError` to hear it. Catch inside the method, or handle `unhandledrejection` on purpose. The action form of this rule was already true for a clipboard write; it is the same `try` around the lifecycle methods.
+
+**Seen in:** [Westport retort queue](features/15-error-handling/08-westport-retort-queue/),
+[Deception Pass fault line](features/15-error-handling/13-deception-pass-fault-line/).
+
+### A value-callback throw during connect leaves that controller's actions live
+
+**What happens.** `context.connect()` starts the binding observer before the value observer. A throw from a value callback, including invalid JSON, leaves that `try` entirely. `handleError` is not called. The rest of the scan is skipped, as in [A throw from a value callback skips the rest of the connect scan](#a-throw-from-a-value-callback-skips-the-rest-of-the-connect-scan). `controller.connect()` does not run.
+
+The context was added to the module before `connect()` was called, so the controller is in `application.controllers`. Actions bound in that first step still run.
+
+A throw from a target or outlet callback on a later visit is the uncaught error already described in [The target observer is paused while the callback runs](#the-target-observer-is-paused-while-the-callback-runs) and [A throw from an outlet callback skips the rest of the connect scan](#a-throw-from-an-outlet-callback-skips-the-rest-of-the-connect-scan). `handleError` stays quiet there too.
+
+**Why it matters.** Hansville's fax never says it connected, and the after bell stays waiting, but the fax button rings. Ozette's torn slip, foul bearing, and parted bell cord file nothing in the handled line.
+
+**What to do.** Don't look for these in `handleError`. If a card might throw from a value callback while connecting, don't put a controller you need after it. Don't assume the skipped `connect()` unbound the card's buttons.
+
+**Seen in:** [Hansville isolation](features/15-error-handling/11-hansville-isolation/),
+[Ozette callback gap](features/15-error-handling/07-ozette-callback-gap/).
+
+### A throw from `handleError` or `logger.error` escapes the action listener
+
+**What happens.** The `try` around an action, and the `try` around each lifecycle method, call `handleError` and do not wrap that call. If the replacement throws, or if `logger.error` throws inside the default method, the exception leaves the listener.
+
+Later actions in that same listener do not run. A descriptor with different options is a different listener and still runs. The browser then reports the error that escaped: the reporter's error, or the logger's error, not the controller's. Stimulus does not also make its empty-source `window.onerror` call. The default method never gets there if `logger.error` throws, and a replacement is not the default method.
+
+During `initialize()`, the same escape happens in the constructor. The context is not added, and controllers later in that scan do not connect. On the initial `start()` scan that rejection is an unhandled rejection of the promise `start()` returned. On a later mutation it is an `error` event.
+
+**Why it matters.** Deception Pass marks the pass and does not close the gate. The fault reads `reporter jammed`. The slate reads "Horn wrote the slate." and the next watch stays waiting, with the fault `tape snapped`. The late lamp enters `initialize()` and the lamp after it stays waiting.
+
+**What to do.** Don't throw from `handleError` or from `logger.error`. Record the original `error` first. A logger has to implement `error` without throwing; the format string and the message are the first two arguments, as in [Debug logging uses the logger only while `debug` is true](#debug-logging-uses-the-logger-only-while-debug-is-true).
+
+**Seen in:** [Deception Pass fault line](features/15-error-handling/13-deception-pass-fault-line/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
