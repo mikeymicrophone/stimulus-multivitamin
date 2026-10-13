@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Targets · 06 · Rehearsal dinner seating
+
+  Teaches:
+  - The blank place card is inside a template that is the cardBlueprint
+    target. The guest markup in that template is not a guest target.
+  - Seating a guest clones the template content and appends it. The
+    clone is a guest target on that read.
+  - Excusing a guest removes the element. The next guestTargets read
+    omits them. The blueprint still holds one card.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Rehearsal dinner seating · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .chart { max-width: 36rem; display: grid; gap: 0.7rem; }
+      .guests { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+      .guests li { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fffdf8; }
+      .seat-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+      .seat-row label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .status { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RehearsalDinnerController from "./rehearsal_dinner_controller.js"
+
+      const application = Application.start()
+      application.register("rehearsal-dinner", RehearsalDinnerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>06 · Rehearsal dinner seating</span>
+      </nav>
+      <h1>Rehearsal dinner seating</h1>
+      <p class="lede">
+        Cedar and Salt, the night before the wedding. Priya is seated.
+        The blank card in the blueprint is not a guest until it is
+        cloned onto the chart.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario chart" data-controller="rehearsal-dinner">
+        <h2>Tables</h2>
+        <ul class="guests" data-rehearsal-dinner-target="tableList">
+          <li data-rehearsal-dinner-target="guest" data-guest-name="Priya Shah" data-table-number="4">
+            <span data-guest-label>Priya Shah at table 4</span>
+            <button type="button" data-action="rehearsal-dinner#excuseGuest">Excuse Priya Shah</button>
+          </li>
+        </ul>
+        <div class="seat-row">
+          <label>
+            Guest
+            <input type="text" value="Jonah Ellis" data-rehearsal-dinner-target="guestName">
+          </label>
+          <label>
+            Table
+            <input type="text" value="2" data-rehearsal-dinner-target="tableNumber">
+          </label>
+          <button type="button" data-action="rehearsal-dinner#seatGuest">Seat the guest</button>
+        </div>
+        <p class="status" data-rehearsal-dinner-target="status" aria-live="polite"></p>
+        <template data-rehearsal-dinner-target="cardBlueprint">
+          <li data-rehearsal-dinner-target="guest" data-guest-name="" data-table-number="">
+            <span data-guest-label>Open chair</span>
+            <button type="button" data-action="rehearsal-dinner#excuseGuest">Excuse this guest</button>
+          </li>
+        </template>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="rehearsal_dinner_controller.js"><code>rehearsal_dinner_controller.js</code></a> — clones the blueprint and reads guests from the chart</li>
+          <li>This page's source — Priya on the chart, the blank card inside the template</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

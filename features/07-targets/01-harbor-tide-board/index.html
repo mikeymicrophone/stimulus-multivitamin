@@ -1,0 +1,99 @@
+<!doctype html>
+<!--
+  Targets · 01 · Harbor tide board
+
+  Teaches:
+  - static targets declares stationName, reading, advisory, slip, and
+    report. The attribute is data-tide-board-target, and the token is
+    the name as declared.
+  - stationNameTarget reads the one heading. readingTargets reads every
+    reading on that board.
+  - hasAdvisoryTarget guards the optional advisory. Kingston has none.
+    Dismissing Port Townsend's removes the element, and the next read
+    is false.
+  - slipTarget throws Missing target element "slip" for "tide-board"
+    controller when it is read. slipTargets is empty and hasSlipTarget
+    is false. The board still connects.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Harbor tide board · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .boards { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .board { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; }
+      .board h2 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+      .reading, .advisory { margin: 0.2rem 0; }
+      .advisory { font-weight: 700; }
+      .board-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.7rem 0; }
+      .report { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideBoardController from "./tide_board_controller.js"
+
+      const application = Application.start()
+      application.register("tide-board", TideBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>01 · Harbor tide board</span>
+      </nav>
+      <h1>Harbor tide board</h1>
+      <p class="lede">
+        Port Townsend has a small-craft advisory and Kingston does not.
+        Each board reads its own targets. Filing a slip asks for an
+        element that was never marked, and that read throws.
+      </p>
+    </header>
+
+    <main>
+      <div class="boards">
+        <section class="scenario board" data-controller="tide-board" aria-labelledby="port-townsend-name">
+          <h2 id="port-townsend-name" data-tide-board-target="stationName">Port Townsend</h2>
+          <p class="reading" data-tide-board-target="reading">6.2 ft rising</p>
+          <p class="reading" data-tide-board-target="reading">next high 14:10</p>
+          <p class="advisory" data-tide-board-target="advisory">Small craft advisory until 18:00</p>
+          <div class="board-actions">
+            <button type="button" data-action="tide-board#dismissAdvisory">Dismiss the advisory</button>
+            <button type="button" data-action="tide-board#readMissingSlip">File the missing slip</button>
+          </div>
+          <p class="report" data-tide-board-target="report" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario board" data-controller="tide-board" aria-labelledby="kingston-name">
+          <h2 id="kingston-name" data-tide-board-target="stationName">Kingston</h2>
+          <p class="reading" data-tide-board-target="reading">3.1 ft slack</p>
+          <div class="board-actions">
+            <button type="button" data-action="tide-board#dismissAdvisory">Dismiss the advisory</button>
+            <button type="button" data-action="tide-board#readMissingSlip">File the missing slip</button>
+          </div>
+          <p class="report" data-tide-board-target="report" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_board_controller.js"><code>tide_board_controller.js</code></a> — singular, plural, and has-target, and the missing slip</li>
+          <li>This page's source — two boards, one with an advisory and one without</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

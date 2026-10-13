@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+  Targets · 08 · Bakery oven queue
+
+  Teaches:
+  - loafTargets is document order. Move Brioche earlier and the next
+    read is Brioche, Rye, Ciabatta.
+  - The visual swap sets CSS order on Ciabatta so it paints first.
+    loafTargets does not follow that paint order.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Bakery oven queue · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .oven { max-width: 36rem; display: grid; gap: 0.7rem; }
+      .loaf-rack { display: flex; flex-direction: column; gap: 0.4rem; }
+      .visual-front .loaf-rack [data-loaf-name="Ciabatta"] { order: -1; }
+      .loaf { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fffdf8; }
+      .pull-order, .visual-note { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import OvenQueueController from "./oven_queue_controller.js"
+
+      const application = Application.start()
+      application.register("oven-queue", OvenQueueController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>08 · Bakery oven queue</span>
+      </nav>
+      <h1>Bakery oven queue</h1>
+      <p class="lede">
+        Hearth and Rye pulls loaves in markup order. Moving a loaf
+        changes that order. Painting one loaf at the front of the rack
+        does not.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario oven" data-controller="oven-queue">
+        <h2>Deck oven</h2>
+        <div class="loaf-rack">
+          <article class="loaf" data-oven-queue-target="loaf" data-loaf-name="Rye">
+            <span>Rye</span>
+            <button type="button" data-action="oven-queue#moveEarlier">Move Rye earlier</button>
+          </article>
+          <article class="loaf" data-oven-queue-target="loaf" data-loaf-name="Brioche">
+            <span>Brioche</span>
+            <button type="button" data-action="oven-queue#moveEarlier">Move Brioche earlier</button>
+          </article>
+          <article class="loaf" data-oven-queue-target="loaf" data-loaf-name="Ciabatta">
+            <span>Ciabatta</span>
+            <button type="button" data-action="oven-queue#moveEarlier">Move Ciabatta earlier</button>
+          </article>
+        </div>
+        <p>
+          <button type="button" data-action="oven-queue#showCiabattaFirst">Show Ciabatta at the front of the rack</button>
+        </p>
+        <p class="pull-order" data-oven-queue-target="pullOrder" aria-live="polite"></p>
+        <p class="visual-note" data-oven-queue-target="visualNote">Document order is the pull order. The visual swap has not been used.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="oven_queue_controller.js"><code>oven_queue_controller.js</code></a> — reads <code>loafTargets</code> after a move and after a CSS reorder</li>
+          <li>This page's source — three loaves, and the rule that paints Ciabatta first</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

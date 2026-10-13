@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  Targets · 10 · Archive request desk
+
+  Teaches:
+  - The desk element is a slip target. querySelectorAll on the desk
+    does not return the desk. slipTargets does.
+  - "slip rush" matches a token lookup and the target list. An exact
+    attribute selector misses it.
+  - The nested request-desk keeps Inner map out of the outer slipTargets
+    and not out of querySelectorAll.
+  - data-target="request-desk.slip" still matches, after the modern
+    matches. Dual stamp is listed twice and warns the first time.
+  - A NodeList saved at connect stays put when the tax lien is filed.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Archive request desk · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .desk { display: grid; gap: 0.45rem; max-width: 40rem; }
+      .slip { margin: 0; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.7rem; background: #fffdf8; }
+      .nested { margin-left: 1rem; }
+      .desk-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .comparison { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RequestDeskController from "./request_desk_controller.js"
+
+      const application = Application.start()
+      application.register("request-desk", RequestDeskController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>10 · Archive request desk</span>
+      </nav>
+      <h1>Archive request desk</h1>
+      <p class="lede">
+        Whatcom County Archives. The desk is the walk-up slip. A nested
+        desk holds a map. One card still uses the old target attribute.
+        Compare that with what a query would return.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario desk" data-controller="request-desk" data-request-desk-target="slip" data-slip-label="Walk-up">
+        <h2>Reading room</h2>
+        <article class="slip" data-request-desk-target="slip" data-slip-label="Deed 1842">Deed 1842</article>
+        <article class="slip" data-request-desk-target="slip rush" data-slip-label="Probate rush">Probate rush</article>
+        <article class="slip" data-request-desk-target="slip" data-target="request-desk.slip" data-slip-label="Dual stamp">Dual stamp</article>
+        <section class="desk nested" data-controller="request-desk">
+          <h3>Map drawers</h3>
+          <article class="slip" data-request-desk-target="slip" data-slip-label="Inner map">Inner map</article>
+        </section>
+        <p class="slip" data-target="request-desk.slip" data-slip-label="Card catalog">Card catalog</p>
+        <div class="desk-actions">
+          <button type="button" data-action="request-desk#compare">Compare lookups</button>
+          <button type="button" data-action="request-desk#fileTaxLien">File the tax lien</button>
+        </div>
+        <p class="comparison" data-request-desk-target="comparison" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="request_desk_controller.js"><code>request_desk_controller.js</code></a> — target list beside two selectors, then a slip filed in the same turn</li>
+          <li>This page's source — walk-up desk, rush token, nested desk, and the old <code>data-target</code> stamp</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

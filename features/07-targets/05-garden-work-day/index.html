@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Targets · 05 · Garden work day
+
+  Teaches:
+  - plotTargets is read when the action runs. Squash, appended in that
+    turn, is already listed. Kale, removed in that turn, is already gone.
+  - The names saved in connect() stay Beans, Kale.
+  - plotTargetConnected writes the callback log after addPlot has
+    already said the callback had not run. The list did not wait for it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Garden work day · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .roster-card { max-width: 36rem; display: grid; gap: 0.6rem; }
+      .plots { margin: 0; padding-left: 1.2rem; }
+      .add-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+      .add-row label { display: grid; gap: 0.15rem; font-weight: 600; flex: 1; }
+      .status, .callback-log { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WorkDayController from "./work_day_controller.js"
+
+      const application = Application.start()
+      application.register("work-day", WorkDayController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>05 · Garden work day</span>
+      </nav>
+      <h1>Garden work day</h1>
+      <p class="lede">
+        The Saturday roster at the community garden. Plots added or sent
+        home are in <code>plotTargets</code> on the next line of the
+        action. The list saved when the roster connected is not.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario roster-card" data-controller="work-day">
+        <h2>North and east beds</h2>
+        <ul class="plots" data-work-day-target="roster">
+          <li data-work-day-target="plot" data-plot-name="Beans">Beans</li>
+          <li data-work-day-target="plot" data-plot-name="Kale">Kale</li>
+        </ul>
+        <div class="add-row">
+          <label>
+            Plot to add
+            <input type="text" value="Squash" data-work-day-target="plotName">
+          </label>
+          <button type="button" data-action="work-day#addPlot">Add the plot</button>
+          <button type="button" data-action="work-day#sendHome" data-plot-name="Kale">Send Kale home</button>
+        </div>
+        <p class="status" data-work-day-target="status" aria-live="polite"></p>
+        <p class="callback-log" data-work-day-target="callbackLog" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="work_day_controller.js"><code>work_day_controller.js</code></a> — a live plot list, a connect-time snapshot, and a callback that runs later</li>
+          <li>This page's source — Beans and Kale on the page, Squash waiting in the field</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

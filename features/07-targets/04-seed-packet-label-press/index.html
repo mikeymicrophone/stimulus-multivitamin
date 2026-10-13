@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  Targets · 04 · Seed packet label press
+
+  Teaches:
+  - The kale packet uses varietyName and daysToHarvest, the strings in
+    static targets. The bean packet uses variety-name and
+    days-to-harvest. Those tokens do not match.
+  - Printing the bean packet reads varietyNameTarget and shows
+    Missing target element "varietyName" for "label-press" controller.
+  - botanical is not declared. this.botanicalTarget is undefined on
+    both packets. It does not throw the missing-target error.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Seed packet label press · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .packets { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .packet { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.55rem; }
+      .packet h2 { margin: 0; font-size: 1.1rem; }
+      .packet label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .warning { margin: 0; }
+      .preview { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LabelPressController from "./label_press_controller.js"
+
+      const application = Application.start()
+      application.register("label-press", LabelPressController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>04 · Seed packet label press</span>
+      </nav>
+      <h1>Seed packet label press</h1>
+      <p class="lede">
+        The kale packet uses the declared target names. The bean packet
+        uses kebab-case tokens, the way a value attribute would, and a
+        botanical line the press never declared.
+      </p>
+    </header>
+
+    <main>
+      <div class="packets">
+        <section class="scenario packet" data-controller="label-press">
+          <h2>Lacinato kale</h2>
+          <label>
+            Variety
+            <input type="text" value="Lacinato kale" data-label-press-target="varietyName">
+          </label>
+          <label>
+            Days to harvest
+            <input type="number" min="1" value="60" data-label-press-target="daysToHarvest">
+          </label>
+          <p class="warning" data-label-press-target="warning">Sow after last frost</p>
+          <button type="button" data-action="label-press#printLabel">Print the kale label</button>
+          <p class="preview" data-label-press-target="preview" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario packet" data-controller="label-press">
+          <h2>Provider bean</h2>
+          <label>
+            Variety
+            <input type="text" value="Provider bean" data-label-press-target="variety-name">
+          </label>
+          <label>
+            Days to harvest
+            <input type="number" min="1" value="50" data-label-press-target="days-to-harvest">
+          </label>
+          <p class="warning" data-label-press-target="botanical">Phaseolus vulgaris</p>
+          <button type="button" data-action="label-press#printLabel">Print the bean label</button>
+          <p class="preview" data-label-press-target="preview" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="label_press_controller.js"><code>label_press_controller.js</code></a> — prints from declared names, and reports a missing one</li>
+          <li>This page's source — camelCase tokens on the kale packet, kebab-case tokens on the bean packet</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

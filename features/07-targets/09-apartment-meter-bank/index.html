@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  Targets · 09 · Apartment meter bank
+
+  Teaches:
+  - The building and Unit 2 are both meter-bank. Unit 2's meters,
+    including the unit element itself, are outside the building's
+    meterTargets.
+  - The water heater is a different identifier. The laundry meter
+    inside it still belongs to the building.
+  - Each bank sums meterTargets when it reads. The boundary is applied
+    at read time.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Apartment meter bank · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .closet { display: grid; gap: 0.7rem; }
+      .bank { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .unit { margin-left: 1rem; }
+      .meter { margin: 0; }
+      .total, .heater-note { min-height: 1.4em; margin: 0; font-weight: 600; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MeterBankController from "./meter_bank_controller.js"
+      import WaterHeaterController from "./water_heater_controller.js"
+
+      const application = Application.start()
+      application.register("meter-bank", MeterBankController)
+      application.register("water-heater", WaterHeaterController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>09 · Apartment meter bank</span>
+      </nav>
+      <h1>Apartment meter bank</h1>
+      <p class="lede">
+        The building closet contains the lobby meter, the laundry heater,
+        and Unit 2's own closet. Unit 2 is the same kind of controller,
+        so its meters stay on its own bill.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario closet bank" data-controller="meter-bank" data-bank-name="Building">
+        <h2>Building closet</h2>
+        <p class="total" data-meter-bank-target="total" aria-live="polite"></p>
+        <p class="meter" data-meter-bank-target="meter" data-meter-name="Lobby lights" data-kilowatt-hours="40">Lobby lights · 40 kWh</p>
+        <article class="bank" data-controller="water-heater">
+          <h3>Laundry</h3>
+          <p class="meter" data-meter-bank-target="meter" data-meter-name="Laundry heater" data-kilowatt-hours="15">Laundry heater · 15 kWh</p>
+          <p data-water-heater-target="model">Rheem 50-gallon</p>
+          <p class="heater-note" data-water-heater-target="note"></p>
+        </article>
+        <section class="bank unit" data-controller="meter-bank" data-bank-name="Unit 2" data-meter-bank-target="meter" data-meter-name="Unit panel" data-kilowatt-hours="80">
+          <h3>Unit 2</h3>
+          <p class="total" data-meter-bank-target="total" aria-live="polite"></p>
+          <p class="meter" data-meter-bank-target="meter" data-meter-name="Kitchen" data-kilowatt-hours="22">Kitchen · 22 kWh</p>
+          <button type="button" data-action="meter-bank#readMeters">Read Unit 2</button>
+        </section>
+        <button type="button" data-action="meter-bank#readMeters">Read the building</button>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="meter_bank_controller.js"><code>meter_bank_controller.js</code></a> — sums meters that belong to this bank</li>
+          <li><a href="water_heater_controller.js"><code>water_heater_controller.js</code></a> — the laundry heater, a different identifier</li>
+          <li>This page's source — Unit 2 nested in the building, the laundry meter nested in the heater</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

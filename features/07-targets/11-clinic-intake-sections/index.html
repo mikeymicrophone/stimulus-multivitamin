@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Targets · 11 · Clinic intake sections
+
+  Teaches:
+  - insurance-section and pharmacy-section extend the intake section
+    and inherit heading, field, and summary.
+  - Inherited targets are stamped with the subclass identifier.
+    data-intake-section-target="heading" inside insurance is not the
+    heading target.
+  - memberId and allergyNote are the names each subclass adds.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Clinic intake sections · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .intake { display: grid; gap: 1rem; }
+      .section { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .section h2 { margin: 0; font-size: 1.15rem; }
+      .section label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .stray { margin: 0; color: var(--muted-ink, #555); }
+      .summary { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import IntakeSectionController from "./intake_section_controller.js"
+      import InsuranceSectionController from "./insurance_section_controller.js"
+      import PharmacySectionController from "./pharmacy_section_controller.js"
+
+      const application = Application.start()
+      application.register("intake-section", IntakeSectionController)
+      application.register("insurance-section", InsuranceSectionController)
+      application.register("pharmacy-section", PharmacySectionController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>11 · Clinic intake sections</span>
+      </nav>
+      <h1>Clinic intake sections</h1>
+      <p class="lede">
+        Cedar Clinic's front desk. Insurance and pharmacy inherit the
+        intake section's heading and fields, and each adds a target of
+        its own. A heading stamped for the parent identifier is ignored.
+      </p>
+    </header>
+
+    <main>
+      <div class="intake">
+        <section class="scenario section" data-controller="insurance-section">
+          <h2 data-insurance-section-target="heading">Insurance</h2>
+          <p class="stray" data-intake-section-target="heading">Primary policyholder, printed on the base form</p>
+          <label>
+            Carrier
+            <input type="text" value="Aetna" data-field-label="Carrier" data-insurance-section-target="field">
+          </label>
+          <label>
+            Member id
+            <input type="text" value="AET-44021" data-insurance-section-target="memberId">
+          </label>
+          <button type="button" data-action="insurance-section#summarize">Summarize insurance</button>
+          <p class="summary" data-insurance-section-target="summary" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario section" data-controller="pharmacy-section">
+          <h2 data-pharmacy-section-target="heading">Pharmacy</h2>
+          <label>
+            Allergies
+            <input type="text" value="Penicillin" data-field-label="Allergies" data-pharmacy-section-target="field">
+          </label>
+          <label>
+            Allergy note
+            <input type="text" value="Carry an epinephrine pen" data-pharmacy-section-target="allergyNote">
+          </label>
+          <button type="button" data-action="pharmacy-section#summarize">Summarize pharmacy</button>
+          <p class="summary" data-pharmacy-section-target="summary" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="intake_section_controller.js"><code>intake_section_controller.js</code></a> — heading, fields, and summary</li>
+          <li><a href="insurance_section_controller.js"><code>insurance_section_controller.js</code></a> — member id, and the parent attribute that does not count</li>
+          <li><a href="pharmacy_section_controller.js"><code>pharmacy_section_controller.js</code></a> — allergy note on the same inherited targets</li>
+          <li>This page's source — subclass identifiers on the inherited names</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
