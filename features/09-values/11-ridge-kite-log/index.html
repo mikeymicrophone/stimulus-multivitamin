@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Values · 11 · Ridge kite log
+
+  Teaches:
+  - stationName and launched are declared on kite-log. ridge-log
+    inherits them and adds gustKnots. The base controller is
+    registered. No element uses kite-log.
+  - The station is data-ridge-log-station-name-value. A paragraph
+    attribute data-kite-log-station-name-value is ignored.
+  - launched is a bare Boolean, so a missing attribute is false and
+    hasLaunchedValue is false. Marking it launched writes
+    data-ridge-log-launched-value="true".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ridge kite log · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .ridge { max-width: 42rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.55rem; }
+      .ridge h2 { margin: 0; font-size: 1.15rem; }
+      .ridge p { margin: 0; }
+      .reading { min-height: 4.5rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import KiteLogController from "./kite_log_controller.js"
+      import RidgeLogController from "./ridge_log_controller.js"
+
+      const application = Application.start()
+      application.register("kite-log", KiteLogController)
+      application.register("ridge-log", RidgeLogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>11 · Ridge kite log</span>
+      </nav>
+      <h1>Ridge kite log</h1>
+      <p class="lede">
+        A box kite on the Cape Flattery ridge, gusting 22 knots. The
+        valley form's station name is still stamped on the card, under
+        the parent identifier.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="scenario ridge"
+        data-controller="ridge-log"
+        data-ridge-log-station-name-value="Cape Flattery"
+        data-kite-log-station-name-value="Copied from the valley form"
+        data-ridge-log-gust-knots-value="22"
+      >
+        <h2>Cape Flattery ridge</h2>
+        <p>The kite is on the grass. The valley copy of the station name is not this log's attribute.</p>
+        <p><button type="button" data-action="ridge-log#markLaunched">Mark the kite launched</button></p>
+        <p class="reading" data-ridge-log-target="reading" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="kite_log_controller.js"><code>kite_log_controller.js</code></a> — station name and launched, the base values</li>
+          <li><a href="ridge_log_controller.js"><code>ridge_log_controller.js</code></a> — gusts, the inherited names, and the stray valley attribute</li>
+          <li>This page's source — Cape Flattery on the subclass, the valley line on the parent identifier</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

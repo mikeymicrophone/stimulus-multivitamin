@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Values · 01 · Maple sugar shack
+
+  Teaches:
+  - static values declares lotCode and evaporatorName as String.
+    The attributes are data-sugar-shack-lot-code-value and
+    data-sugar-shack-evaporator-name-value.
+  - The south arch has no evaporator name. The value reads as "" and
+    hasEvaporatorNameValue is false. The north arch has both.
+  - Moving a lot assigns evaporatorNameValue. The data attribute is
+    already the new pan name when the reading is painted.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Maple sugar shack · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .arches { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .arch { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .arch h2 { margin: 0; font-size: 1.15rem; }
+      .arch p { margin: 0; }
+      .reading { min-height: 3.2rem; }
+      label { display: grid; gap: 0.25rem; font-size: 0.95rem; }
+      input { font: inherit; padding: 0.35rem 0.5rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SugarShackController from "./sugar_shack_controller.js"
+
+      const application = Application.start()
+      application.register("sugar-shack", SugarShackController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>01 · Maple sugar shack</span>
+      </nav>
+      <h1>Maple sugar shack</h1>
+      <p class="lede">
+        Boiling night at the Grafton sugar shack. Lot S-14 is on the
+        north arch. Lot S-15 is drawn and has not been assigned a pan.
+      </p>
+    </header>
+
+    <main>
+      <div class="arches">
+        <section
+          class="scenario arch"
+          data-controller="sugar-shack"
+          data-sugar-shack-lot-code-value="S-14"
+          data-sugar-shack-evaporator-name-value="North arch"
+          aria-labelledby="north-arch-lot"
+        >
+          <h2>North arch</h2>
+          <p>Lot <strong data-sugar-shack-target="lot" id="north-arch-lot"></strong></p>
+          <p>Evaporator <span data-sugar-shack-target="evaporator"></span></p>
+          <label>
+            Move this lot to
+            <input type="text" value="Rail pan" data-sugar-shack-target="panName" autocomplete="off">
+          </label>
+          <p><button type="button" data-action="sugar-shack#moveToNamedPan">Move this lot</button></p>
+          <p class="reading" data-sugar-shack-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section
+          class="scenario arch"
+          data-controller="sugar-shack"
+          data-sugar-shack-lot-code-value="S-15"
+          aria-labelledby="south-arch-lot"
+        >
+          <h2>South arch</h2>
+          <p>Lot <strong data-sugar-shack-target="lot" id="south-arch-lot"></strong></p>
+          <p>Evaporator <span data-sugar-shack-target="evaporator"></span></p>
+          <label>
+            Move this lot to
+            <input type="text" value="Finishing pan" data-sugar-shack-target="panName" autocomplete="off">
+          </label>
+          <p><button type="button" data-action="sugar-shack#moveToNamedPan">Move this lot</button></p>
+          <p class="reading" data-sugar-shack-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="sugar_shack_controller.js"><code>sugar_shack_controller.js</code></a> — string values, the missing pan, and writing the attribute</li>
+          <li>This page's source — two arches, one without an evaporator name</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

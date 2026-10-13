@@ -1,0 +1,157 @@
+<!doctype html>
+<!--
+  Values · 07 · Assay office slips
+
+  Teaches:
+  - pennyweights is a Number. "1_000" becomes 1000. "1,200" and
+    "12dwt" are NaN. " 14.5 " is 14.5. "" is 0 with has true. A
+    missing slip is 0 with has false. "2e1" is 20. The long
+    certificate keeps its digits in the attribute and loses one in
+    the value.
+  - A mark list that is not JSON throws SyntaxError on read. A JSON
+    object throws TypeError for an Array value.
+  - An object value rejects unquoted keys, null, and a JSON array.
+    null is reported as type "undefined".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Assay office slips · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .bench { display: grid; gap: 1rem; }
+      .group { display: grid; gap: 0.6rem; }
+      .slip { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; display: grid; gap: 0.35rem; }
+      .slip h3 { margin: 0; font-size: 1.02rem; }
+      .slip p { margin: 0; }
+      .reading { min-height: 1.5rem; }
+      h2 { margin: 0; font-size: 1.2rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WeightSlipController from "./weight_slip_controller.js"
+      import MarkListController from "./mark_list_controller.js"
+      import FindingCardController from "./finding_card_controller.js"
+
+      const application = Application.start()
+      application.register("weight-slip", WeightSlipController)
+      application.register("mark-list", MarkListController)
+      application.register("finding-card", FindingCardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>07 · Assay office slips</span>
+      </nav>
+      <h1>Assay office slips</h1>
+      <p class="lede">
+        The Dahlonega office is transcribing a morning's slips. Some
+        weights came off a balance, some off a clerk's comma, and one
+        certificate number is longer than a safe integer.
+      </p>
+    </header>
+
+    <main class="bench">
+      <section class="group" aria-labelledby="weights-heading">
+        <h2 id="weights-heading">Weights</h2>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="1_000">
+          <h3 data-weight-slip-target="slipName">Underscore slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="1,200">
+          <h3 data-weight-slip-target="slipName">Comma slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value=" 14.5 ">
+          <h3 data-weight-slip-target="slipName">Spaced slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="">
+          <h3 data-weight-slip-target="slipName">Blank slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip">
+          <h3 data-weight-slip-target="slipName">Missing slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="2e1">
+          <h3 data-weight-slip-target="slipName">Balance slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="12dwt">
+          <h3 data-weight-slip-target="slipName">Unit slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+        <section class="scenario slip" data-controller="weight-slip" data-weight-slip-pennyweights-value="9007199254740993">
+          <h3 data-weight-slip-target="slipName">Certificate slip</h3>
+          <p class="reading" data-weight-slip-target="reading" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section class="group" aria-labelledby="marks-heading">
+        <h2 id="marks-heading">Mint marks</h2>
+        <section class="scenario slip" data-controller="mark-list" data-mark-list-marks-value='["eagle","shield"]'>
+          <h3 data-mark-list-target="slipName">Eagle list</h3>
+          <p><button type="button" data-action="mark-list#transcribe">Transcribe the eagle list</button></p>
+          <p class="reading" data-mark-list-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+        <section class="scenario slip" data-controller="mark-list" data-mark-list-marks-value="eagle,shield">
+          <h3 data-mark-list-target="slipName">Comma list</h3>
+          <p><button type="button" data-action="mark-list#transcribe">Transcribe the comma list</button></p>
+          <p class="reading" data-mark-list-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+        <section class="scenario slip" data-controller="mark-list" data-mark-list-marks-value='{"mint":"Dahlonega"}'>
+          <h3 data-mark-list-target="slipName">Object list</h3>
+          <p><button type="button" data-action="mark-list#transcribe">Transcribe the object list</button></p>
+          <p class="reading" data-mark-list-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+      </section>
+
+      <section class="group" aria-labelledby="findings-heading">
+        <h2 id="findings-heading">Findings</h2>
+        <section class="scenario slip" data-controller="finding-card" data-finding-card-finding-value='{"fine":900,"mint":"Dahlonega"}'>
+          <h3 data-finding-card-target="slipName">Dahlonega finding</h3>
+          <p><button type="button" data-action="finding-card#transcribe">Transcribe the Dahlonega finding</button></p>
+          <p class="reading" data-finding-card-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+        <section class="scenario slip" data-controller="finding-card" data-finding-card-finding-value="{fine:900}">
+          <h3 data-finding-card-target="slipName">Unquoted finding</h3>
+          <p><button type="button" data-action="finding-card#transcribe">Transcribe the unquoted finding</button></p>
+          <p class="reading" data-finding-card-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+        <section class="scenario slip" data-controller="finding-card" data-finding-card-finding-value="null">
+          <h3 data-finding-card-target="slipName">Null finding</h3>
+          <p><button type="button" data-action="finding-card#transcribe">Transcribe the null finding</button></p>
+          <p class="reading" data-finding-card-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+        <section class="scenario slip" data-controller="finding-card" data-finding-card-finding-value='["fine"]'>
+          <h3 data-finding-card-target="slipName">List finding</h3>
+          <p><button type="button" data-action="finding-card#transcribe">Transcribe the list finding</button></p>
+          <p class="reading" data-finding-card-target="reading" aria-live="polite">Not transcribed.</p>
+        </section>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="weight_slip_controller.js"><code>weight_slip_controller.js</code></a> — number parsing, blanks, and the long certificate</li>
+          <li><a href="mark_list_controller.js"><code>mark_list_controller.js</code></a> — array JSON, a comma note, and an object</li>
+          <li><a href="finding_card_controller.js"><code>finding_card_controller.js</code></a> — object JSON, unquoted keys, null, and a list</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

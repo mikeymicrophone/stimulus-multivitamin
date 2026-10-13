@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+  Values · 12 · Lock gauge house
+
+  Teaches:
+  - gauge's houseZeroFeet and gauge-house's zeroFeet are different
+    value names that build the same attribute,
+    data-gauge-house-zero-feet-value. Both read 4.2.
+  - Raising the gauge zero to 5 writes that attribute. The house
+    reads 5 on the next line, in the same action.
+  - poolFeet on gauge is data-gauge-pool-feet-value. poolFeet on
+    gauge-house is data-gauge-house-pool-feet-value. Setting the
+    house pool to 8 leaves the gauge pool at 11.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lock gauge house · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .lock { max-width: 42rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.6rem; }
+      .lock h2 { margin: 0; font-size: 1.15rem; }
+      .lock p { margin: 0; }
+      .reading { min-height: 2.4rem; font-weight: 600; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GaugeController from "./gauge_controller.js"
+      import GaugeHouseController from "./gauge_house_controller.js"
+
+      const application = Application.start()
+      application.register("gauge", GaugeController)
+      application.register("gauge-house", GaugeHouseController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>12 · Lock gauge house</span>
+      </nav>
+      <h1>Lock gauge house</h1>
+      <p class="lede">
+        Ballard locks, the saltwater gauge and the gauge house on the
+        same timber. The zero mark was named twice. The pool readings
+        were not.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="scenario lock"
+        data-controller="gauge gauge-house"
+        data-gauge-house-zero-feet-value="4.2"
+        data-gauge-pool-feet-value="11"
+        data-gauge-house-pool-feet-value="9"
+      >
+        <h2>Large lock, salt side</h2>
+        <p class="reading" data-gauge-target="reading" aria-live="polite"></p>
+        <p class="reading" data-gauge-house-target="reading" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" data-action="gauge#raiseZero">Raise the gauge zero to 5</button>
+          <button type="button" data-action="gauge-house#setHousePool">Set the house pool to 8</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="gauge_controller.js"><code>gauge_controller.js</code></a> — the gauge zero, which shares the house's attribute</li>
+          <li><a href="gauge_house_controller.js"><code>gauge_house_controller.js</code></a> — the house zero and its own pool</li>
+          <li>This page's source — one timber, one shared zero, two pool readings</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
