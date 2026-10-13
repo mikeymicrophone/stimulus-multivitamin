@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Application setup and registration · 10 · Colman Dock shed
+
+  Teaches:
+  - Two applications rooted so one contains the other
+    both connect a shared identifier. Actions run twice.
+  - An element outside the inner root is connected only
+    by the outer application.
+  - A third application with a different controllerAttribute
+    does not see data-controller, and the others do not
+    see its attribute. One connection, one flash.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Colman Dock shed · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application, defaultSchema } from "@hotwired/stimulus"
+      import PierLampController from "./pier_lamp_controller.js"
+      import StreetClockController from "./street_clock_controller.js"
+      import ShedLampController from "./shed_lamp_controller.js"
+
+      const page = Application.start()
+      const dock = Application.start(document.getElementById("colman-dock"))
+      const shedSchema = { ...defaultSchema, controllerAttribute: "data-shed-controller" }
+      const shed = Application.start(document.getElementById("terminal-shed"), shedSchema)
+
+      page.register("street-clock", StreetClockController)
+      page.register("pier-lamp", PierLampController)
+      dock.register("pier-lamp", PierLampController)
+      shed.register("shed-lamp", ShedLampController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>10 · Colman Dock shed</span>
+      </nav>
+      <h1>Colman Dock shed</h1>
+      <p class="lede">
+        Seattle's Colman Dock sits inside the page. The pier lamp
+        is registered on both, so one click flashes twice. The
+        terminal shed uses its own controller attribute and
+        flashes once.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <article class="card" data-controller="street-clock">
+          <h2>Street clock</h2>
+          <p id="clock-reading" class="reading" data-street-clock-target="reading">Street clock is waiting.</p>
+        </article>
+
+        <article id="street-lamp" class="card" data-controller="pier-lamp">
+          <h2>Street lamp</h2>
+          <p id="street-reading" class="reading" data-pier-lamp-target="reading">Street lamp is waiting.</p>
+          <p id="street-flashes" data-pier-lamp-target="flashes">Flashes 0.</p>
+          <div class="actions">
+            <button type="button" id="flash-street" data-action="pier-lamp#flash">Flash the street lamp</button>
+          </div>
+        </article>
+
+        <section id="colman-dock" class="card">
+          <h2>Colman Dock</h2>
+          <article id="pier-lamp" class="card" data-controller="pier-lamp">
+            <h2>Pier lamp</h2>
+            <p id="pier-reading" class="reading" data-pier-lamp-target="reading">Pier lamp is waiting.</p>
+            <p id="pier-flashes" data-pier-lamp-target="flashes">Flashes 0.</p>
+            <div class="actions">
+              <button type="button" id="flash-pier" data-action="pier-lamp#flash">Flash the pier lamp</button>
+            </div>
+          </article>
+
+          <article id="terminal-shed" class="card" data-shed-controller="shed-lamp">
+            <h2>Terminal shed</h2>
+            <p id="shed-reading" class="reading" data-shed-lamp-target="reading">Shed lamp is waiting.</p>
+            <p id="shed-flashes" data-shed-lamp-target="flashes">Shed flashes 0.</p>
+            <div class="actions">
+              <button type="button" id="flash-shed" data-action="shed-lamp#flash">Flash the shed lamp</button>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pier_lamp_controller.js"><code>pier_lamp_controller.js</code></a> — registered on the page and the dock</li>
+          <li><a href="street_clock_controller.js"><code>street_clock_controller.js</code></a> — page application only</li>
+          <li><a href="shed_lamp_controller.js"><code>shed_lamp_controller.js</code></a> — its own controller attribute</li>
+          <li>This page's source — three applications</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

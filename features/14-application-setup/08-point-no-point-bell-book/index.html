@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  Application setup and registration · 08 · Point No Point bell book
+
+  Teaches:
+  - getControllerForElementAndIdentifier(element, identifier)
+    returns that instance, or null.
+  - A nested bell is not the outer bell.
+  - The other identifier on the same element is a
+    different controller.
+  - An element outside this application root is null
+    even when it wears the identifier.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Point No Point bell book · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BellBookController from "./bell_book_controller.js"
+      import FogBellController from "./fog_bell_controller.js"
+      import WatchFlagController from "./watch_flag_controller.js"
+
+      const book = document.getElementById("bell-book")
+      const application = Application.start(book)
+      application.register("bell-book", BellBookController)
+      application.register("fog-bell", FogBellController)
+      application.register("watch-flag", WatchFlagController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>08 · Point No Point bell book</span>
+      </nav>
+      <h1>Point No Point bell book</h1>
+      <p class="lede">
+        The keeper's book at Point No Point looks up each bell by
+        the element and the identifier. The shore bell sits
+        outside the book, so this application cannot see it.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section id="bell-book" class="card" data-controller="bell-book">
+          <h2>Bell book</h2>
+          <p id="book-reading" class="reading" data-bell-book-target="reading">Book has not been read.</p>
+          <div class="actions">
+            <button type="button" id="read-book" data-action="bell-book#readBook">Read the book</button>
+          </div>
+
+          <article
+            id="outer-bell"
+            class="card"
+            data-controller="fog-bell watch-flag"
+            data-fog-bell-station-value="Point No Point"
+          >
+            <h2>Outer bell</h2>
+            <p id="outer-reading" data-fog-bell-target="reading">Outer bell is waiting.</p>
+
+            <article
+              id="inner-bell"
+              class="card"
+              data-controller="fog-bell"
+              data-fog-bell-station-value="Foulweather"
+            >
+              <h2>Inner bell</h2>
+              <p id="inner-reading" data-fog-bell-target="reading">Inner bell is waiting.</p>
+            </article>
+          </article>
+        </section>
+
+        <article
+          id="shore-bell"
+          class="card"
+          data-controller="fog-bell"
+          data-fog-bell-station-value="Hansville"
+        >
+          <h2>Shore bell</h2>
+          <p id="shore-reading" data-fog-bell-target="reading">Shore bell is waiting.</p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bell_book_controller.js"><code>bell_book_controller.js</code></a> — the lookups</li>
+          <li><a href="fog_bell_controller.js"><code>fog_bell_controller.js</code></a> — nested bells</li>
+          <li><a href="watch_flag_controller.js"><code>watch_flag_controller.js</code></a> — the second identifier on the outer bell</li>
+          <li>This page's source — the application root is the book, not the document</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<!--
+  Application setup and registration · 07 · Nahcotta barge watch
+
+  Teaches:
+  - unload(identifier) disconnects that module and leaves
+    the element in the document. getController is null.
+  - register of the same identifier builds a new instance.
+  - stop() does not call disconnect. Actions go quiet.
+  - Elements removed while stopped disconnect on the next
+    start(). Elements added while stopped connect then.
+    An element that stayed is not connected again.
+  - start() on an application that is already started
+    does not add another controller.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Nahcotta barge watch · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import OysterHoldController from "./oyster_hold_controller.js"
+      import BargeDeckController from "./barge_deck_controller.js"
+      import SkiffLineController from "./skiff_line_controller.js"
+
+      const barge = document.getElementById("barge")
+      const application = Application.start(barge)
+      application.register("oyster-hold", OysterHoldController)
+      application.register("barge-deck", BargeDeckController)
+      application.register("skiff-line", SkiffLineController)
+
+      document.getElementById("unload-hold").addEventListener("click", () => {
+        const hold = document.getElementById("oyster-hold")
+        application.unload("oyster-hold")
+        const found = application.getControllerForElementAndIdentifier(hold, "oyster-hold")
+        document.getElementById("unload-note").textContent =
+          `Hold controller ${found === null ? "null" : "present"}.`
+      })
+
+      document.getElementById("register-hold").addEventListener("click", () => {
+        application.register("oyster-hold", OysterHoldController)
+      })
+
+      document.getElementById("stop-watch").addEventListener("click", () => {
+        application.stop()
+        document.getElementById("watch-note").textContent = "Watch stopped."
+      })
+
+      document.getElementById("cut-loose").addEventListener("click", () => {
+        document.getElementById("oyster-hold").remove()
+        const skiff = document.createElement("article")
+        skiff.id = "skiff-line"
+        skiff.className = "card"
+        skiff.dataset.controller = "skiff-line"
+        skiff.innerHTML = `
+          <h2>Skiff line</h2>
+          <p id="skiff-reading" class="reading" data-skiff-line-target="reading">Skiff is tied and not connected.</p>
+        `
+        barge.append(skiff)
+        document.getElementById("cut-note").textContent = "Hold cut loose. Skiff tied. Watch has not started."
+      })
+
+      document.getElementById("start-watch").addEventListener("click", async () => {
+        const before = document.getElementById("barge-deck").dataset.connections
+        await application.start()
+        const decks = application.controllers.filter((controller) => controller.identifier === "barge-deck").length
+        document.getElementById("start-note").textContent =
+          `Deck connections ${document.getElementById("barge-deck").dataset.connections}. Was ${before}. Deck controllers ${decks}.`
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>07 · Nahcotta barge watch</span>
+      </nav>
+      <h1>Nahcotta barge watch</h1>
+      <p class="lede">
+        The oyster barge at Nahcotta. Unload the hold and register
+        it again. Stop the watch, cut the hold loose, tie a skiff,
+        and start. The deck never connects a second time.
+      </p>
+    </header>
+
+    <main>
+      <div id="barge" class="board">
+        <p id="hold-tape" class="card reading">Hold tape is empty.</p>
+        <p id="unload-note" class="card reading">Hold has not been unloaded.</p>
+        <p id="watch-note" class="card reading">Watch is running.</p>
+        <p id="cut-note" class="card reading">Nothing has been cut loose.</p>
+        <p id="start-note" class="card reading">Watch has not been started again.</p>
+
+        <div class="actions">
+          <button type="button" id="unload-hold">Unload the hold</button>
+          <button type="button" id="register-hold">Register the hold again</button>
+          <button type="button" id="stop-watch">Stop the watch</button>
+          <button type="button" id="cut-loose">Cut the hold loose</button>
+          <button type="button" id="start-watch">Start the watch</button>
+        </div>
+
+        <article id="barge-deck" class="card" data-controller="barge-deck">
+          <h2>Barge deck</h2>
+          <p id="deck-reading" class="reading" data-barge-deck-target="reading">Deck is waiting.</p>
+          <p id="hail-reading" data-barge-deck-target="hails">Hails 0.</p>
+          <div class="actions">
+            <button type="button" id="hail-deck" data-action="barge-deck#hail">Hail the deck</button>
+          </div>
+        </article>
+
+        <article id="oyster-hold" class="card" data-controller="oyster-hold">
+          <h2>Oyster hold</h2>
+          <p id="hold-reading" class="reading" data-oyster-hold-target="reading">Hold is waiting.</p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="oyster_hold_controller.js"><code>oyster_hold_controller.js</code></a> — unload, a new claim, disconnect</li>
+          <li><a href="barge_deck_controller.js"><code>barge_deck_controller.js</code></a> — stays connected across stop and start</li>
+          <li><a href="skiff_line_controller.js"><code>skiff_line_controller.js</code></a> — connects when the watch starts again</li>
+          <li>This page's source — <code>unload</code>, <code>stop</code>, and <code>start</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

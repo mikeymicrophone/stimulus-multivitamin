@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  Application setup and registration · 01 · Bush Point range board
+
+  Teaches:
+  - Application.start() with no element uses the document
+    element. A controller on a meta in the head connects,
+    and that meta is not inside the body.
+  - Application.start(element) watches only that element,
+    including the element itself.
+  - The same identifier outside the root never connects.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta id="head-watch" data-controller="office-clock" name="bush-point-watch" content="Bush Point">
+    <link rel="icon" href="data:,">
+    <title>Bush Point range board · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import OfficeClockController from "./office_clock_controller.js"
+      import RangeBoardController from "./range_board_controller.js"
+      import RangeLampController from "./range_lamp_controller.js"
+
+      const page = Application.start()
+      const body = Application.start(document.body)
+      const board = Application.start(document.getElementById("range-board"))
+
+      page.register("office-clock", OfficeClockController)
+      body.register("office-clock", OfficeClockController)
+      board.register("range-board", RangeBoardController)
+      board.register("range-lamp", RangeLampController)
+
+      queueMicrotask(() => {
+        const meta = document.getElementById("head-watch")
+        const pageFound = page.getControllerForElementAndIdentifier(meta, "office-clock")
+        const bodyFound = body.getControllerForElementAndIdentifier(meta, "office-clock")
+        document.getElementById("root-note").textContent =
+          `Page found the head watch: ${pageFound !== null}. Body found the head watch: ${bodyFound !== null}.`
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>01 · Bush Point range board</span>
+      </nav>
+      <h1>Bush Point range board</h1>
+      <p class="lede">
+        The Whidbey Island range at Bush Point. The office clock
+        lives on a meta in the head. The range board is its own
+        application. The shore lamp, outside that board, stays dark.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Office clock</h2>
+          <p id="office-reading" class="reading">Office clock is waiting.</p>
+          <p id="root-note" class="reading">Roots have not been compared.</p>
+        </section>
+
+        <section id="range-board" class="card" data-controller="range-board">
+          <h2>Range board</h2>
+          <p id="board-status" class="reading" data-range-board-target="status">Range board is waiting.</p>
+          <article class="card" data-controller="range-lamp">
+            <h2>Board lamp</h2>
+            <p id="board-lamp" class="reading" data-range-lamp-target="reading">Board lamp is waiting.</p>
+            <div class="actions">
+              <button type="button" id="log-bearing" data-action="range-lamp#logBearing">Log bearing 312</button>
+            </div>
+          </article>
+        </section>
+
+        <article class="card" id="shore-lamp" data-controller="range-lamp">
+          <h2>Shore lamp</h2>
+          <p id="shore-reading" class="reading" data-range-lamp-target="reading">Shore lamp is dark.</p>
+          <div class="actions">
+            <button type="button" id="log-shore" data-action="range-lamp#logBearing">Log the shore lamp</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="office_clock_controller.js"><code>office_clock_controller.js</code></a> — the head watch</li>
+          <li><a href="range_board_controller.js"><code>range_board_controller.js</code></a> — controller on the application root</li>
+          <li><a href="range_lamp_controller.js"><code>range_lamp_controller.js</code></a> — lamps inside that root</li>
+          <li>This page's source — <code>Application.start()</code>, <code>Application.start(document.body)</code>, and <code>Application.start(board)</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

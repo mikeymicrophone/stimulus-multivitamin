@@ -1,0 +1,255 @@
+<!doctype html>
+<!--
+  Application setup and registration · 13 · Ediz Hook pitfalls
+
+  Teaches:
+  - register() of an identifier that is already loaded
+    disconnects the old instance and builds a new one.
+  - A second register whose shouldLoad is false does
+    not unload the first.
+  - Application.start() twice is two applications.
+    start() on the same instance is not.
+  - A quote in an identifier throws during the scan.
+  - Identifier case must match the attribute.
+  - A duplicated token connects once.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ediz Hook pitfalls · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EdizBellController from "./ediz_bell_controller.js"
+      import DayWatchController from "./day_watch_controller.js"
+      import DarkWatchController from "./dark_watch_controller.js"
+      import DoubleLampController from "./double_lamp_controller.js"
+      import RestartLampController from "./restart_lamp_controller.js"
+      import QuoteSlipController from "./quote_slip_controller.js"
+      import AfterSlipController from "./after_slip_controller.js"
+      import CaseLampController from "./case_lamp_controller.js"
+      import TideBellController from "./tide_bell_controller.js"
+
+      const application = Application.start()
+      application.register("ediz-bell", EdizBellController)
+      application.register("day-watch", DayWatchController)
+      application.register("tide-bell", TideBellController)
+
+      const doubleRoot = document.getElementById("double-root")
+      const firstDouble = Application.start(doubleRoot)
+      firstDouble.register("double-lamp", DoubleLampController)
+
+      const restartRoot = document.getElementById("restart-root")
+      const restart = Application.start(restartRoot)
+      restart.register("restart-lamp", RestartLampController)
+
+      document.getElementById("register-bell").addEventListener("click", () => {
+        application.register("ediz-bell", EdizBellController)
+      })
+
+      document.getElementById("register-dark").addEventListener("click", () => {
+        application.register("day-watch", DarkWatchController)
+        const watch = document.getElementById("day-watch")
+        const found = application.getControllerForElementAndIdentifier(watch, "day-watch")
+        document.getElementById("dark-note").textContent =
+          `Still the day watch: ${found instanceof DayWatchController}. Dark connected: ${found instanceof DarkWatchController}.`
+      })
+
+      document.getElementById("start-second").addEventListener("click", () => {
+        const second = Application.start(doubleRoot)
+        second.register("double-lamp", DoubleLampController)
+        window.Stimulus = second
+        document.getElementById("second-note").textContent = "Second application registered."
+      })
+
+      document.getElementById("start-same").addEventListener("click", async () => {
+        const lamp = document.getElementById("restart-lamp")
+        const before = lamp.dataset.connections
+        await restart.start()
+        const count = restart.controllers.filter((controller) => controller.identifier === "restart-lamp").length
+        document.getElementById("restart-note").textContent =
+          `Connections ${lamp.dataset.connections}. Was ${before}. Controllers ${count}.`
+      })
+
+      document.getElementById("register-quote").addEventListener("click", () => {
+        const errors = []
+        const onReject = (event) => errors.push(event.reason && event.reason.message ? event.reason.message : String(event.reason))
+        window.addEventListener("unhandledrejection", onReject)
+        const quoteRoot = document.getElementById("quote-root")
+        const quoteApp = Application.start(quoteRoot)
+        quoteApp.register('slip"hook', QuoteSlipController)
+        quoteApp.register("after-slip", AfterSlipController)
+        setTimeout(() => {
+          window.removeEventListener("unhandledrejection", onReject)
+          const listed = quoteApp.controllers.map((controller) => controller.identifier).join(" ")
+          const after = quoteApp.getControllerForElementAndIdentifier(document.getElementById("after-slip"), "after-slip")
+          document.getElementById("quote-reading").textContent =
+            `Listed ${listed}. After slip connected: ${!!after}. ${errors[0] || "no error"}`
+        }, 50)
+      })
+
+      document.getElementById("register-mixed-case").addEventListener("click", () => {
+        application.register("Bell-Case", CaseLampController)
+        queueMicrotask(() => {
+          const lamp = document.getElementById("case-lamp")
+          const mixed = application.getControllerForElementAndIdentifier(lamp, "Bell-Case")
+          const lower = application.getControllerForElementAndIdentifier(lamp, "bell-case")
+          document.getElementById("case-note").textContent =
+            `Bell-Case found: ${mixed !== null}. bell-case found: ${lower !== null}.`
+        })
+      })
+
+      document.getElementById("register-lower-case").addEventListener("click", () => {
+        application.register("bell-case", CaseLampController)
+      })
+
+      document.getElementById("drop-token").addEventListener("click", () => {
+        const bell = document.getElementById("tide-bell")
+        const before = application.getControllerForElementAndIdentifier(bell, "tide-bell")
+        bell.setAttribute("data-controller", "tide-bell")
+        queueMicrotask(() => {
+          const after = application.getControllerForElementAndIdentifier(bell, "tide-bell")
+          document.getElementById("token-note").textContent =
+            `Same bell ${before === after}. Connections ${bell.dataset.connections}.`
+        })
+      })
+
+      document.getElementById("clear-token").addEventListener("click", () => {
+        document.getElementById("tide-bell").setAttribute("data-controller", "")
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>13 · Ediz Hook pitfalls</span>
+      </nav>
+      <h1>Ediz Hook pitfalls</h1>
+      <p class="lede">
+        The spit at Port Angeles. Registering a bell twice,
+        starting the lamp twice, and a slip whose identifier
+        has a quote in it.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <article id="ediz-bell" class="card" data-controller="ediz-bell">
+          <h2>Ediz bell</h2>
+          <p id="bell-reading" class="reading" data-ediz-bell-target="reading">Bell is waiting.</p>
+          <p id="bell-tape">Bell has not disconnected.</p>
+          <div class="actions">
+            <button type="button" id="register-bell">Register the bell again</button>
+          </div>
+        </article>
+
+        <article id="day-watch" class="card" data-controller="day-watch">
+          <h2>Day watch</h2>
+          <p id="watch-reading" class="reading" data-day-watch-target="reading">Day watch is waiting.</p>
+          <p id="watch-tape">Day watch has not disconnected.</p>
+          <p id="dark-note">Dark watch has not been registered.</p>
+          <div class="actions">
+            <button type="button" id="register-dark">Register a dark watch over it</button>
+          </div>
+        </article>
+
+        <section id="double-root" class="card">
+          <h2>Double lamp</h2>
+          <article id="double-lamp" class="card" data-controller="double-lamp">
+            <p id="double-reading" class="reading" data-double-lamp-target="reading">Double lamp is waiting.</p>
+            <p id="double-hails" data-double-lamp-target="hails">Hails 0.</p>
+            <div class="actions">
+              <button type="button" id="hail-double" data-action="double-lamp#hail">Hail the lamp</button>
+            </div>
+          </article>
+          <p id="second-note">Second application has not been started.</p>
+          <div class="actions">
+            <button type="button" id="start-second">Start a second application</button>
+          </div>
+        </section>
+
+        <section id="restart-root" class="card">
+          <h2>Restart lamp</h2>
+          <article id="restart-lamp" class="card" data-controller="restart-lamp">
+            <p id="restart-reading" class="reading" data-restart-lamp-target="reading">Restart lamp is waiting.</p>
+          </article>
+          <p id="restart-note">Same application has not been started again.</p>
+          <div class="actions">
+            <button type="button" id="start-same">Start the same application again</button>
+          </div>
+        </section>
+
+        <section id="quote-root" class="card">
+          <h2>Quoted slip</h2>
+          <p id="quote-init">Quote initialize has not run.</p>
+          <p id="quote-connect">Quote has not connected.</p>
+          <p id="quote-reading" class="reading">Quoted slip has not been registered.</p>
+          <p data-controller="slip&quot;hook">Quoted slip markup.</p>
+          <p id="after-slip" data-controller="after-slip">
+            <span id="after-reading">After slip is waiting.</span>
+          </p>
+          <div class="actions">
+            <button type="button" id="register-quote">Register the quoted slip</button>
+          </div>
+        </section>
+
+        <article id="case-lamp" class="card" data-controller="bell-case">
+          <h2>Case lamp</h2>
+          <p id="case-reading" class="reading" data-bell-case-target="reading">Case lamp is dark.</p>
+          <p id="case-note">Case has not been compared.</p>
+          <div class="actions">
+            <button type="button" id="register-mixed-case">Register Bell-Case</button>
+            <button type="button" id="register-lower-case">Register bell-case</button>
+          </div>
+        </article>
+
+        <article id="tide-bell" class="card" data-controller="tide-bell tide-bell">
+          <h2>Tide bell</h2>
+          <p id="tide-reading" class="reading" data-tide-bell-target="reading">Tide bell is waiting.</p>
+          <p id="tide-note">Token has not been changed.</p>
+          <p id="token-note">Spare token is still there.</p>
+          <div class="actions">
+            <button type="button" id="drop-token">Drop the spare token</button>
+            <button type="button" id="clear-token">Clear the token</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="ediz_bell_controller.js"><code>ediz_bell_controller.js</code></a> — registered twice</li>
+          <li><a href="day_watch_controller.js"><code>day_watch_controller.js</code></a> — the watch that should stay</li>
+          <li><a href="dark_watch_controller.js"><code>dark_watch_controller.js</code></a> — <code>shouldLoad</code> false</li>
+          <li><a href="double_lamp_controller.js"><code>double_lamp_controller.js</code></a> — two applications</li>
+          <li><a href="restart_lamp_controller.js"><code>restart_lamp_controller.js</code></a> — <code>start()</code> again</li>
+          <li><a href="quote_slip_controller.js"><code>quote_slip_controller.js</code></a> — identifier with a quote</li>
+          <li><a href="after_slip_controller.js"><code>after_slip_controller.js</code></a> — skipped by the thrown scan</li>
+          <li><a href="case_lamp_controller.js"><code>case_lamp_controller.js</code></a> — case must match</li>
+          <li><a href="tide_bell_controller.js"><code>tide_bell_controller.js</code></a> — one token, written twice</li>
+          <li>This page's source — the buttons that trip each pitfall</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  Application setup and registration · 04 · Grays Harbor retort shift
+
+  Teaches:
+  - static get shouldLoad() is checked as a value.
+    false skips register, and afterLoad does not run.
+  - A static method named shouldLoad is not called.
+    The function is truthy, so the controller loads.
+  - A static field of false skips. The string "false"
+    does not.
+  - A subclass inherits the getter.
+  - The getter is read at register time. Changing the
+    flag later does nothing until you register again.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Grays Harbor retort shift · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .kettles { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DayRetortController from "./day_retort_controller.js"
+      import NightGateController from "./night_gate_controller.js"
+      import CookFloorController from "./cook_floor_controller.js"
+      import MethodRetortController from "./method_retort_controller.js"
+      import FieldRetortController from "./field_retort_controller.js"
+      import StringRetortController from "./string_retort_controller.js"
+
+      const application = Application.start()
+      application.register("day-retort", DayRetortController)
+      application.register("night-gate", NightGateController)
+      application.register("cook-floor", CookFloorController)
+      application.register("method-retort", MethodRetortController)
+      application.register("field-retort", FieldRetortController)
+      application.register("string-retort", StringRetortController)
+
+      const writeRoster = () => {
+        document.getElementById("roster").textContent = application.controllers.map((controller) => controller.identifier).join(" ")
+      }
+
+      queueMicrotask(writeRoster)
+
+      document.getElementById("call-day").addEventListener("click", () => {
+        document.body.dataset.retortShift = "day"
+        application.register("night-gate", NightGateController)
+        writeRoster()
+      })
+    </script>
+  </head>
+  <body data-retort-shift="night">
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>04 · Grays Harbor retort shift</span>
+      </nav>
+      <h1>Grays Harbor retort shift</h1>
+      <p class="lede">
+        Aberdeen's cannery floor. The day retort loads. The night
+        gate reads the shift flag. A method that returns false is
+        still loaded, because Stimulus never calls it.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <p id="kettle-tape" class="card reading">Kettle tape is empty.</p>
+        <p id="roster" class="card reading">Roster is empty.</p>
+        <div class="actions">
+          <button type="button" id="call-day">Call the day shift</button>
+        </div>
+
+        <div class="kettles">
+          <article class="card" data-controller="day-retort">
+            <h2>Day retort</h2>
+            <p data-reading>Day retort is cold.</p>
+          </article>
+          <article class="card" data-controller="night-gate">
+            <h2>Night gate</h2>
+            <p id="night-reading" data-reading>Night gate is cold.</p>
+          </article>
+          <article class="card" data-controller="cook-floor">
+            <h2>Cook floor</h2>
+            <p id="cook-reading" data-reading>Cook floor is cold.</p>
+          </article>
+          <article class="card" data-controller="method-retort">
+            <h2>Method retort</h2>
+            <p data-reading>Method retort is cold.</p>
+          </article>
+          <article class="card" data-controller="field-retort">
+            <h2>Field retort</h2>
+            <p id="field-reading" data-reading>Field retort is cold.</p>
+          </article>
+          <article class="card" data-controller="string-retort">
+            <h2>String retort</h2>
+            <p data-reading>String retort is cold.</p>
+          </article>
+        </div>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="day_retort_controller.js"><code>day_retort_controller.js</code></a> — getter returns true</li>
+          <li><a href="night_gate_controller.js"><code>night_gate_controller.js</code></a> — getter reads the shift flag</li>
+          <li><a href="cook_floor_controller.js"><code>cook_floor_controller.js</code></a> — inherits that getter</li>
+          <li><a href="method_retort_controller.js"><code>method_retort_controller.js</code></a> — a method Stimulus does not call</li>
+          <li><a href="field_retort_controller.js"><code>field_retort_controller.js</code></a> — a field set to false</li>
+          <li><a href="string_retort_controller.js"><code>string_retort_controller.js</code></a> — the string "false"</li>
+          <li><a href="kettle_log.js"><code>kettle_log.js</code></a> — the shared tape</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Application setup and registration · 02 · Cape Flattery lens cabinet
+
+  Teaches:
+  - application.register(identifier, constructor) can be
+    called twice with the same constructor.
+  - this.identifier follows the registration, not the class.
+  - afterLoad(identifier, application) runs once per
+    register, and this inside it is the constructor.
+  - The connected instance is instanceof that constructor.
+    instance.constructor === that constructor is false.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cape Flattery lens cabinet · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LensDrawerController from "./lens_drawer_controller.js"
+
+      const application = Application.start()
+      application.register("lens-cabinet", LensDrawerController)
+      application.register("spare-cabinet", LensDrawerController)
+
+      queueMicrotask(() => {
+        const lens = document.getElementById("lens-cabinet")
+        const spare = document.getElementById("spare-cabinet")
+        const lensController = application.getControllerForElementAndIdentifier(lens, "lens-cabinet")
+        const spareController = application.getControllerForElementAndIdentifier(spare, "spare-cabinet")
+        const crossed = application.getControllerForElementAndIdentifier(lens, "spare-cabinet")
+        document.getElementById("identity-reading").textContent = [
+          `instanceof ${lensController instanceof LensDrawerController}.`,
+          `sameConstructor ${lensController.constructor === LensDrawerController}.`,
+          `spare instanceof ${spareController instanceof LensDrawerController}.`,
+          `crossed ${crossed === null ? "null" : "present"}.`
+        ].join(" ")
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>02 · Cape Flattery lens cabinet</span>
+      </nav>
+      <h1>Cape Flattery lens cabinet</h1>
+      <p class="lede">
+        The Makah light at Cape Flattery keeps the working Fresnel
+        and a spare in two cabinets. Both are the same drawer class,
+        registered under two identifiers.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <p id="load-tape" class="card reading">Load tape is empty.</p>
+
+        <article id="lens-cabinet" class="card" data-controller="lens-cabinet">
+          <h2>Working cabinet</h2>
+          <p id="lens-reading" class="reading" data-lens-cabinet-target="reading">Working cabinet is shut.</p>
+          <div class="actions">
+            <button type="button" id="file-lens" data-action="lens-cabinet#fileDrawer">File the north drawer</button>
+          </div>
+        </article>
+
+        <article id="spare-cabinet" class="card" data-controller="spare-cabinet">
+          <h2>Spare cabinet</h2>
+          <p id="spare-reading" class="reading" data-spare-cabinet-target="reading">Spare cabinet is shut.</p>
+          <div class="actions">
+            <button type="button" id="file-spare" data-action="spare-cabinet#fileDrawer">File the spare drawer</button>
+          </div>
+        </article>
+
+        <p id="identity-reading" class="card reading">Identity has not been read.</p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lens_drawer_controller.js"><code>lens_drawer_controller.js</code></a> — one class, two identifiers</li>
+          <li>This page's source — two <code>register</code> calls and the identity check</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

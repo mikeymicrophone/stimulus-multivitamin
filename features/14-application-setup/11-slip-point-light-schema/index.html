@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  Application setup and registration · 11 · Slip Point light schema
+
+  Teaches:
+  - A schema can rename controllerAttribute, actionAttribute,
+    and targetAttributeForScope, and can add keyMappings.
+  - Spread defaultSchema.keyMappings before adding a key,
+    or enter, esc, and the letters disappear.
+  - An unknown key filter throws "contains unknown key
+    filter: …" out of the event listener.
+  - Target callbacks ignore the renamed target attribute.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Slip Point light schema · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application, defaultSchema } from "@hotwired/stimulus"
+      import KeeperLampController from "./keeper_lamp_controller.js"
+      import BareLampController from "./bare_lamp_controller.js"
+
+      const lightSchema = {
+        ...defaultSchema,
+        controllerAttribute: "data-light-controller",
+        actionAttribute: "data-light-action",
+        targetAttribute: "data-light-target",
+        targetAttributeForScope: (identifier) => `data-light-${identifier}-target`,
+        outletAttributeForScope: (identifier, outlet) => `data-light-${identifier}-${outlet}-outlet`,
+        keyMappings: { ...defaultSchema.keyMappings, horn: "F8" }
+      }
+
+      const bareSchema = {
+        ...defaultSchema,
+        keyMappings: { horn: "F8" }
+      }
+
+      const light = Application.start(document.getElementById("slip-point"), lightSchema)
+      const bare = Application.start(document.getElementById("bare-board"), bareSchema)
+      light.register("keeper-lamp", KeeperLampController)
+      bare.register("bare-lamp", BareLampController)
+
+      window.addEventListener("error", (event) => {
+        if (String(event.message).includes("unknown key filter")) {
+          document.getElementById("bare-error").textContent = event.message
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>11 · Slip Point light schema</span>
+      </nav>
+      <h1>Slip Point light schema</h1>
+      <p class="lede">
+        The light at Slip Point, Clallam Bay, uses its own
+        attribute names and a horn key. The practice board
+        beside it replaced the whole key map and lost Enter.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section id="slip-point" class="card">
+          <h2>Slip Point</h2>
+          <p id="callback-tape" class="reading">Callbacks have not run.</p>
+          <article id="keeper-lamp" class="card" data-light-controller="keeper-lamp">
+            <h2>Keeper lamp</h2>
+            <p id="lamp-reading" class="reading" data-light-keeper-lamp-target="reading">Lamp is dark.</p>
+            <p data-keeper-lamp-target="wick">Wick token.</p>
+            <div class="actions">
+              <button type="button" id="sound-lamp" data-light-action="keeper-lamp#sound">Sound the horn</button>
+              <input id="lamp-key" aria-label="Keeper key" data-light-action="keydown.horn->keeper-lamp#soundHorn keydown.enter->keeper-lamp#fileEnter">
+            </div>
+          </article>
+          <p id="plain-lamp" class="card" data-controller="keeper-lamp">Plain attribute stays dark.</p>
+        </section>
+
+        <section id="bare-board" class="card">
+          <h2>Practice board</h2>
+          <p id="bare-error" class="reading">No key error yet.</p>
+          <article class="card" data-controller="bare-lamp">
+            <h2>Bare lamp</h2>
+            <p id="bare-reading" class="reading" data-bare-lamp-target="reading">Bare lamp is dark.</p>
+            <div class="actions">
+              <button type="button" id="sound-bare" data-action="bare-lamp#sound">Sound the bare horn</button>
+              <input id="bare-key" aria-label="Bare key" data-action="keydown.horn->bare-lamp#soundHorn keydown.enter->bare-lamp#fileEnter">
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="keeper_lamp_controller.js"><code>keeper_lamp_controller.js</code></a> — renamed attributes and the wick callback</li>
+          <li><a href="bare_lamp_controller.js"><code>bare_lamp_controller.js</code></a> — a key map with only horn</li>
+          <li>This page's source — both schemas</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

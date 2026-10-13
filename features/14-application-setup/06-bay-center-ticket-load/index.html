@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  Application setup and registration · 06 · Bay Center ticket load
+
+  Teaches:
+  - application.load accepts one definition, a list of
+    arguments, or a single array.
+  - An array followed by another definition drops the
+    extra definition.
+  - A nested array throws, because the inner array has
+    no controllerConstructor.
+  - shouldLoad false inside an array skips that one
+    definition only.
+  - unload has the same array rule: unload(array, extra)
+    unloads the array and leaves the extra alone.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Bay Center ticket load · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BuyerBoardController from "./buyer_board_controller.js"
+      import ScaleHouseController from "./scale_house_controller.js"
+      import IceHoldController from "./ice_hold_controller.js"
+      import ExtraSlipController from "./extra_slip_controller.js"
+
+      const buyer = { identifier: "buyer-board", controllerConstructor: BuyerBoardController }
+      const scale = { identifier: "scale-house", controllerConstructor: ScaleHouseController }
+      const ice = { identifier: "ice-hold", controllerConstructor: IceHoldController }
+      const extra = { identifier: "extra-slip", controllerConstructor: ExtraSlipController }
+
+      const application = Application.start(document.getElementById("ticket-floor"))
+      application.load([buyer, ice])
+      application.load([buyer], extra)
+
+      const writeRoster = () => {
+        document.getElementById("roster").textContent =
+          application.controllers.map((controller) => controller.identifier).join(" ") || "none"
+      }
+
+      queueMicrotask(writeRoster)
+
+      document.getElementById("load-pair").addEventListener("click", () => {
+        application.load(scale, extra)
+        writeRoster()
+      })
+
+      document.getElementById("unload-scale").addEventListener("click", () => {
+        application.unload(["scale-house"], "buyer-board")
+        writeRoster()
+      })
+
+      document.getElementById("nest-list").addEventListener("click", () => {
+        try {
+          application.load([[extra]])
+          document.getElementById("nest-note").textContent = "Nested load did not throw."
+        } catch (error) {
+          document.getElementById("nest-note").textContent = `Nested load threw ${error.name}.`
+        }
+        writeRoster()
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>06 · Bay Center ticket load</span>
+      </nav>
+      <h1>Bay Center ticket load</h1>
+      <p class="lede">
+        The oyster desk at Bay Center loads its boards from
+        definition arrays. An extra slipped in after an array
+        is ignored. A list nested inside a list throws.
+      </p>
+    </header>
+
+    <main>
+      <div id="ticket-floor" class="board">
+        <p id="roster" class="card reading">Roster is empty.</p>
+        <p id="nest-note" class="card reading">Nested load has not been tried.</p>
+        <div class="actions">
+          <button type="button" id="load-pair">Load the scale and the extra slip</button>
+          <button type="button" id="unload-scale">Unload the scale</button>
+          <button type="button" id="nest-list">Nest a list</button>
+        </div>
+
+        <article class="card" data-controller="buyer-board">
+          <h2>Buyer board</h2>
+          <p id="buyer-reading" class="reading" data-buyer-board-target="reading">Buyer board is not connected.</p>
+        </article>
+        <article class="card" data-controller="scale-house">
+          <h2>Scale house</h2>
+          <p id="scale-reading" class="reading" data-scale-house-target="reading">Scale house is not connected.</p>
+        </article>
+        <article class="card" data-controller="ice-hold">
+          <h2>Ice hold</h2>
+          <p id="ice-reading" class="reading" data-ice-hold-target="reading">Ice hold is not connected.</p>
+        </article>
+        <article class="card" data-controller="extra-slip">
+          <h2>Extra slip</h2>
+          <p id="extra-reading" class="reading" data-extra-slip-target="reading">Extra slip is not connected.</p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="buyer_board_controller.js"><code>buyer_board_controller.js</code></a> — loaded from the array</li>
+          <li><a href="scale_house_controller.js"><code>scale_house_controller.js</code></a> — loaded as a list argument</li>
+          <li><a href="ice_hold_controller.js"><code>ice_hold_controller.js</code></a> — <code>shouldLoad</code> is false</li>
+          <li><a href="extra_slip_controller.js"><code>extra_slip_controller.js</code></a> — dropped when it follows an array</li>
+          <li>This page's source — <code>load</code> and <code>unload</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
