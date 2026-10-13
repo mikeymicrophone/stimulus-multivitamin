@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 10 · Admiralty pilot orders
+
+  Teaches:
+  - One hail runs log, then bell, then the station,
+    then the book at document, then window listeners.
+  - Window listeners are sorted by action index.
+    The later watch, whose hail action is token 0,
+    runs before the earlier watch, whose hail action
+    is token 1.
+  - stopPropagation skips ancestors and globals and
+    leaves the second action on the boat running.
+  - stopImmediatePropagation skips that second action too.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Admiralty pilot orders · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PilotStationController from "./pilot_station_controller.js"
+      import PilotBoatController from "./pilot_boat_controller.js"
+      import OrderBookController from "./order_book_controller.js"
+      import EarlyWatchController from "./early_watch_controller.js"
+      import LateWatchController from "./late_watch_controller.js"
+
+      const application = Application.start()
+      application.register("pilot-station", PilotStationController)
+      application.register("pilot-boat", PilotBoatController)
+      application.register("order-book", OrderBookController)
+      application.register("early-watch", EarlyWatchController)
+      application.register("late-watch", LateWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>10 · Admiralty pilot orders</span>
+      </nav>
+      <h1>Admiralty pilot orders</h1>
+      <p class="lede">
+        The Wicklow hails for a pilot off Admiralty Head. The
+        boat, the station, the order book, and two watches all
+        answer. The tape is the order they answered in.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="pilot-station"
+          data-action="pilot-boat:hailed->pilot-station#hear pilot-boat:cleared->pilot-station#clear"
+        >
+          <h2>Pilot station</h2>
+          <p id="station-line" data-pilot-station-target="line"></p>
+
+          <article
+            class="card"
+            data-controller="pilot-boat"
+            data-action="pilot-boat:hailed->pilot-boat#logHail pilot-boat:hailed->pilot-boat#bellHail pilot-boat:cleared->pilot-boat#clearLocal"
+          >
+            <h2>Pilot boat</h2>
+            <div class="actions">
+              <button type="button" data-action="pilot-boat#hail" data-pilot-boat-manner-param="plain">Hail Wicklow</button>
+              <button type="button" data-action="pilot-boat#hail" data-pilot-boat-manner-param="stop">Hail and stop</button>
+              <button type="button" data-action="pilot-boat#hail" data-pilot-boat-manner-param="immediate">Hail and cut</button>
+            </div>
+            <p id="tape" class="reading" data-pilot-boat-target="tape" aria-live="polite"></p>
+          </article>
+
+          <p class="card" data-controller="early-watch" data-action="pilot-boat:cleared@window->early-watch#clear pilot-boat:hailed@window->early-watch#hear">
+            <span id="early-line" data-early-watch-target="line"></span>
+          </p>
+          <p class="card" data-controller="late-watch" data-action="pilot-boat:hailed@window->late-watch#hear pilot-boat:cleared@window->late-watch#clear">
+            <span id="late-line" data-late-watch-target="line"></span>
+          </p>
+        </section>
+
+        <p class="card" data-controller="order-book" data-action="pilot-boat:hailed@document->order-book#hear pilot-boat:cleared@document->order-book#clear">
+          <span id="book-line" data-order-book-target="line"></span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pilot_boat_controller.js"><code>pilot_boat_controller.js</code></a> — two actions, then stop or cut</li>
+          <li><a href="pilot_station_controller.js"><code>pilot_station_controller.js</code></a> — the ancestor</li>
+          <li><a href="order_book_controller.js"><code>order_book_controller.js</code></a> — <code>@document</code></li>
+          <li><a href="early_watch_controller.js"><code>early_watch_controller.js</code></a> — window action at index 1</li>
+          <li><a href="late_watch_controller.js"><code>late_watch_controller.js</code></a> — window action at index 0</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

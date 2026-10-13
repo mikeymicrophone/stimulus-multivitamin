@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 01 · Port Gamble tide staff
+
+  Teaches:
+  - this.dispatch("posted") fires tide-staff:posted. The
+    prefix is the registered identifier. The name is the
+    argument, so "line-changed" stays hyphenated.
+  - gauge-card dispatching "posted" fires gauge-card:posted.
+    The log's tide-staff:posted action does not claim it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Port Gamble tide staff · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideLogController from "./tide_log_controller.js"
+      import TideStaffController from "./tide_staff_controller.js"
+      import GaugeCardController from "./gauge_card_controller.js"
+
+      const application = Application.start()
+      application.register("tide-log", TideLogController)
+      application.register("tide-staff", TideStaffController)
+      application.register("gauge-card", GaugeCardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>01 · Port Gamble tide staff</span>
+      </nav>
+      <h1>Port Gamble tide staff</h1>
+      <p class="lede">
+        The staff on the Hood Canal shore posts a reading. The log
+        hears <code>tide-staff:posted</code>. Changing the line is a
+        different event. The gauge card posts under its own name.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="board card"
+        data-controller="tide-log"
+        data-action="tide-staff:posted->tide-log#filePosted tide-staff:line-changed->tide-log#fileLine gauge-card:posted->tide-log#fileGauge"
+      >
+        <h2>Tide log</h2>
+        <p id="log-reading" class="reading" data-tide-log-target="reading" aria-live="polite"></p>
+
+        <article class="card" data-controller="tide-staff">
+          <h2>Tide staff</h2>
+          <div class="actions">
+            <button type="button" data-action="tide-staff#postReading">Post 8.4 ft</button>
+            <button type="button" data-action="tide-staff#changeLine">Mark the south line</button>
+          </div>
+          <p id="staff-note" data-tide-staff-target="note">Staff has not posted.</p>
+        </article>
+
+        <article class="card" data-controller="gauge-card">
+          <h2>Gauge card</h2>
+          <div class="actions">
+            <button type="button" data-action="gauge-card#postGauge">Post the gauge</button>
+          </div>
+          <p id="gauge-note" data-gauge-card-target="note">Gauge has not posted.</p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_staff_controller.js"><code>tide_staff_controller.js</code></a> — dispatches posted and line-changed</li>
+          <li><a href="gauge_card_controller.js"><code>gauge_card_controller.js</code></a> — the same method name, a different identifier</li>
+          <li><a href="tide_log_controller.js"><code>tide_log_controller.js</code></a> — three event names, three actions</li>
+          <li>This page's source — the log wraps both posters so the events can bubble</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 05 · Point Wilson signal flags
+
+  Teaches:
+  - bubbles and cancelable default to true. composed is
+    not an option dispatch() forwards, so it stays false.
+  - bubbles: false never reaches the log. cancelable:
+    false makes preventDefault a no-op.
+  - The strings "false" are still true. 0 is false.
+  - An event dispatched inside a shadow root does not
+    cross it. A CustomEvent built with composed: true does.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Point Wilson signal flags · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FlagLogController from "./flag_log_controller.js"
+      import SignalMastController from "./signal_mast_controller.js"
+      import StraitWatchController from "./strait_watch_controller.js"
+
+      const application = Application.start()
+      application.register("flag-log", FlagLogController)
+      application.register("signal-mast", SignalMastController)
+      application.register("strait-watch", StraitWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>05 · Point Wilson signal flags</span>
+      </nav>
+      <h1>Point Wilson signal flags</h1>
+      <p class="lede">
+        The mast at Point Wilson hoists a flag. The log can veto
+        a hoist that bubbles. The lamp lives in a shadow root,
+        and a hoist that starts there stays there.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="flag-log"
+          data-action="signal-mast:hoisted->flag-log#hear"
+        >
+          <h2>Flag log</h2>
+          <p id="log-reading" class="reading" data-flag-log-target="reading" aria-live="polite"></p>
+
+          <article class="card" data-controller="signal-mast">
+            <h2>Signal mast</h2>
+            <div class="actions">
+              <button type="button" data-action="signal-mast#flyDefault">Hoist baker</button>
+              <button type="button" data-action="signal-mast#flyStill">Hoist without bubbling</button>
+              <button type="button" data-action="signal-mast#flyFixed">Hoist a fixed flag</button>
+              <button type="button" data-action="signal-mast#flyWorded">Hoist with the word false</button>
+              <button type="button" data-action="signal-mast#flyZero">Hoist with zero</button>
+              <button type="button" data-action="signal-mast#flyShadow">Hoist inside the shadow</button>
+              <button type="button" data-action="signal-mast#flyManual">Hoist a composed event by hand</button>
+            </div>
+            <p id="mast-report" class="reading" data-signal-mast-target="report">No hoist yet.</p>
+            <div id="lamp-host" data-signal-mast-target="host" data-action="signal-mast:hoisted->signal-mast#hearHost">
+              <p id="host-line" data-signal-mast-target="hostLine">Host is quiet.</p>
+            </div>
+          </article>
+        </section>
+
+        <p
+          class="card"
+          data-controller="strait-watch"
+          data-action="signal-mast:hoisted@window->strait-watch#hear"
+        >
+          <span id="watch-reading" data-strait-watch-target="reading">Watch is quiet.</span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="signal_mast_controller.js"><code>signal_mast_controller.js</code></a> — passes bubbles, cancelable, and composed</li>
+          <li><a href="flag_log_controller.js"><code>flag_log_controller.js</code></a> — vetoes a hoist that arrives</li>
+          <li><a href="strait_watch_controller.js"><code>strait_watch_controller.js</code></a> — listens at window</li>
+          <li>This page's source — the lamp host is a shadow root inside the mast</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

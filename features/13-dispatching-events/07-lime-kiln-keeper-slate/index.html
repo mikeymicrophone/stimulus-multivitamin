@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 07 · Lime Kiln keeper slate
+
+  Teaches:
+  - keeper--slate keeps the double hyphen in the event
+    name. keeper-slate:signed does not hear it.
+  - The book listens on itself, at @document, and at
+    @window. All three run, in that order.
+  - lens-cabinet:rotated is the multi-word identifier.
+    keeper--slate:watch-relieved is a multi-word name
+    on the namespaced identifier.
+  - The book's station param arrives as event.params
+    next to event.detail.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lime Kiln keeper slate · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 4.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WatchBookController from "./watch_book_controller.js"
+      import KeeperSlateController from "./keeper_slate_controller.js"
+      import LensCabinetController from "./lens_cabinet_controller.js"
+
+      const application = Application.start()
+      application.register("watch-book", WatchBookController)
+      application.register("keeper--slate", KeeperSlateController)
+      application.register("lens-cabinet", LensCabinetController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>07 · Lime Kiln keeper slate</span>
+      </nav>
+      <h1>Lime Kiln keeper slate</h1>
+      <p class="lede">
+        San Juan Channel. The keeper's slate is registered as
+        <code>keeper--slate</code>. The book at the light hears
+        the signature on the page, on the document, and on the
+        window. A single hyphen does not match.
+      </p>
+    </header>
+
+    <main>
+      <article
+        class="board card"
+        data-controller="watch-book"
+        data-watch-book-station-param="Lime Kiln"
+        data-action="keeper--slate:signed->watch-book#localSign keeper--slate:signed@document->watch-book#fromDocument keeper--slate:signed@window->watch-book#fromWindow keeper-slate:signed->watch-book#wrongHyphen lens-cabinet:rotated->watch-book#rotated keeper--slate:watch-relieved@window->watch-book#relieved"
+      >
+        <h2>Watch book</h2>
+        <p id="book-reading" class="reading" data-watch-book-target="reading" aria-live="polite"></p>
+
+        <section class="card" data-controller="keeper--slate" data-keeper--slate-keeper-value="Mara">
+          <h2>Keeper slate</h2>
+          <div class="actions">
+            <button type="button" data-action="keeper--slate#signWatch">Sign the forenoon watch</button>
+            <button type="button" data-action="keeper--slate#relieveWatch">Relieve the watch</button>
+          </div>
+          <p id="slate-note" data-keeper--slate-target="note">Slate is blank.</p>
+        </section>
+
+        <section class="card" data-controller="lens-cabinet" data-lens-cabinet-order-value="1">
+          <h2>Lens cabinet</h2>
+          <div class="actions">
+            <button type="button" data-action="lens-cabinet#rotate">Rotate the lens</button>
+          </div>
+          <p id="cabinet-note" data-lens-cabinet-target="note">Lens is at first order.</p>
+        </section>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="keeper_slate_controller.js"><code>keeper_slate_controller.js</code></a> — the <code>keeper--slate</code> identifier</li>
+          <li><a href="lens_cabinet_controller.js"><code>lens_cabinet_controller.js</code></a> — the <code>lens-cabinet</code> identifier</li>
+          <li><a href="watch_book_controller.js"><code>watch_book_controller.js</code></a> — local, document, and window listeners</li>
+          <li>This page's source — the decoy action uses one hyphen</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
