@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Action options · 05 · Farmers market stall analytics
+
+  Teaches:
+  - :capture is { capture: true }. The directory records visits in the
+    capture phase, so that action runs while the event is traveling down,
+    before any child action.
+  - A child with :stop calls stopPropagation() when its action runs, which
+    is in the bubble phase (unless that child also asked for :capture).
+    Capture-phase ancestors have already run. Bubble-phase ancestors
+    never see the event.
+  - "Text the stall" uses :stop so the stall card does not also open.
+    The capture log still names the stall; the bubble log does not.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Farmers market stall analytics · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .market-layout { display: grid; grid-template-columns: minmax(0, 1fr) 14rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 46rem) { .market-layout { grid-template-columns: 1fr; } }
+      .stall-grid { display: grid; gap: 0.7rem; }
+      .stall-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; cursor: pointer; display: grid; gap: 0.3rem; }
+      .stall-card h3 { margin: 0; }
+      .visit-logs { font-size: 0.85rem; }
+      .visit-logs ul { margin: 0.2rem 0 0.8rem; padding-left: 1.1rem; min-height: 3rem; }
+      .market-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .composer, .stall-detail { margin-top: 0.8rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fff; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MarketDirectoryController from "./market_directory_controller.js"
+
+      const application = Application.start()
+      application.register("market-directory", MarketDirectoryController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>05 · Farmers market stall analytics</span>
+      </nav>
+      <h1>Farmers market stall analytics</h1>
+      <p class="lede">
+        Saturday market at Brookhaven Green. The directory records every
+        click in the capture phase. Text the stall uses <code>:stop</code>
+        so the card does not open, but the capture log still sees the
+        visit.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="market-directory"
+               data-action="click->market-directory#recordVisit:capture click->market-directory#recordBubble"
+               data-market-directory-stalls-value='{"honey-hickory":{"name":"Honey &amp; Hickory","vendor":"Ruthie Calder","goods":"Wildflower honey, hickory syrup, and comb in pint jars."},"mill-loaf":{"name":"Mill Loaf","vendor":"Owen Havelock","goods":"Country loaves and rye from the mill on Quarry Road."},"marsh-greens":{"name":"Marsh Greens","vendor":"Sana Quist","goods":"Mustard greens, cutting celery, and greenhouse tomatoes."}}'>
+        <h2>Brookhaven Green · Saturday market</h2>
+        <div class="market-layout">
+          <div class="stall-grid">
+            <article class="stall-card" data-stall-slug="honey-hickory" data-action="click->market-directory#openStall">
+              <h3>Honey &amp; Hickory</h3>
+              <p class="muted">Ruthie Calder · stall 12</p>
+              <button type="button" data-stall-slug="honey-hickory" data-action="click->market-directory#openComposer:stop">Text the stall</button>
+            </article>
+            <article class="stall-card" data-stall-slug="mill-loaf" data-action="click->market-directory#openStall">
+              <h3>Mill Loaf</h3>
+              <p class="muted">Owen Havelock · stall 4</p>
+              <button type="button" data-stall-slug="mill-loaf" data-action="click->market-directory#openComposer:stop">Text the stall</button>
+            </article>
+            <article class="stall-card" data-stall-slug="marsh-greens" data-action="click->market-directory#openStall">
+              <h3>Marsh Greens</h3>
+              <p class="muted">Sana Quist · stall 19</p>
+              <button type="button" data-stall-slug="marsh-greens" data-action="click->market-directory#openComposer:stop">Text the stall</button>
+            </article>
+          </div>
+
+          <aside class="visit-logs">
+            <h3>Capture log</h3>
+            <ul data-market-directory-target="captureLog"></ul>
+            <h3>Bubble log</h3>
+            <ul data-market-directory-target="bubbleLog"></ul>
+          </aside>
+        </div>
+
+        <p class="market-status" data-market-directory-target="status" aria-live="polite"></p>
+
+        <div class="composer" data-market-directory-target="composer" hidden>
+          <h3 data-market-directory-target="composerHeading"></h3>
+          <p class="muted">The market desk will pass this to the stall. The card behind it did not open.</p>
+          <label>
+            Message
+            <textarea rows="3">Do you still have wildflower pints this morning?</textarea>
+          </label>
+        </div>
+
+        <article class="stall-detail" data-market-directory-target="detail" hidden>
+          <h3 data-market-directory-target="detailHeading"></h3>
+          <p data-market-directory-target="detailCopy"></p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="market_directory_controller.js"><code>market_directory_controller.js</code></a> — capture log, bubble log, composer, and stall detail</li>
+          <li>This page's source — directory <code>:capture</code> versus Text the stall <code>:stop</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

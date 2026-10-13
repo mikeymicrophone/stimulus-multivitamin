@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  Action options · 04 · Literary essay progress
+
+  Teaches:
+  - :passive is the native { passive: true } listener option. The essay
+    column declares scroll->essay-progress#updateProgress:passive so the
+    browser can keep scrolling without waiting to see whether JavaScript
+    will call preventDefault().
+  - A :passive listener that did call preventDefault() would be ignored
+    (and Chromium would warn on the console). This page only reads
+    scrollTop.
+  - The listener is on the article, not on window, so scrolling the page
+    around the essay does not move the bar — only the column does.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Literary essay progress · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .progress-rail { height: 0.45rem; background: #e4dccb; border-radius: 999px; overflow: hidden; margin: 0 0 0.4rem; }
+      .progress-fill { height: 100%; width: 0; background: var(--bottle-green, #1f3d2b); }
+      .progress-meta { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; color: var(--muted-ink, #555); margin: 0 0 0.8rem; }
+      .essay-column { max-height: 22rem; overflow: auto; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1.1rem; background: #fffdf8; }
+      .essay-column h3 { margin-top: 0; }
+      .essay-column p { max-width: 38rem; }
+      .progress-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EssayProgressController from "./essay_progress_controller.js"
+
+      const application = Application.start()
+      application.register("essay-progress", EssayProgressController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>04 · Literary essay progress</span>
+      </nav>
+      <h1>Literary essay progress</h1>
+      <p class="lede">
+        The Plover Review's reader for Imani Okonkwo's
+        <cite>Glass Eels on the Damariscotta</cite>. The column listens
+        with <code>scroll-&gt;essay-progress#updateProgress:passive</code>
+        so the bar tracks the essay without blocking the scroll.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="essay-progress">
+        <h2>The Plover Review · Fall 2026</h2>
+        <div class="progress-rail">
+          <div class="progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Reading progress" data-essay-progress-target="progressFill"></div>
+        </div>
+        <div class="progress-meta">
+          <span data-essay-progress-target="percent">0%</span>
+          <span data-essay-progress-target="position"></span>
+        </div>
+
+        <article class="essay-column" data-essay-progress-target="article" data-action="scroll->essay-progress#updateProgress:passive">
+          <h3>Glass Eels on the Damariscotta</h3>
+          <p class="muted">Imani Okonkwo · 4,200 words</p>
+          <p>Before first light the weir is a black comb in the river. I stand with Linwood Cates on the Damariscotta side and wait for the buckets to speak. Glass eels look like nothing until you lift them: a handful of clear needles, each with a dark thread of gut, each still deciding whether to become an elver.</p>
+          <p>Linwood has fished this bend since the 1970s, first with his aunt, now with a permit that is a laminated card and a season that shrinks every spring. The state counts the run in kilograms. Linwood counts it in nights the water is right, which is not the same number.</p>
+          <p>We dip. The first bucket is empty except for a spruce needle. The second holds maybe forty eels, a poor start. He does not swear. He sets the bucket in the skiff and talks about the millpond above the falls, how the eels used to stack there so thick the kids raked them into washtubs.</p>
+          <p>By the night watch the tide has turned and the dip net comes up heavier. Glass eels in the buckets look like rain on a windshield. I write the weight on a sheet clipped to a fish crate: 1.8 kilograms by 2:10 a.m., which is honest and not enough. Linwood's buyer in Waldoboro will take whatever we have, packed in seawater and ice, on the road before the diner in Damariscotta Mills opens.</p>
+          <p>Upriver the mills are quiet. Someone has strung a string of café lights over the landing, and they sway in a wind that does not reach the water. I think about the eels' years at sea, the Sargasso, the Gulf Stream, a larval drift that treats Maine as a rumor until it doesn't. Then they arrive here as glass and we weigh them in the dark.</p>
+          <p>Linwood says the run is over by Thursday if the rain holds. He is rarely wrong about Thursday. I rinse the clipboard, put the pencil behind my ear, and watch the last dip come up with more spruce than eel. The bar at the top of this page should have moved while you read. It did that without asking the browser to wait.</p>
+        </article>
+
+        <p class="progress-status" data-essay-progress-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="essay_progress_controller.js"><code>essay_progress_controller.js</code></a> — reads <code>scrollTop</code> and paints the bar</li>
+          <li>This page's source — the essay column with <code>:passive</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

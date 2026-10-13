@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  Action options · 12 · Community solar cancel
+
+  Teaches:
+  - A custom option blocks the action by returning false.
+    click->solar-share#cancelShare:confirmed only runs cancelShare() when
+    the callback returns true, which here means the acknowledgement box
+    is checked. Returning false leaves the subscription untouched.
+  - The callback uses controller (the solar-share instance, for the box)
+    and element (the Cancel button that declared the action).
+  - :!confirmed sets value to false. The same callback returns true in
+    that branch without reading the box, so Keep my share always runs.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Community solar cancel · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .share-card { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; max-width: 36rem; }
+      .share-card dl { display: grid; grid-template-columns: 9rem 1fr; gap: 0.2rem 0.8rem; margin: 0; }
+      .share-card dt { color: var(--muted-ink, #555); font-size: 0.85rem; }
+      .share-card dd { margin: 0; }
+      .share-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+      .option-log { font-size: 0.85rem; min-height: 3rem; }
+      .solar-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SolarShareController from "./solar_share_controller.js"
+
+      const application = Application.start()
+      application.register("solar-share", SolarShareController)
+      application.registerActionOption("confirmed", ({ name, value, element, controller }) => {
+        const acknowledged = controller.hasAcknowledgement
+        const allowed = value ? acknowledged : true
+        controller.recordOption({
+          name,
+          value: String(value),
+          elementName: element.textContent.trim(),
+          identifier: controller.identifier,
+          acknowledged: String(acknowledged),
+          returned: String(allowed),
+        })
+        return allowed
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>12 · Community solar cancel</span>
+      </nav>
+      <h1>Community solar cancel</h1>
+      <p class="lede">
+        South Ridge Solar Co-op. Cancelling a share is
+        <code>click-&gt;solar-share#cancelShare:confirmed</code>. The
+        custom option returns <code>false</code> until the
+        acknowledgement box is checked, so the method never runs.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="solar-share">
+        <h2>South Ridge Solar Co-op · Your share</h2>
+        <article class="share-card">
+          <dl>
+            <dt>Array</dt><dd>South Ridge, Kestrel Falls</dd>
+            <dt>Share</dt><dd data-solar-share-target="subscription">2.4 kW · active since March 2024</dd>
+            <dt>Bill credit</dt><dd>$38.40 on the October Harbor Electric statement</dd>
+            <dt>Member</dt><dd>Evelyn Cho · membership 4419</dd>
+          </dl>
+          <label>
+            <input type="checkbox" name="acknowledge" data-solar-share-target="acknowledgement">
+            I understand the co-op will offer this 2.4 kW to the waitlist and I cannot undo it from this page.
+          </label>
+          <div class="share-actions">
+            <button type="button" data-action="click->solar-share#cancelShare:confirmed">Cancel my share</button>
+            <button type="button" class="quiet" data-action="click->solar-share#keepShare:!confirmed">Keep my share</button>
+          </div>
+        </article>
+
+        <p class="solar-status" data-solar-share-target="status" aria-live="polite"></p>
+        <h3>Option callback</h3>
+        <ol class="option-log" data-solar-share-target="optionLog"></ol>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="solar_share_controller.js"><code>solar_share_controller.js</code></a> — cancels or keeps the share after the option allows it</li>
+          <li>This page's source — <code>registerActionOption("confirmed")</code> and the two buttons</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

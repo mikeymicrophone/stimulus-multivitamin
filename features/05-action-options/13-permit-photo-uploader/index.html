@@ -1,0 +1,142 @@
+<!doctype html>
+<!--
+  Action options · 13 · Permit photo uploader
+
+  Teaches:
+  - Built-in and custom options stack on one descriptor.
+    dragover->permit-upload#markDropzone:prevent:stop and
+    drop->permit-upload#queueDroppedPhoto:prevent:stop:online:accepted
+    cancel the browser's file navigation, keep the event off ancestors,
+    then let custom :online and :accepted decide whether queueDroppedPhoto
+    runs.
+  - :online reads navigator.onLine through the callback. :accepted reads
+    the file from the event and the accepted types from the controller.
+    Either returning false blocks the action; the method never sees the
+    drop.
+  - The file picker uses change->permit-upload#queuePickedPhoto:online:accepted.
+    Submit uses submit->permit-upload#sendPacket:prevent:once.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Permit photo uploader · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .permit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 50rem) { .permit-layout { grid-template-columns: 1fr; } }
+      .dropzone { border: 2px dashed var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 1.2rem; background: #fffdf8; min-height: 8rem; }
+      .dropzone[data-over] { background: #e7efe6; }
+      .option-log { font-size: 0.85rem; min-height: 4rem; }
+      .permit-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+      .confirmation { background: #e7efe6; border-radius: 8px; padding: 0.5rem 0.7rem; }
+      .permit-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.8rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PermitUploadController from "./permit_upload_controller.js"
+
+      const application = Application.start()
+      application.register("permit-upload", PermitUploadController)
+
+      application.registerActionOption("online", ({ name, value, event, controller }) => {
+        const isOnline = navigator.onLine
+        const allowed = value ? isOnline : !isOnline
+        controller.recordOption({
+          name,
+          value: String(value),
+          eventType: event.type,
+          returned: String(allowed),
+          detail: `onLine=${isOnline}`,
+          blockedMessage: "Packet blocked: the :online option returned false because this browser is offline.",
+        })
+        return allowed
+      })
+
+      application.registerActionOption("accepted", ({ name, value, event, controller }) => {
+        if (!value) return true
+        const photo = event.dataTransfer?.files[0] || event.target.files?.[0]
+        const allowed = Boolean(photo) && controller.acceptedTypes.includes(photo.type)
+        controller.recordOption({
+          name,
+          value: String(value),
+          eventType: event.type,
+          returned: String(allowed),
+          detail: photo ? `type=${photo.type}` : "no file",
+          blockedMessage: photo
+            ? `Packet blocked: the :accepted option returned false for ${photo.type}. Site plans must be JPEG or PNG.`
+            : "Packet blocked: the :accepted option returned false because the drop had no file.",
+        })
+        return allowed
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>13 · Permit photo uploader</span>
+      </nav>
+      <h1>Permit photo uploader</h1>
+      <p class="lede">
+        Kestrel Falls building department, permit BP-2026-1842. Drop and
+        pick mix <code>:prevent:stop</code> with custom
+        <code>:online</code> and <code>:accepted</code>. Send uses
+        <code>:prevent:once</code>.
+      </p>
+    </header>
+
+    <main>
+      <form class="scenario" data-controller="permit-upload" action="filed/" method="post"
+            data-action="submit->permit-upload#sendPacket:prevent:once">
+        <h2>Kestrel Falls · Building permit BP-2026-1842</h2>
+        <p class="muted">Site plan photos for the ell at 18 Quarry Road. JPEG or PNG only.</p>
+
+        <div class="permit-layout">
+          <div>
+            <div class="dropzone" data-permit-upload-target="dropzone"
+                 data-action="dragover->permit-upload#markDropzone:prevent:stop dragleave->permit-upload#clearDropzone drop->permit-upload#queueDroppedPhoto:prevent:stop:online:accepted">
+              <p><strong>Drop a site-plan photo here</strong></p>
+              <p class="muted">Or pick a file. Offline drops and PDFs never reach the queue.</p>
+              <label>
+                Choose a photo
+                <input type="file" name="site_plan" accept="image/jpeg,image/png" data-permit-upload-target="fileField"
+                       data-action="change->permit-upload#queuePickedPhoto:online:accepted">
+              </label>
+            </div>
+            <div class="permit-actions">
+              <button type="submit">Send packet</button>
+            </div>
+            <p class="permit-status" data-permit-upload-target="status" aria-live="polite"></p>
+            <p class="confirmation" data-permit-upload-target="confirmation" hidden></p>
+          </div>
+
+          <aside>
+            <h3>Queued photos</h3>
+            <ul data-permit-upload-target="queue"></ul>
+            <h3>Option callback</h3>
+            <ol class="option-log" data-permit-upload-target="optionLog"></ol>
+          </aside>
+        </div>
+      </form>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="permit_upload_controller.js"><code>permit_upload_controller.js</code></a> — queues photos and sends the packet after the options allow it</li>
+          <li>This page's source — mixed <code>:prevent:stop:online:accepted</code> and <code>registerActionOption</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

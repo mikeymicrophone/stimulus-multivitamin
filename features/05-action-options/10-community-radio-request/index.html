@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  Action options · 10 · Community radio request
+
+  Teaches:
+  - Native click order is capture (window → document → target) then bubble
+    (target → document → window). Stimulus descriptors pick a target and
+    a phase: click@window->request-desk#recordWindowCapture:capture runs
+    first, then the form, then click@document->request-desk#closeIfOutside,
+    then click@window->request-desk#recordWindowBubble.
+  - :stop on the form calls stopPropagation() in the bubble phase, so
+    document and window bubble actions never see an inside click. Window
+    capture already ran and still logs.
+  - closeIfOutside therefore only closes the sheet for clicks that were
+    not stopped, which is the studio clock and the rest of the page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Community radio request · Action options · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .studio { display: grid; grid-template-columns: minmax(0, 1fr) 14rem; gap: 1.2rem; align-items: start; }
+      @media (max-width: 46rem) { .studio { grid-template-columns: 1fr; } }
+      .now-playing { border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; }
+      .studio-clock { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fff; }
+      .request-sheet { margin-top: 0.8rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .request-sheet label { display: grid; gap: 0.15rem; font-weight: 600; font-size: 0.9rem; }
+      .request-sheet input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fff; }
+      .phase-log { font-size: 0.85rem; min-height: 5rem; }
+      .studio-status { min-height: 1.4em; color: var(--bottle-green, #1f3d2b); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RequestDeskController from "./request_desk_controller.js"
+
+      const application = Application.start()
+      application.register("request-desk", RequestDeskController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-options">Action options</a> /
+        <span>10 · Community radio request</span>
+      </nav>
+      <h1>Community radio request</h1>
+      <p class="lede">
+        WPOV 91.7's request desk. A capture listener on
+        <code>@window</code>, a <code>:stop</code> on the sheet, a
+        closer on <code>@document</code>, and a bubble listener on
+        <code>@window</code> make the phase order visible.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="request-desk"
+               data-action="click@window->request-desk#recordWindowCapture:capture click@document->request-desk#closeIfOutside click@window->request-desk#recordWindowBubble">
+        <h2>WPOV 91.7 · Evening shift</h2>
+        <div class="studio">
+          <div>
+            <div class="now-playing">
+              <p class="muted">On air</p>
+              <p><strong>Neko Case — Hold On, Hold On</strong></p>
+              <button type="button" data-request-desk-target="opener" data-action="request-desk#openSheet">Request the next song</button>
+            </div>
+
+            <form class="request-sheet" data-request-desk-target="overlay" data-action="click->request-desk#keepSheetOpen:stop" hidden>
+              <h3>Request sheet</h3>
+              <label>
+                Song
+                <input type="text" name="song" value="Star Witness" autocomplete="off" data-request-desk-target="song">
+              </label>
+              <label>
+                Artist
+                <input type="text" name="artist" value="Neko Case" autocomplete="off" data-request-desk-target="artist">
+              </label>
+              <button type="button" data-action="request-desk#queueRequest">Queue the request</button>
+            </form>
+          </div>
+
+          <aside>
+            <div class="studio-clock">
+              <h3>Studio clock</h3>
+              <p data-request-desk-target="lastInteraction">No interaction yet</p>
+              <p class="muted">Click here to close an open sheet. This click is outside the form.</p>
+            </div>
+            <h3>Phase log</h3>
+            <ol class="phase-log" data-request-desk-target="phaseLog"></ol>
+            <h3>Queue</h3>
+            <ol data-request-desk-target="queue"></ol>
+          </aside>
+        </div>
+        <p class="studio-status" data-request-desk-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="request_desk_controller.js"><code>request_desk_controller.js</code></a> — capture log, inside <code>:stop</code>, document closer, window bubble clock</li>
+          <li>This page's source — <code>@window</code> / <code>@document</code> descriptors and the sheet's <code>:stop</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
