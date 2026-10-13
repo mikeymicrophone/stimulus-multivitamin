@@ -16,6 +16,10 @@ the answer can strike again, before the first record is written.
 - Nothing in `dispatch` stops a listener from dispatching
   the same event again. The hop count is the guard.
   Limit 2 means the first strike echoes once.
+- The log passes `prefix: "bell-relay"`. A bare
+  `this.dispatch("strike")` from the log would fire
+  `relay-log:strike`, and the actions listening for
+  `bell-relay:strike` would not run.
 
 **Files**
 

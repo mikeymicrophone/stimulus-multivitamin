@@ -20,8 +20,10 @@ it. The lamp is inside a shadow root.
   not bubble and cannot be vetoed.
 - A hoist whose `target` is the lamp inside the shadow
   root does not reach the host, the log, or the watch.
-  The same name built with `new CustomEvent(..., { composed: true })`
+  The same name built with `new CustomEvent(..., { bubbles: true, cancelable: true, composed: true })`
   does reach all three, and `event.composed` is true.
+  A hand-built event is not cancelable unless the call
+  says so. `dispatch()` is cancelable unless told otherwise.
 
 **Files**
 

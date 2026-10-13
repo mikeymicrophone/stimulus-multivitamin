@@ -11,6 +11,8 @@ prefix. The log counts which event name arrived.
 - `prefix: false` and `prefix: ""` fire `landed`. There is
   no colon and no identifier. `null` and `0` do the same,
   because the name is built with `prefix ? prefix + ":" + name : name`.
+  The "Prefix false" button's param is the boolean `false`
+  after typecast, and that boolean is what gets passed.
 - `prefix: "false"` fires `false:landed`. The word is
   truthy, so it is kept. It does not hit the bare listener.
 

@@ -81,6 +81,7 @@ export default class extends Controller {
     this.blank()
     const event = new CustomEvent("signal-mast:hoisted", {
       bubbles: true,
+      cancelable: true,
       composed: true,
       detail: { flag: "manual" }
     })

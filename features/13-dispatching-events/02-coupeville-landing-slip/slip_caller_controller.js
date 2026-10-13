@@ -15,7 +15,7 @@ export default class extends Controller {
     const kind = event.params.prefixKind
     const options = {}
     if (kind === "terminal") options.prefix = "terminal"
-    if (kind === "false") options.prefix = false
+    if (kind === false) options.prefix = false
     if (kind === "empty") options.prefix = ""
     if (kind === "word") options.prefix = "false"
     const landed = this.dispatch("landed", options)
