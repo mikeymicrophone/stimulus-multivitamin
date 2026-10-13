@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+  Targets · 02 · County bus route card
+
+  Teaches:
+  - data-route-card-target takes a token list. "stop terminus" on the
+    Port Orchard stop puts that one element in both stopTargets and
+    terminusTargets.
+  - Renaming terminusTarget changes the stop list, because it is the
+    same node.
+  - terminusTarget is the first match in the document. Flagging Harper,
+    printed above Port Orchard, makes Harper the singular end of the
+    line. Two terminus tokens do not warn.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>County bus route card · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .route-card { max-width: 36rem; }
+      .stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .stops li { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fffdf8; }
+      .route-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.8rem 0; }
+      .summary { min-height: 1.4em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RouteCardController from "./route_card_controller.js"
+
+      const application = Application.start()
+      application.register("route-card", RouteCardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>02 · County bus route card</span>
+      </nav>
+      <h1>County bus route card</h1>
+      <p class="lede">
+        Kitsap Transit route 7. Port Orchard is both a stop and the end
+        of the line, written as two tokens on one element. Flagging an
+        earlier stop changes which element <code>terminusTarget</code> is.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario route-card" data-controller="route-card">
+        <h2>Route 7 · Southworth</h2>
+        <ol class="stops">
+          <li data-route-card-target="stop" data-stop-name="Southworth">Southworth</li>
+          <li data-route-card-target="stop" data-stop-name="Harper">Harper</li>
+          <li data-route-card-target="stop terminus" data-stop-name="Port Orchard">Port Orchard</li>
+        </ol>
+        <div class="route-actions">
+          <button type="button" data-action="route-card#renameEnd">Rename the end of the line</button>
+          <button type="button" data-action="route-card#flagHarper">Flag Harper as an end too</button>
+        </div>
+        <p class="summary" data-route-card-target="summary" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="route_card_controller.js"><code>route_card_controller.js</code></a> — one element in two target lists, and the first match</li>
+          <li>This page's source — the Port Orchard stop carries both tokens</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

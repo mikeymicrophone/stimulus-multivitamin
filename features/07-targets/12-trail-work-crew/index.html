@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Targets · 12 · Trail work crew
+
+  Teaches:
+  - The saw crew is a nested work-crew. Its volunteer is not in the
+    trail day's volunteerTargets.
+  - Move Lila earlier and the next read follows document order.
+  - Sending Owen into the saw crew drops him from the trail day's list
+    on that read. The outer controller does not reconnect. The saw
+    crew's next read includes him.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Trail work crew · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .crew { display: grid; gap: 0.5rem; }
+      .saw { margin-left: 1rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fffdf8; }
+      .roll { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .roll li { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.35rem 0.7rem; background: #fff; }
+      .crew-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .roll-status { min-height: 1.4em; margin: 0; font-weight: 600; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WorkCrewController from "./work_crew_controller.js"
+
+      const application = Application.start()
+      application.register("work-crew", WorkCrewController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>12 · Trail work crew</span>
+      </nav>
+      <h1>Trail work crew</h1>
+      <p class="lede">
+        Cascade Trail day. The saw crew is the same kind of controller,
+        nested, so its people are not on the trail day's roll. Moving
+        Owen across that boundary shows up the next time either roll is
+        read.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario crew" data-controller="work-crew" data-crew-name="Trail day">
+        <h2>Trail day</h2>
+        <p class="roll-status" data-work-crew-target="status" aria-live="polite"></p>
+        <ul class="roll" data-work-crew-target="roll">
+          <li data-work-crew-target="volunteer" data-volunteer-name="Mina"><span>Mina</span></li>
+          <li data-work-crew-target="volunteer" data-volunteer-name="Owen"><span>Owen</span></li>
+          <li data-work-crew-target="volunteer" data-volunteer-name="Lila">
+            <span>Lila</span>
+            <button type="button" data-action="work-crew#moveEarlier">Move Lila earlier</button>
+          </li>
+        </ul>
+        <section class="crew saw" data-controller="work-crew" data-crew-name="Saw crew">
+          <h3>Saw crew</h3>
+          <p class="roll-status" data-work-crew-target="status" aria-live="polite"></p>
+          <ul class="roll" data-work-crew-target="roll">
+            <li data-work-crew-target="volunteer" data-volunteer-name="Chris"><span>Chris</span></li>
+          </ul>
+          <button type="button" data-action="work-crew#readRoll">Read the saw crew</button>
+        </section>
+        <div class="crew-actions">
+          <button type="button" data-action="work-crew#readRoll">Read the trail day</button>
+          <button type="button" data-action="work-crew#sendOwenToSawCrew">Send Owen to the saw crew</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="work_crew_controller.js"><code>work_crew_controller.js</code></a> — reads each crew's volunteers, reorders Lila, and moves Owen</li>
+          <li>This page's source — the saw crew nested inside the trail day</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

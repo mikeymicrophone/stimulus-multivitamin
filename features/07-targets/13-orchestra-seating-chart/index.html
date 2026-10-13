@@ -1,0 +1,142 @@
+<!doctype html>
+<!--
+  Targets · 13 · Orchestra seating chart
+
+  Teaches:
+  - chair and principal are two tokens on Helena and Ellen. The singular
+    principal is the first of those in the document.
+  - The brass quintet is a nested seating-chart. Its chairs are not in
+    the orchestra's chairTargets. Filtering winds keeps document order.
+  - The bench blueprint is a template. Its chair is not seated until
+    it is cloned. Moving Marco earlier changes the next read.
+  - hasIntermissionTarget is false on the quintet. soloTarget throws.
+  - The piece title is one element targeted by seating-chart and by
+    concert-program.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Orchestra seating chart · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .concert { display: grid; gap: 0.7rem; }
+      .chairs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .chairs li { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.7rem; background: #fffdf8; }
+      .quintet { margin-left: 1rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fff; display: grid; gap: 0.45rem; }
+      .chart-actions, .substitute-row { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: end; }
+      .substitute-row label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .chart-status, .program-note { min-height: 1.4em; margin: 0; }
+      .intermission { margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SeatingChartController from "./seating_chart_controller.js"
+      import ConcertProgramController from "./concert_program_controller.js"
+
+      const application = Application.start()
+      application.register("seating-chart", SeatingChartController)
+      application.register("concert-program", ConcertProgramController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>13 · Orchestra seating chart</span>
+      </nav>
+      <h1>Orchestra seating chart</h1>
+      <p class="lede">
+        Harbor Symphony, 14 November. The quintet on the lip of the stage
+        is its own seating chart. The program and the orchestra share the
+        piece title.
+      </p>
+    </header>
+
+    <main>
+      <article class="scenario concert" data-controller="seating-chart concert-program" data-chart-name="Harbor Symphony">
+        <h2 data-seating-chart-target="pieceTitle" data-concert-program-target="pieceTitle">Pines of Rome</h2>
+        <p data-concert-program-target="movement">The Pines of the Appian Way</p>
+        <p class="program-note" data-concert-program-target="programNote" aria-live="polite"></p>
+        <p class="intermission" data-seating-chart-target="intermission">Intermission after the Respighi, 20 minutes</p>
+        <p class="chart-status" data-seating-chart-target="status" aria-live="polite"></p>
+        <ol class="chairs" data-seating-chart-target="roster">
+          <li data-seating-chart-target="chair principal" data-section="strings" data-player-name="Helena Cho">
+            <span data-player-label>Helena Cho · violin I</span>
+            <button type="button" data-action="seating-chart#moveEarlier">Move Helena Cho earlier</button>
+          </li>
+          <li data-seating-chart-target="chair" data-section="strings" data-player-name="Marco Diaz">
+            <span data-player-label>Marco Diaz · violin II</span>
+            <button type="button" data-action="seating-chart#moveEarlier">Move Marco Diaz earlier</button>
+          </li>
+          <li data-seating-chart-target="chair" data-section="winds" data-player-name="Priya Nair">
+            <span data-player-label>Priya Nair · flute</span>
+            <button type="button" data-action="seating-chart#moveEarlier">Move Priya Nair earlier</button>
+          </li>
+          <li data-seating-chart-target="chair principal" data-section="winds" data-player-name="Ellen Brooks">
+            <span data-player-label>Ellen Brooks · clarinet</span>
+            <button type="button" data-action="seating-chart#moveEarlier">Move Ellen Brooks earlier</button>
+          </li>
+        </ol>
+        <section class="quintet" data-controller="seating-chart" data-chart-name="Brass quintet">
+          <h3>Brass quintet</h3>
+          <p class="chart-status" data-seating-chart-target="status" aria-live="polite"></p>
+          <ol class="chairs" data-seating-chart-target="roster">
+            <li data-seating-chart-target="chair" data-section="brass" data-player-name="Otto Lang">
+              <span data-player-label>Otto Lang · trumpet</span>
+              <button type="button" data-action="seating-chart#moveEarlier">Move Otto Lang earlier</button>
+            </li>
+            <li data-seating-chart-target="chair principal" data-section="brass" data-player-name="June Park">
+              <span data-player-label>June Park · horn</span>
+              <button type="button" data-action="seating-chart#moveEarlier">Move June Park earlier</button>
+            </li>
+          </ol>
+          <button type="button" data-action="seating-chart#readChart">Read the brass quintet</button>
+        </section>
+        <div class="chart-actions">
+          <button type="button" data-action="seating-chart#readChart">Read Harbor Symphony</button>
+          <button type="button" data-action="seating-chart#showSection" data-section="strings">Show strings</button>
+          <button type="button" data-action="seating-chart#showSection" data-section="winds">Show winds</button>
+          <button type="button" data-action="concert-program#reviseTitle">Revise the piece title</button>
+          <button type="button" data-action="seating-chart#readSolo">Read the solo part</button>
+        </div>
+        <div class="substitute-row">
+          <label>
+            Substitute
+            <input type="text" value="Samir Adeyemi" data-seating-chart-target="substituteName">
+          </label>
+          <label>
+            Section
+            <input type="text" value="winds" data-seating-chart-target="substituteSection">
+          </label>
+          <button type="button" data-action="seating-chart#addSubstitute">Seat this substitute</button>
+        </div>
+        <template data-seating-chart-target="benchBlueprint">
+          <li data-seating-chart-target="chair" data-section="" data-player-name="">
+            <span data-player-label>Open chair</span>
+            <button type="button" data-action="seating-chart#moveEarlier">Move the substitute earlier</button>
+          </li>
+        </template>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="seating_chart_controller.js"><code>seating_chart_controller.js</code></a> — chairs, principals, the blueprint, and the missing solo</li>
+          <li><a href="concert_program_controller.js"><code>concert_program_controller.js</code></a> — the shared piece title</li>
+          <li>This page's source — the quintet nested in the orchestra, two tokens on the principals, the blueprint in a template</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

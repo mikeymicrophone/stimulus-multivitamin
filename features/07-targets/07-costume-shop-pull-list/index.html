@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  Targets · 07 · Costume shop pull list
+
+  Teaches:
+  - pieceTargets includes the lantern, which is hidden. Hiding is not
+    removal.
+  - Filtering the array keeps document order. Wigs are Gray bob, then
+    Storm wig.
+  - pieceTarget stays the Act I coat, the first piece in the document,
+    after the wig filter hides it.
+  - Pulling checked pieces walks pieceTargets, so a covered checked
+    lantern is still pulled, after the pocket watch.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Costume shop pull list · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .rack { max-width: 40rem; display: grid; gap: 0.6rem; }
+      .pieces { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .pieces li { display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.7rem; background: #fffdf8; }
+      .department { color: var(--muted-ink, #555); font-size: 0.9rem; }
+      .rack-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .status { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PullListController from "./pull_list_controller.js"
+
+      const application = Application.start()
+      application.register("pull-list", PullListController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>07 · Costume shop pull list</span>
+      </nav>
+      <h1>Costume shop pull list</h1>
+      <p class="lede">
+        The Salt Line rack. Showing one department hides the other rows.
+        The piece list still has every row, and the first piece is still
+        the coat at the top of the page.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario rack" data-controller="pull-list">
+        <h2>Friday pull</h2>
+        <ul class="pieces">
+          <li data-pull-list-target="piece" data-piece-name="Act I coat" data-department="wardrobe">
+            <label><input type="checkbox"> Act I coat</label>
+            <span class="department">wardrobe</span>
+          </li>
+          <li data-pull-list-target="piece" data-piece-name="Gray bob" data-department="wigs">
+            <label><input type="checkbox"> Gray bob</label>
+            <span class="department">wigs</span>
+          </li>
+          <li data-pull-list-target="piece" data-piece-name="Pocket watch" data-department="props">
+            <label><input type="checkbox"> Pocket watch</label>
+            <span class="department">props</span>
+          </li>
+          <li data-pull-list-target="piece" data-piece-name="Storm wig" data-department="wigs">
+            <label><input type="checkbox"> Storm wig</label>
+            <span class="department">wigs</span>
+          </li>
+          <li data-pull-list-target="piece" data-piece-name="Lantern" data-department="props" hidden>
+            <label><input type="checkbox"> Lantern</label>
+            <span class="department">props, in storage</span>
+          </li>
+        </ul>
+        <div class="rack-actions">
+          <button type="button" data-action="pull-list#showDepartment" data-department="all">Whole rack</button>
+          <button type="button" data-action="pull-list#showDepartment" data-department="wardrobe">Wardrobe</button>
+          <button type="button" data-action="pull-list#showDepartment" data-department="wigs">Wigs</button>
+          <button type="button" data-action="pull-list#showDepartment" data-department="props">Props</button>
+          <button type="button" data-action="pull-list#pullChecked">Pull checked pieces</button>
+        </div>
+        <p class="status" data-pull-list-target="status" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pull_list_controller.js"><code>pull_list_controller.js</code></a> — filters and pulls from the piece list</li>
+          <li>This page's source — five pieces, the lantern covered</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

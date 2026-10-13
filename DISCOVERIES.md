@@ -890,6 +890,212 @@ a different name.
 **Seen in:** [Orchard bin tickets](features/06-action-parameters/13-orchard-bin-tickets/),
 [Courier dispatch slip](features/06-action-parameters/10-courier-dispatch-slip/).
 
+## Targets
+
+### The singular target throws when it is missing; the plural and the has-property do not
+
+**What happens.** `this.slipTarget` throws
+`Missing target element "slip" for "tide-board" controller` at the
+moment it is read. `this.slipTargets` is `[]` and `this.hasSlipTarget`
+is false. The controller still connects and can render its other
+targets. A name that is not listed in `static targets` never gets a
+getter: `this.botanicalTarget` is `undefined`, and reading it does not
+throw that error, even when an element carries the token.
+
+**Why it matters.** An optional advisory can be absent and the board
+still loads. Code that treats the singular form as "zero or one" fails
+through `handleError` the first time that line runs. Code that invents
+a getter for an undeclared token fails differently, with no Stimulus
+error at all.
+
+**What to do.** Declare every name you read. Use `has[Name]Target`
+before the singular getter when the element is optional. Use the plural
+when there may be many, or none.
+
+**Seen in:** [Harbor tide board](features/07-targets/01-harbor-tide-board/),
+[Seed packet label press](features/07-targets/04-seed-packet-label-press/).
+
+### Target names are matched exactly and are not camelized
+
+**What happens.** The selector is `[data-${identifier}-target~="varietyName"]`.
+The token has to be the `static targets` string, including case.
+`variety-name` does not match `varietyName`. Stimulus camelizes value
+names, CSS class names, outlet names, and action parameters. It does
+not camelize target names. `hasVarietyNameTarget` is `has`, plus the
+declared name with only its first character capitalized, plus `Target`.
+
+**Why it matters.** Markup written in the value-attribute style
+(`variety-name`) leaves `hasVarietyNameTarget` false, and the singular
+getter throws the missing-target error, on a packet that clearly has a
+variety field.
+
+**What to do.** Write the token in the same camelCase as `static targets`:
+`data-label-press-target="varietyName"`. Keep kebab-case for the
+identifier only.
+
+**Seen in:** [Seed packet label press](features/07-targets/04-seed-packet-label-press/).
+
+### The singular target is the first match in the document
+
+**What happens.** `terminusTarget` is `terminusTargets[0]`. Several
+elements may carry the token. Stimulus does not warn. The first in the
+document wins, not the last and not a highlighted one. An element whose
+attribute is `stop terminus` is one node, so it is in both lists, and
+writing its `textContent` changes both.
+
+**Why it matters.** Flagging Harper, printed above Port Orchard, makes
+`terminusTarget` Harper. Renaming the end of the line renames that same
+stop in the stop list.
+
+**What to do.** Use the plural list when more than one element can
+match, and pick the one you mean. Put several tokens on one element
+only when it really is both things.
+
+**Seen in:** [County bus route card](features/07-targets/02-county-bus-route-card/),
+[Orchestra seating chart](features/07-targets/13-orchestra-seating-chart/).
+
+### Target getters query the DOM when you read them
+
+**What happens.** `this.plotTargets` runs a query on every read and
+returns a new array. A plot appended in the current turn is already in
+the list. A plot removed in the current turn is already gone. An array
+saved from `connect()` is not updated. `plotTargetConnected()` runs
+later, from the mutation observer, after the method that inserted the
+plot has finished writing its status.
+
+**Why it matters.** A roster cached at connect still says Beans, Kale
+after Squash is on the board. A status line written in the add method
+cannot see the callback's stamp yet. The list itself is already current,
+so the callback is not a refresh.
+
+**What to do.** Read `this.plotTargets` at the moment you need it. Do
+not keep the array. Use a connected callback for work that should happen
+because a target appeared; that is a separate feature.
+
+**Seen in:** [Garden work day](features/07-targets/05-garden-work-day/).
+
+**Why this section.** Scheduling the callback is the observer. The
+getter is the target API, and it is already current before the callback
+runs.
+
+### A nested controller with the same identifier is a scope boundary, re-checked on every read
+
+**What happens.** A target counts when
+`element.closest('[data-controller~="that-identifier"]')` is that
+controller's element. A nested `meter-bank` is a boundary: its meters,
+and the nested element itself when it carries the target attribute, are
+left out of the outer `meterTargets`. A nested `water-heater` is not a
+`meter-bank`, so a meter inside the heater still belongs to the outer
+bank. The check runs at read time. Moving Owen's element into the nested
+saw crew drops him from the trail day's list on the next line. The outer
+controller does not disconnect.
+
+**Why it matters.** A building total written with `querySelectorAll`
+bills Unit 2's kitchen to the building. A roll that is not re-read after
+a move still includes someone who now belongs to the nested crew.
+
+**What to do.** Read the target list. Use a nested controller of the
+same identifier only where that boundary is what you want. Read again
+after you move nodes.
+
+**Seen in:** [Apartment meter bank](features/07-targets/09-apartment-meter-bank/),
+[Trail work crew](features/07-targets/12-trail-work-crew/).
+
+### Target attributes are not prefix-matched
+
+**What happens.** The attribute name is exactly
+`data-${identifier}-target`. `data-moorage-bill-ledger-target="slipFee"`
+is not a `slipFee` target of `moorage-bill`, even though `moorage-bill`
+is a hyphen-prefix of `moorage-bill-ledger`. Action parameters use a
+prefix pattern and do leak across that pair of names. Targets do not.
+An input both controllers should see needs both attributes.
+
+**Why it matters.** A $999 field stamped only for the ledger stays out
+of the bill's slip-fee list. Sharing the real slip fee means writing
+`data-moorage-bill-target` and `data-moorage-bill-ledger-target` on
+that one input.
+
+**What to do.** Stamp each controller's own attribute on the elements it
+should see. The target lookup will not borrow the longer identifier's
+attribute.
+
+**Seen in:** [Marina moorage bill](features/07-targets/03-marina-moorage-bill/).
+
+**Why this section.** The contrast with
+[A shorter identifier matches a longer identifier's param attributes](#a-shorter-identifier-matches-a-longer-identifiers-param-attributes)
+is the point. The target attribute is a different name, not a prefix.
+
+### `querySelector` is not a target lookup, and the legacy attribute still matches
+
+**What happens.** Stimulus finds a target with
+`[data-identifier-target~="name"]`, includes the controller element
+when it matches, drops anything inside a nested element with the same
+identifier, and then appends legacy `data-target="identifier.name"`
+matches. `querySelectorAll` does none of the scope work, skips the
+element itself, and an exact `[data-request-desk-target="slip"]` misses
+`slip rush`. A `NodeList` from `querySelectorAll` is static. The legacy
+attribute still matches. Those matches are concatenated after the
+modern ones, so they are not interleaved in document order. An element
+with both attributes appears twice in the plural list. The first time a
+legacy element is found, Stimulus logs a deprecation warning naming
+`data-target` and the replacement `data-identifier-target`. The singular
+getter prefers a modern match and does not, by itself, look at the
+legacy attribute when a modern one exists.
+
+**Why it matters.** A count written with `querySelectorAll` includes the
+nested desk's map, misses the walk-up slip on the desk element, misses
+a rush slip when the selector is exact, and goes stale when a tax lien
+is filed. The card catalog's old stamp still shows up in `slipTargets`,
+and the dual-stamped slip shows up twice, the second time in the legacy
+block rather than at its place in the document.
+
+**What to do.** Read `this.slipTargets`. Replace
+`data-target="request-desk.slip"` with
+`data-request-desk-target="slip"`. Do not leave both on one element.
+
+**Seen in:** [Archive request desk](features/07-targets/10-archive-request-desk/).
+
+### Inherited target names use the subclass identifier
+
+**What happens.** `static targets` is collected from the class and its
+ancestors. `InsuranceSection` declares `memberId` and inherits
+`heading`, `field`, and `summary`, so `headingTarget` exists. The
+attribute Stimulus looks up is `data-insurance-section-target="heading"`,
+the instance's identifier, not `data-intake-section-target`. A paragraph
+stamped with the parent attribute sits in the section and is not the
+heading target.
+
+**Why it matters.** A block copied from the base section's markup looks
+wired. `hasHeadingTarget` is true only because the subclass's own
+attribute is also present. The stray heading is ignored.
+
+**What to do.** Stamp inherited targets with the identifier of the
+controller that is actually on the element.
+
+**Seen in:** [Clinic intake sections](features/07-targets/11-clinic-intake-sections/).
+
+### A hidden element is still a target
+
+**What happens.** `[hidden]` does not remove a node, and the target
+query does not care that it is hidden. `pieceTargets` includes the
+lantern in storage. After a wig filter sets `hidden` on the coat,
+`pieceTarget` is still the coat, the first piece in the document. The
+visible rows are the wigs. A checked lantern is still in the list a
+pull walks, in document order, after the pocket watch.
+
+**Why it matters.** Filtering the screen and then reading the singular
+target returns the coat, not the first wig. A count of `pieceTargets`
+counts covered pieces.
+
+**What to do.** Filter the `pieceTargets` array for the rows you mean.
+Treat `hidden` as a visual state. The plural list is the whole rack.
+
+**Seen in:** [Costume shop pull list](features/07-targets/07-costume-shop-pull-list/).
+
+**Why this section.** Hiding is presentation. The target list is a DOM
+query, so a covered lantern is still a piece. The same split is why
+[hidden elements keep their actions](#hidden-elements-keep-their-actions).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
@@ -924,6 +1130,50 @@ rule), [Unsaved-changes guard](features/03-actions/06-unsaved-changes-guard/)
 These are the platform, not Stimulus. They belong here because they show
 up inside actions, callbacks, and `data-action` descriptors, and the
 fix is usually in the Stimulus code.
+
+### Nodes inside a `<template>` are not targets
+
+**What happens.** `element.querySelectorAll` does not look inside a
+`<template>`'s document fragment. Stimulus target lookup uses that
+method, so a place card drawn in the blueprint is not a `guest` target.
+The `<template>` element can itself be a target (`cardBlueprint`).
+Cloning `template.content` and appending the clone puts a real guest in
+the document, and the next `guestTargets` read includes them. The
+blueprint still holds its own card.
+
+**Why it matters.** A seating chart that counts guests on load reports
+Priya and not the blank card, which is what you want, and it will keep
+reporting that after a clone that was never appended.
+
+**What to do.** Keep the blueprint as its own target. Clone
+`template.content`, fill the clone, and append it where the chart
+should show it. Then read `guestTargets`.
+
+**Seen in:** [Rehearsal dinner seating](features/07-targets/06-rehearsal-dinner-seating/),
+[Orchestra seating chart](features/07-targets/13-orchestra-seating-chart/).
+
+**Why this section.** Skipping template contents is the HTML parsing
+rules. Stimulus inherits it by querying the live document.
+
+### Flex `order` does not change target order
+
+**What happens.** `this.loafTargets` follows document order. CSS `order`
+changes which loaf is painted first and leaves the target list alone.
+`insertBefore` changes the document, and the next target read follows
+the nodes.
+
+**Why it matters.** A rack that paints Ciabatta at the front still pulls
+Brioche first when Brioche is first in the markup. The pull order and
+the paint order diverge on purpose only if you meant them to.
+
+**What to do.** Move the nodes when the sequence matters. Read
+`loafTargets` for that sequence. Use CSS `order` for a visual treatment
+that must not become the sequence.
+
+**Seen in:** [Bakery oven queue](features/07-targets/08-bakery-oven-queue/).
+
+**Why this section.** Paint order is CSS. The target query never asks
+for it.
 
 ### `[hidden]` loses to any author `display` rule
 

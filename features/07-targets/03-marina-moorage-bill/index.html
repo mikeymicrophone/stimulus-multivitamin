@@ -1,0 +1,101 @@
+<!doctype html>
+<!--
+  Targets · 03 · Marina moorage bill
+
+  Teaches:
+  - moorage-bill and moorage-bill-ledger share the slip form. The slip
+    fee input is a target of both, through two different attributes.
+  - The target attribute is exactly data-${identifier}-target.
+    data-moorage-bill-ledger-target="slipFee" is not a slipFee target
+    of moorage-bill, even though the shorter identifier is a prefix.
+  - Power belongs only to the bill. The posted date belongs only to
+    the ledger.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Marina moorage bill · Targets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .slip-form { display: grid; gap: 0.7rem; max-width: 36rem; }
+      .slip-form label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .totals { display: grid; gap: 0.35rem; }
+      .due { font-size: 1.2rem; font-weight: 700; margin: 0; }
+      .note, .ledger-note { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MoorageBillController from "./moorage_bill_controller.js"
+      import MoorageBillLedgerController from "./moorage_bill_ledger_controller.js"
+
+      const application = Application.start()
+      application.register("moorage-bill", MoorageBillController)
+      application.register("moorage-bill-ledger", MoorageBillLedgerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#targets">Targets</a> /
+        <span>03 · Marina moorage bill</span>
+      </nav>
+      <h1>Marina moorage bill</h1>
+      <p class="lede">
+        Boat Haven, slip C-14, October. The bill and the ledger are two
+        controllers on one form. They share the slip fee because both
+        target attributes are written on that input.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario slip-form" data-controller="moorage-bill moorage-bill-ledger">
+        <h2>Slip C-14 · October</h2>
+        <label>
+          Slip fee
+          <input id="slip-fee" type="number" min="0" step="0.01" value="186"
+                 data-moorage-bill-target="slipFee" data-moorage-bill-ledger-target="charge">
+        </label>
+        <label>
+          Power
+          <input id="power-fee" type="number" min="0" step="0.01" value="42" data-moorage-bill-target="powerFee">
+        </label>
+        <label>
+          Ledger-only fee, not on the bill
+          <input id="ledger-only-fee" type="number" min="0" step="0.01" value="999" data-moorage-bill-ledger-target="slipFee">
+        </label>
+        <label>
+          Posted
+          <input id="posted-on" type="date" value="2026-10-01" data-moorage-bill-ledger-target="postedOn">
+        </label>
+        <p>
+          <button type="button" data-action="moorage-bill#postMonth moorage-bill-ledger#postMonth">Post October</button>
+        </p>
+        <div class="totals">
+          <p class="due">Due <span data-moorage-bill-target="total">—</span></p>
+          <p class="note" data-moorage-bill-target="note" aria-live="polite"></p>
+          <p class="ledger-note" data-moorage-bill-ledger-target="ledgerNote" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="moorage_bill_controller.js"><code>moorage_bill_controller.js</code></a> — slip fee and power, and how many slip-fee targets the bill can see</li>
+          <li><a href="moorage_bill_ledger_controller.js"><code>moorage_bill_ledger_controller.js</code></a> — the same slip fee as a ledger charge</li>
+          <li>This page's source — both attributes on the slip fee, and only the ledger attribute on the $999 field</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
