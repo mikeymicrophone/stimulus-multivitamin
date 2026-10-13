@@ -21,9 +21,11 @@ export default class extends Controller {
     this.deliverScan(barcode)
   }
 
-  // Simulator buttons keep codes in value="". Action params run the
-  // attribute through JSON.parse, so a UPC with no leading zero would
-  // arrive as a number. value="" always hands the scanner a string.
+  // Simulator buttons keep codes in value="", which is always a string, so
+  // 084271003318 keeps its leading zero. An action param would not strip
+  // that zero: JSON.parse leaves "084271003318" as a string. Only a bare
+  // digit string, with no leading zero, becomes a number. value="" keeps
+  // both kinds of UPC as strings, which is what the pick lines compare.
   simulateScan({ currentTarget }) {
     this.deliverScan(currentTarget.value)
     this.scanInputTarget.focus()

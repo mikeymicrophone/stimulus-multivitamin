@@ -22,9 +22,11 @@ up empty.
 - Lines connect after the pick list, so the list filters out lines whose
   controllers aren't ready yet, and each line calls `lineChanged()` when it
   connects.
-- Action params run values through `JSON.parse`, so a UPC with no leading
-  zero would become a number. The simulator buttons keep every code in
-  `value=""`, where `084271003318` stays a string of digits.
+- Simulator buttons keep every code in `value=""`, which is always a
+  string, so `084271003318` keeps its leading zero and `714532009915`
+  stays digits. An action param would not strip that zero: `JSON.parse`
+  leaves a leading-zero value as a string, and only a bare digit string
+  becomes a number. See [DISCOVERIES.md](../../../DISCOVERIES.md).
 
 **Files**
 

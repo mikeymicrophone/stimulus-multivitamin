@@ -15,6 +15,11 @@
     knows how codes arrive, the pick list knows the warehouse rules, each
     line knows its count, and the tote knows its weight. They talk only
     through public methods.
+  - Simulator buttons pass each barcode through value="", which is always
+    a string. 084271003318 keeps its leading zero. An action param would
+    not strip that zero either: JSON.parse leaves a leading-zero value as
+    a string, and only a bare digit string becomes a number. See
+    DISCOVERIES.md, "Action params turn all-digit strings into numbers."
 -->
 <html lang="en">
   <head>
