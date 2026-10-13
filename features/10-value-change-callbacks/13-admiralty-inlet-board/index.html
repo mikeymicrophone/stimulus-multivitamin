@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Value change callbacks · 13 · Admiralty Inlet board
+
+  Teaches:
+  - Station comes from the query in initialize(), and the callback
+    writes it back. Mute comes from localStorage the same way.
+  - Height paints the staff and derives flood or ebb, writing stream
+    only when it differs. The pilot call is debounced.
+  - NOAA sets the height attribute from outside. Clearing the height
+    falls back to 0 and the stream follows.
+  - Pushing middle on the returned watches does not repaint the list.
+    Assigning a new array does.
+  - The sounding note keeps depth_ft.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Admiralty Inlet board · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { max-width: 44rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.55rem; }
+      .board h2 { margin: 0; font-size: 1.2rem; }
+      .board p { margin: 0; }
+      .staff-well { height: 6.5rem; display: flex; align-items: flex-end; background: #f3ecdd; border-radius: 8px; padding: 0.3rem; }
+      .staff { width: 2.2rem; background: #1f3d2b; color: white; font-size: 0.75rem; display: flex; align-items: flex-end; justify-content: center; border-radius: 4px 4px 0 0; }
+      .row { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
+      .horn { font-weight: 600; }
+      .calls-held .horn { opacity: 0.45; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      label { display: grid; gap: 0.2rem; font-size: 0.95rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import InletBoardController from "./inlet_board_controller.js"
+
+      const application = Application.start()
+      application.register("inlet-board", InletBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>13 · Admiralty Inlet board</span>
+      </nav>
+      <h1>Admiralty Inlet board</h1>
+      <p class="lede">
+        The tide board at Bush Point. Height, horn, watches, and the
+        sounding note stay in step because each one is painted from its
+        changed callback. The turn of the tide is 6 feet.
+      </p>
+    </header>
+
+    <main>
+      <article
+        class="scenario board"
+        data-controller="inlet-board"
+        data-inlet-board-station-value="bush-point"
+        data-inlet-board-height-value="8"
+        data-inlet-board-sounding-value="false"
+        data-inlet-board-watches-value='["morning","forenoon"]'
+        data-inlet-board-reading-value='{"depth_ft":6,"bottom":"gravel"}'
+      >
+        <h2 data-inlet-board-target="station">Bush Point</h2>
+        <label>
+          Station
+          <select data-inlet-board-target="stationSelect" data-action="inlet-board#chooseStation">
+            <option value="bush-point">Bush Point</option>
+            <option value="marrowstone">Marrowstone</option>
+            <option value="nodule-point">Nodule Point</option>
+          </select>
+        </label>
+        <div class="staff-well" aria-hidden="true">
+          <div class="staff" data-inlet-board-target="staff"></div>
+        </div>
+        <div class="row">
+          <p data-inlet-board-target="stream">Stream unset.</p>
+          <p class="horn" data-inlet-board-target="horn">Horn quiet.</p>
+        </div>
+        <p data-inlet-board-target="watches"></p>
+        <p data-inlet-board-target="scribble"></p>
+        <p data-inlet-board-target="note"></p>
+        <p data-inlet-board-target="pilotCall" aria-live="polite">No call yet.</p>
+        <div class="actions">
+          <button type="button" data-action="inlet-board#raiseStaff">Raise the staff</button>
+          <button type="button" data-action="inlet-board#applyNoaa">NOAA correction to 9 ft</button>
+          <button type="button" data-action="inlet-board#clearHeight">Take the height off</button>
+          <button type="button" data-action="inlet-board#toggleHorn">Toggle the horn</button>
+          <button type="button" data-action="inlet-board#pushMiddle">Push a middle watch</button>
+          <button type="button" data-action="inlet-board#writeMiddle">Write the middle watch</button>
+          <button type="button" data-action="inlet-board#toggleMute">Mute the pilot call</button>
+        </div>
+        <ol class="log" data-inlet-board-target="heightLog"></ol>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="inlet_board_controller.js"><code>inlet_board_controller.js</code></a> — the board, derived from the callbacks</li>
+          <li><a href="noaa_correction.js"><code>noaa_correction.js</code></a> — the office correction, via setAttribute</li>
+          <li>This page's source — Bush Point at 8 feet</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  Value change callbacks · 11 · Ferry sailing filters
+
+  Teaches:
+  - initialize() copies the query into the values before the observer
+    starts. The first callbacks see the query. The markup draft is not
+    a callback argument.
+  - The callbacks write the query. A board change pushes history.
+    popstate reads it back without pushing again.
+  - The late card writes its markup into the hash from the callbacks,
+    then connect() reads that hash and misses the hash the page opened
+    with.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ferry sailing filters · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .sailings { display: grid; gap: 0.75rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .card h2 { margin: 0; font-size: 1.1rem; }
+      .card p { margin: 0; }
+      .summary { font-weight: 600; min-height: 1.5rem; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SailingFilterController from "./sailing_filter_controller.js"
+      import LateFilterController from "./late_filter_controller.js"
+
+      const application = Application.start()
+      application.register("sailing-filter", SailingFilterController)
+      application.register("late-filter", LateFilterController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>11 · Ferry sailing filters</span>
+      </nav>
+      <h1>Ferry sailing filters</h1>
+      <p class="lede">
+        Washington State Ferries crossings kept in the query string.
+        The markup on this card says Port Townsend–Coupeville, draft 12,
+        day crossing. The hash card below restores too late.
+      </p>
+    </header>
+
+    <main>
+      <div class="sailings">
+        <article
+          class="scenario card"
+          data-controller="sailing-filter"
+          data-sailing-filter-route-value="port-townsend-coupeville"
+          data-sailing-filter-draft-value="12"
+          data-sailing-filter-night-value="false"
+          data-action="popstate@window->sailing-filter#applyQuery"
+        >
+          <h2>Sailing board</h2>
+          <p>Route, minimum draft, and day or night crossing live in the query string.</p>
+          <p class="summary" data-sailing-filter-target="summary" aria-live="polite"></p>
+          <div class="actions">
+            <button type="button" data-action="sailing-filter#chooseKingston">Kingston–Edmonds, draft 18, night</button>
+          </div>
+          <ol class="log" data-sailing-filter-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario card"
+          data-controller="late-filter"
+          data-late-filter-route-value="kingston-edmonds"
+          data-late-filter-draft-value="10"
+          data-late-filter-night-value="false"
+        >
+          <h2>Late hash card</h2>
+          <p>
+            Opened with a hash for Anacortes–Friday Harbor, draft 20, night
+            crossing. This card writes its markup into the hash from the
+            callbacks, then reads the hash in connect().
+          </p>
+          <p class="summary" data-late-filter-target="summary" aria-live="polite"></p>
+          <ol class="log" data-late-filter-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="sailing_filter_controller.js"><code>sailing_filter_controller.js</code></a> — query string restored in initialize()</li>
+          <li><a href="late_filter_controller.js"><code>late_filter_controller.js</code></a> — hash restored in connect(), after the callbacks wrote it</li>
+          <li>This page's source — the sailing board and the late card</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

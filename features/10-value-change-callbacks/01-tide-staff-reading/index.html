@@ -1,0 +1,114 @@
+<!doctype html>
+<!--
+  Value change callbacks · 01 · Tide staff reading
+
+  Teaches:
+  - heightValueChanged runs for the painted staff and for the staff
+    whose attribute was left off the card.
+  - Ediz Hook is 6, so the first previous value is 0, the default.
+  - Koitlah is chalked 0. The first call is (0, 0), not (0, undefined).
+  - Tongue Point has no attribute. The first call is (0, undefined).
+  - connect() runs after that paint and only notes what is already there.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Tide staff reading · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .staffs { display: grid; gap: 0.75rem; }
+      .staff { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .staff h2 { margin: 0; font-size: 1.1rem; }
+      .staff p { margin: 0; }
+      .reading { min-height: 1.5rem; font-weight: 600; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideStaffController from "./tide_staff_controller.js"
+
+      const application = Application.start()
+      application.register("tide-staff", TideStaffController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>01 · Tide staff reading</span>
+      </nav>
+      <h1>Tide staff reading</h1>
+      <p class="lede">
+        Morning reading along the Strait. Ediz Hook was chalked at 6 feet.
+        Koitlah was chalked at 0. Tongue Point's card never got a height.
+      </p>
+    </header>
+
+    <main>
+      <div class="staffs">
+        <article
+          class="scenario staff"
+          data-controller="tide-staff"
+          data-tide-staff-place-value="Ediz Hook"
+          data-tide-staff-height-value="6"
+        >
+          <h2>Ediz Hook</h2>
+          <p>The watch chalked 6 feet on the way down the ladder.</p>
+          <p class="reading" data-tide-staff-target="reading" aria-live="polite"></p>
+          <div class="actions">
+            <button type="button" data-action="tide-staff#raiseStaff">Raise one foot</button>
+            <button type="button" data-action="tide-staff#lowerStaff">Lower one foot</button>
+          </div>
+          <ol class="log" data-tide-staff-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario staff"
+          data-controller="tide-staff"
+          data-tide-staff-place-value="Koitlah Point"
+          data-tide-staff-height-value="0"
+        >
+          <h2>Koitlah Point</h2>
+          <p>The watch chalked a zero, not a blank.</p>
+          <p class="reading" data-tide-staff-target="reading" aria-live="polite"></p>
+          <div class="actions">
+            <button type="button" data-action="tide-staff#raiseStaff">Raise one foot</button>
+            <button type="button" data-action="tide-staff#lowerStaff">Lower one foot</button>
+          </div>
+          <ol class="log" data-tide-staff-target="log"></ol>
+        </article>
+
+        <article class="scenario staff" data-controller="tide-staff" data-tide-staff-place-value="Tongue Point">
+          <h2>Tongue Point</h2>
+          <p>No height was chalked. The card has the place and nothing else.</p>
+          <p class="reading" data-tide-staff-target="reading" aria-live="polite"></p>
+          <div class="actions">
+            <button type="button" data-action="tide-staff#raiseStaff">Raise one foot</button>
+            <button type="button" data-action="tide-staff#lowerStaff">Lower one foot</button>
+          </div>
+          <ol class="log" data-tide-staff-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_staff_controller.js"><code>tide_staff_controller.js</code></a> — the first callback, and what previous height is</li>
+          <li>This page's source — three staffs, one of them with no height attribute</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

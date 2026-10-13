@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+  Value change callbacks · 03 · Wharf office chalk
+
+  Teaches:
+  - City Dock opens from the attributes. Berth previous is the string
+    default. Draft previous is 0.
+  - Chalking from the controller and chalking from a plain script both
+    land in the same callbacks, after the ask line.
+  - Asking the script to write the same strings adds no callback lines.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Wharf office chalk · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .card { max-width: 40rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 1.5rem; font-weight: 600; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BerthChalkController from "./berth_chalk_controller.js"
+
+      const application = Application.start()
+      application.register("berth-chalk", BerthChalkController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>03 · Wharf office chalk</span>
+      </nav>
+      <h1>Wharf office chalk</h1>
+      <p class="lede">
+        City Dock at Union Wharf, Port Townsend. The berth card can be
+        chalked from the board, or from the office script that writes
+        the attributes the way the elements panel would.
+      </p>
+    </header>
+
+    <main>
+      <article
+        class="scenario card"
+        data-controller="berth-chalk"
+        data-berth-chalk-berth-name-value="City"
+        data-berth-chalk-draft-feet-value="18"
+      >
+        <h2>City Dock</h2>
+        <p>Alongside this morning, 18 feet of water at the face.</p>
+        <p class="reading" data-berth-chalk-target="reading" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" data-action="berth-chalk#chalkFromBoard">Chalk Union from the board</button>
+          <button type="button" data-action="berth-chalk#chalkFromOffice">Chalk South from the office script</button>
+          <button type="button" data-action="berth-chalk#chalkSameWords">Chalk the same words again</button>
+        </div>
+        <ol class="log" data-berth-chalk-target="log"></ol>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="berth_chalk_controller.js"><code>berth_chalk_controller.js</code></a> — both writes share the callbacks</li>
+          <li><a href="office_chalk.js"><code>office_chalk.js</code></a> — setAttribute, no controller</li>
+          <li>This page's source — City Dock, 18 feet</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

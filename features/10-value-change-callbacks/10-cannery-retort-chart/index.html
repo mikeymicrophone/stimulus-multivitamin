@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  Value change callbacks · 10 · Anacortes cannery retorts
+
+  Teaches:
+  - The figure, the meter width, aria-valuenow, the hidden record,
+    and the status sentence all come from temperatureValueChanged.
+  - Retort 2 is 240. Retort 4 has no temperature, so the callback
+    paints 0.
+  - The office script sets 255 by setAttribute. The same callback
+    moves the meter.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Anacortes cannery retorts · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .floor { display: grid; gap: 0.75rem; }
+      .retort { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .retort h2 { margin: 0; font-size: 1.1rem; }
+      .retort p { margin: 0; }
+      .meter { height: 0.8rem; background: #f3ecdd; border-radius: 999px; overflow: hidden; }
+      .column { height: 100%; width: 0; background: #b5651d; }
+      .figure { font-weight: 600; min-height: 1.5rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RetortChartController from "./retort_chart_controller.js"
+
+      const application = Application.start()
+      application.register("retort-chart", RetortChartController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>10 · Anacortes cannery retorts</span>
+      </nav>
+      <h1>Anacortes cannery retorts</h1>
+      <p class="lede">
+        Retort 2 is holding 240°F. Retort 4 was brought online without
+        a temperature on the card. The office can write the attribute
+        without going through the board.
+      </p>
+    </header>
+
+    <main>
+      <div class="floor">
+        <article class="scenario retort" data-controller="retort-chart" data-retort-chart-retort-name-value="2" data-retort-chart-temperature-value="240">
+          <h2>Retort 2</h2>
+          <p class="figure" data-retort-chart-target="figure"></p>
+          <div class="meter">
+            <div class="column" data-retort-chart-target="column" role="meter" aria-label="Retort 2 temperature"></div>
+          </div>
+          <p data-retort-chart-target="status" aria-live="polite">Not charted.</p>
+          <input type="hidden" data-retort-chart-target="record" value="">
+          <div class="actions">
+            <button type="button" data-action="retort-chart#officeSets255">Office sets 255°F</button>
+          </div>
+        </article>
+
+        <article class="scenario retort" data-controller="retort-chart" data-retort-chart-retort-name-value="4">
+          <h2>Retort 4</h2>
+          <p>No temperature was written on this card.</p>
+          <p class="figure" data-retort-chart-target="figure"></p>
+          <div class="meter">
+            <div class="column" data-retort-chart-target="column" role="meter" aria-label="Retort 4 temperature"></div>
+          </div>
+          <p data-retort-chart-target="status" aria-live="polite">Not charted.</p>
+          <input type="hidden" data-retort-chart-target="record" value="">
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="retort_chart_controller.js"><code>retort_chart_controller.js</code></a> — the whole chart from one callback</li>
+          <li><a href="retort_office.js"><code>retort_office.js</code></a> — setAttribute from outside the controller</li>
+          <li>This page's source — retort 2 and retort 4</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

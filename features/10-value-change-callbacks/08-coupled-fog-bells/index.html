@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Value change callbacks · 08 · Coupled fog bells
+
+  Teaches:
+  - Slip Point and Waadah Island, left unguarded, each set the other
+    one second longer. The chase runs until the card cuts it.
+  - The guarded pair starts at the same interval and does not chase.
+    Striking Slip Point to 8 writes Waadah once and stops.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Coupled fog bells · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .pairs { display: grid; gap: 0.75rem; }
+      .pair { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .pair h2 { margin: 0; font-size: 1.1rem; }
+      .pair p { margin: 0; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import UnguardedBellsController from "./unguarded_bells_controller.js"
+      import GuardedBellsController from "./guarded_bells_controller.js"
+
+      const application = Application.start()
+      application.register("unguarded-bells", UnguardedBellsController)
+      application.register("guarded-bells", GuardedBellsController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>08 · Coupled fog bells</span>
+      </nav>
+      <h1>Coupled fog bells</h1>
+      <p class="lede">
+        Slip Point and Waadah Island had their bell intervals tied
+        together. One pair keeps lengthening the other. The other pair
+        copies an interval only when it actually changed.
+      </p>
+    </header>
+
+    <main>
+      <div class="pairs">
+        <article
+          class="scenario pair"
+          data-controller="unguarded-bells"
+          data-unguarded-bells-slip-interval-value="1"
+          data-unguarded-bells-waadah-interval-value="1"
+        >
+          <h2>Unguarded pair</h2>
+          <p>Each bell sets the other one second longer. The card stops the chase itself.</p>
+          <ol class="log" data-unguarded-bells-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario pair"
+          data-controller="guarded-bells"
+          data-guarded-bells-slip-interval-value="5"
+          data-guarded-bells-waadah-interval-value="5"
+        >
+          <h2>Guarded pair</h2>
+          <p>Both bells already agree on 5 seconds.</p>
+          <div class="actions">
+            <button type="button" data-action="guarded-bells#strikeSlipPoint">Strike Slip Point to 8 seconds</button>
+          </div>
+          <ol class="log" data-guarded-bells-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="unguarded_bells_controller.js"><code>unguarded_bells_controller.js</code></a> — the chase, cut at eight strikes</li>
+          <li><a href="guarded_bells_controller.js"><code>guarded_bells_controller.js</code></a> — write the other bell only when it differs</li>
+          <li>This page's source — both pairs</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

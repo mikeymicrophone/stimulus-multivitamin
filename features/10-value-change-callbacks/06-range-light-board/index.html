@@ -1,0 +1,132 @@
+<!doctype html>
+<!--
+  Value change callbacks · 06 · New Dungeness range
+
+  Teaches:
+  - Taking the front color off assigns undefined. The callback gets
+    the string default and the attribute is absent.
+  - Dimming intensity 4 falls back to 0, previous 4.
+  - Clearing a chalked 0 is (0, 0), and the attribute is gone.
+  - Erasing an empty name or an empty lit cell adds no callback.
+    The lamp stays "lit" on the board while the getter is false.
+  - Scraping the rear color with removeAttribute is the same callback
+    as assigning undefined.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>New Dungeness range · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; }
+      .lamp { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .lamp h2 { margin: 0; font-size: 1.1rem; }
+      .lamp p { margin: 0; }
+      .state { min-height: 1.5rem; font-weight: 600; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FrontRangeController from "./front_range_controller.js"
+      import ZeroLampController from "./zero_lamp_controller.js"
+      import BlankSlipController from "./blank_slip_controller.js"
+      import RearRangeController from "./rear_range_controller.js"
+
+      const application = Application.start()
+      application.register("front-range", FrontRangeController)
+      application.register("zero-lamp", ZeroLampController)
+      application.register("blank-slip", BlankSlipController)
+      application.register("rear-range", RearRangeController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>06 · New Dungeness range</span>
+      </nav>
+      <h1>New Dungeness range</h1>
+      <p class="lede">
+        Front and rear lights on the Dungeness range, a lamp chalked at
+        zero, and a blank slip whose lit cell was never filled in.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <article
+          class="scenario lamp"
+          data-controller="front-range"
+          data-front-range-color-value="white"
+          data-front-range-intensity-value="4"
+        >
+          <h2>Front range</h2>
+          <p>White, intensity 4.</p>
+          <div class="actions">
+            <button type="button" data-action="front-range#takeColorOff">Take the color off</button>
+            <button type="button" data-action="front-range#dimToNothing">Dim to nothing</button>
+          </div>
+          <ol class="log" data-front-range-target="log"></ol>
+        </article>
+
+        <article class="scenario lamp" data-controller="zero-lamp" data-zero-lamp-intensity-value="0">
+          <h2>Zero lamp</h2>
+          <p>Intensity was chalked 0, not left blank.</p>
+          <div class="actions">
+            <button type="button" data-action="zero-lamp#clearZero">Clear the zero</button>
+          </div>
+          <ol class="log" data-zero-lamp-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario lamp"
+          data-controller="blank-slip"
+          data-blank-slip-name-value=""
+          data-blank-slip-lit-value=""
+        >
+          <h2>Blank slip</h2>
+          <p>The name cell and the lit cell are both empty attributes.</p>
+          <p class="state" data-blank-slip-target="lamp" aria-live="polite">The lamp is dark.</p>
+          <div class="actions">
+            <button type="button" data-action="blank-slip#eraseName">Erase the name</button>
+            <button type="button" data-action="blank-slip#eraseLit">Erase the lit cell</button>
+            <button type="button" data-action="blank-slip#readLamp">Read the lamp</button>
+          </div>
+          <ol class="log" data-blank-slip-target="log"></ol>
+        </article>
+
+        <article class="scenario lamp" data-controller="rear-range" data-rear-range-color-value="red">
+          <h2>Rear range</h2>
+          <p>Red. The inspector can scrape the attribute off the element.</p>
+          <div class="actions">
+            <button type="button" data-action="rear-range#scrapeColor">Scrape the color</button>
+          </div>
+          <ol class="log" data-rear-range-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="front_range_controller.js"><code>front_range_controller.js</code></a> — undefined clears color and intensity</li>
+          <li><a href="zero_lamp_controller.js"><code>zero_lamp_controller.js</code></a> — clearing a chalked zero</li>
+          <li><a href="blank_slip_controller.js"><code>blank_slip_controller.js</code></a> — empty cells that do not fire when removed</li>
+          <li><a href="rear_range_controller.js"><code>rear_range_controller.js</code></a> — removeAttribute</li>
+          <li>This page's source — four lamps on the Dungeness range</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

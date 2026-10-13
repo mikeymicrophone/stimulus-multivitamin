@@ -6,8 +6,9 @@
  * times in one drag. A moved element is already back in the document when
  * disconnect() runs, so disconnect() checks this.element.isConnected and
  * only tears down (the drag session's document listeners and the on-air
- * clock) when the track has really left. connect() and onAirValueChanged()
- * must then be safe to run again without starting anything twice.
+ * clock) when the track has really left. onAir is written on the track,
+ * so a move does not run onAirValueChanged() again. connect() still
+ * runs, and it must be safe to run again.
  */
 import { Controller } from "@hotwired/stimulus"
 
@@ -24,9 +25,10 @@ export default class extends Controller {
     this.cachedRunningOrder = null
   }
 
-  // Stimulus calls this before connect(), and again on every reconnect,
-  // including each move during a drag. Starting and stopping the clock are
-  // both no-ops when they have nothing to do.
+  // Stimulus calls this before connect(), and again when the attribute
+  // changes. A move does not call it again: onAir is present on the
+  // element. Starting and stopping the clock are both no-ops when they
+  // have nothing to do.
   onAirValueChanged(onAir) {
     if (onAir) {
       this.startClock()

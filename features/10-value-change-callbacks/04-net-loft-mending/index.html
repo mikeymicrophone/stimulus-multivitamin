@@ -1,0 +1,79 @@
+<!doctype html>
+<!--
+  Value change callbacks · 04 · Cap Sante net loft
+
+  Teaches:
+  - static values declares twine, then meshSize, then needleCount.
+    The tag writes needle-count before mesh-size. Twine is absent.
+  - The callbacks follow the tag, then the absent twine, then
+    meshTargetConnected, then connect().
+  - The mesh sentence is already readable in the needle callback.
+  - connect() adds a needle. That callback is logged after
+    "connect returned."
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cap Sante net loft · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .card { max-width: 44rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .log { margin: 0; padding-left: 1.2rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MendingCardController from "./mending_card_controller.js"
+
+      const application = Application.start()
+      application.register("mending-card", MendingCardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>04 · Cap Sante net loft</span>
+      </nav>
+      <h1>Cap Sante net loft</h1>
+      <p class="lede">
+        A gillnet on the loft floor in Anacortes. Twelve needles are
+        already on the card. The mesh is 4 inches. Nobody wrote the twine.
+      </p>
+    </header>
+
+    <main>
+      <article
+        class="scenario card"
+        data-controller="mending-card"
+        data-mending-card-needle-count-value="12"
+        data-mending-card-mesh-size-value="4"
+      >
+        <h2>Gillnet 14</h2>
+        <p data-mending-card-target="mesh">4 in mesh, hung and waiting.</p>
+        <p>The twine spool was not written on this card.</p>
+        <ol class="log" data-mending-card-target="log"></ol>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="mending_card_controller.js"><code>mending_card_controller.js</code></a> — attribute order, the target, and the assignment inside connect()</li>
+          <li>This page's source — needle count written before mesh size</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
