@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  CSS classes · 01 · Icehouse brine tags
+
+  Teaches:
+  - static classes = ["coldHold"] declares one logical name.
+  - The attribute is data-brine-tag-cold-hold-class. coldHold
+    becomes cold-hold.
+  - this.coldHoldClass returns that token. hasColdHoldClass is
+    true when the attribute is on the controller element.
+  - Hold adds the class to the tote. Release removes it. The
+    sockeye tote's token is brine-cold. The coho tote's token
+    is brine-warming. The controller never names either one.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Icehouse brine tags · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .floor { display: grid; gap: 0.75rem; max-width: 40rem; }
+      .tote { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .tote h2 { margin: 0; font-size: 1.15rem; }
+      .tote p { margin: 0; }
+      .tote.brine-cold { background: #d5e4f2; border-color: #3d6f99; }
+      .tote.brine-warming { background: #f6e2c2; border-color: #b5651d; }
+      .reading { min-height: 2.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BrineTagController from "./brine_tag_controller.js"
+
+      const application = Application.start()
+      application.register("brine-tag", BrineTagController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>01 · Icehouse brine tags</span>
+      </nav>
+      <h1>Icehouse brine tags</h1>
+      <p class="lede">
+        Ballard icehouse, before the boats unload. A sockeye tote stays
+        on a cold hold. A coho tote is only warming. The tag color is
+        written on the tote, not in the controller.
+      </p>
+    </header>
+
+    <main>
+      <div class="floor">
+        <article
+          class="scenario tote"
+          data-controller="brine-tag"
+          data-brine-tag-cold-hold-class="brine-cold"
+        >
+          <h2 data-brine-tag-target="toteName">Sockeye</h2>
+          <p>Fourteen hundred pounds, dressed, from the Ingrid Ann.</p>
+          <div class="actions">
+            <button type="button" data-action="brine-tag#holdTote">Hold the tote</button>
+            <button type="button" data-action="brine-tag#releaseTote">Release the tote</button>
+          </div>
+          <p class="reading" data-brine-tag-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario tote"
+          data-controller="brine-tag"
+          data-brine-tag-cold-hold-class="brine-warming"
+        >
+          <h2 data-brine-tag-target="toteName">Coho</h2>
+          <p>Six hundred pounds from the Cape Cross, still above the hold line.</p>
+          <div class="actions">
+            <button type="button" data-action="brine-tag#holdTote">Hold the tote</button>
+            <button type="button" data-action="brine-tag#releaseTote">Release the tote</button>
+          </div>
+          <p class="reading" data-brine-tag-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="brine_tag_controller.js"><code>brine_tag_controller.js</code></a> — coldHoldClass added and removed on the tote</li>
+          <li>This page's source — brine-cold on the sockeye tote, brine-warming on the coho tote</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

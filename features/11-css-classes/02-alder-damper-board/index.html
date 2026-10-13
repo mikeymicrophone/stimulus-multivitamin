@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  CSS classes · 02 · Alder damper board
+
+  Teaches:
+  - Three logical classes: drawnOpen, banked, and shut.
+  - drawnOpen is data-damper-board-drawn-open-class.
+  - Draw, bank, and shut remove the other two tokens and add one,
+    on the room element.
+  - The alder room starts banked. The maple room starts with none
+    of the three. The class strings live in the markup.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Alder damper board · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .house { display: grid; gap: 0.75rem; max-width: 44rem; }
+      .room { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .room h2 { margin: 0; font-size: 1.15rem; }
+      .room p { margin: 0; }
+      .room.room-drawing { background: #f6d7c3; border-color: #b5651d; }
+      .room.room-banked { background: #efe4c4; border-color: #8a6a22; }
+      .room.room-shut { background: #e4e7ea; border-color: #5f6670; }
+      .reading { min-height: 3.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import DamperBoardController from "./damper_board_controller.js"
+
+      const application = Application.start()
+      application.register("damper-board", DamperBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>02 · Alder damper board</span>
+      </nav>
+      <h1>Alder damper board</h1>
+      <p class="lede">
+        Port Townsend smokehouse. The alder room is banked over last
+        night's coals. The maple room is cold. Drawing, banking, and
+        shutting are three classes the room already named.
+      </p>
+    </header>
+
+    <main>
+      <div class="house">
+        <article
+          class="scenario room room-banked"
+          data-controller="damper-board"
+          data-damper-board-drawn-open-class="room-drawing"
+          data-damper-board-banked-class="room-banked"
+          data-damper-board-shut-class="room-shut"
+        >
+          <h2 data-damper-board-target="roomName">Alder room</h2>
+          <p>King salmon sides, hour six. The damper is barely open.</p>
+          <div class="actions">
+            <button type="button" data-action="damper-board#draw">Draw the fire</button>
+            <button type="button" data-action="damper-board#bank">Bank the fire</button>
+            <button type="button" data-action="damper-board#shutDamper">Shut the damper</button>
+          </div>
+          <p class="reading" data-damper-board-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario room"
+          data-controller="damper-board"
+          data-damper-board-drawn-open-class="room-drawing"
+          data-damper-board-banked-class="room-banked"
+          data-damper-board-shut-class="room-shut"
+        >
+          <h2 data-damper-board-target="roomName">Maple room</h2>
+          <p>Empty racks. The firebox has not been lit today.</p>
+          <div class="actions">
+            <button type="button" data-action="damper-board#draw">Draw the fire</button>
+            <button type="button" data-action="damper-board#bank">Bank the fire</button>
+            <button type="button" data-action="damper-board#shutDamper">Shut the damper</button>
+          </div>
+          <p class="reading" data-damper-board-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="damper_board_controller.js"><code>damper_board_controller.js</code></a> — swaps drawnOpen, banked, and shut on the room</li>
+          <li>This page's source — room-drawing, room-banked, and room-shut</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

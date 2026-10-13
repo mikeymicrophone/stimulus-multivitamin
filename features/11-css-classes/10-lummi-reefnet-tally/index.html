@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  CSS classes · 10 · Lummi reefnet tally
+
+  Teaches:
+  - overLimit is declared on the gillnet tally and inherited.
+  - The reefnet tally adds soaked. Both of its attributes use
+    data-reefnet-tally-, not data-gillnet-tally-.
+  - A stray data-gillnet-tally-over-limit-class on the reefnet
+    gear is not overLimitClass.
+  - The setnet tally declares no classes of its own and still
+    has overLimitClass. soakedClass is not on it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lummi reefnet tally · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .grounds { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .gear { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .gear h2 { margin: 0; font-size: 1.15rem; }
+      .gear p { margin: 0; }
+      .gear.net-over { background: #f6d7c3; }
+      .gear.net-soaked { outline: 3px solid #1d4e89; outline-offset: -6px; }
+      .reading { min-height: 4.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GillnetTallyController from "./gillnet_tally_controller.js"
+      import ReefnetTallyController from "./reefnet_tally_controller.js"
+      import SetnetTallyController from "./setnet_tally_controller.js"
+
+      const application = Application.start()
+      application.register("gillnet-tally", GillnetTallyController)
+      application.register("reefnet-tally", ReefnetTallyController)
+      application.register("setnet-tally", SetnetTallyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>10 · Lummi reefnet tally</span>
+      </nav>
+      <h1>Lummi reefnet tally</h1>
+      <p class="lede">
+        Legoe Bay, sockeye week. The gillnet tally named the over-limit
+        class. The reefnet gear inherits it and adds a soaked class.
+        The setnet skiff inherits the tally and adds nothing.
+      </p>
+    </header>
+
+    <main>
+      <div class="grounds">
+        <article
+          class="scenario gear"
+          data-controller="gillnet-tally"
+          data-gillnet-tally-over-limit-class="net-over"
+        >
+          <h2 data-gillnet-tally-target="boatName">Francis Lee</h2>
+          <p>Drift net, 150 fathom. Under the limit at the morning count.</p>
+          <div class="actions">
+            <button type="button" data-action="gillnet-tally#markOverLimit">Mark over the limit</button>
+          </div>
+          <p class="reading" data-gillnet-tally-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario gear"
+          data-controller="reefnet-tally"
+          data-reefnet-tally-over-limit-class="net-over"
+          data-reefnet-tally-soaked-class="net-soaked"
+          data-gillnet-tally-over-limit-class="parent-over"
+        >
+          <h2 data-reefnet-tally-target="boatName">Lummi Bay gear</h2>
+          <p>Two anchors, the head buoy just showing. A copied gillnet attribute is on the card.</p>
+          <div class="actions">
+            <button type="button" data-action="reefnet-tally#markOverLimit">Mark over the limit</button>
+            <button type="button" data-action="reefnet-tally#markSoaked">Mark the net soaked</button>
+          </div>
+          <p class="reading" data-reefnet-tally-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario gear"
+          data-controller="setnet-tally"
+          data-setnet-tally-over-limit-class="net-over"
+        >
+          <h2 data-setnet-tally-target="boatName">Cherry Point skiff</h2>
+          <p>Set net inside the closure line. The tally adds no class of its own.</p>
+          <div class="actions">
+            <button type="button" data-action="setnet-tally#markOverLimit">Mark over the limit</button>
+          </div>
+          <p class="reading" data-setnet-tally-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="gillnet_tally_controller.js"><code>gillnet_tally_controller.js</code></a> — the overLimit class</li>
+          <li><a href="reefnet_tally_controller.js"><code>reefnet_tally_controller.js</code></a> — inherits overLimit and adds soaked</li>
+          <li><a href="setnet_tally_controller.js"><code>setnet_tally_controller.js</code></a> — inherits overLimit and declares none</li>
+          <li>This page's source — three gears, and a stray parent attribute on the reefnet card</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

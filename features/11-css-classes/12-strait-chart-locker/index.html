@@ -1,0 +1,155 @@
+<!doctype html>
+<!--
+  CSS classes · 12 · Strait chart locker
+
+  Teaches:
+  - Plate 18465 reads staleClass live. Two lists are not the
+    same array. Pushing does not stick. Rewriting the attribute
+    does not bump the read count. Assigning the property throws
+    TypeError on #<extended>.
+  - Plate 18423 files static classes as an object. Plate 18400
+    files it as a string. Neither defines staleClass.
+  - Plate 18441 writes the attribute in camelCase. Plate 18484
+    writes it with an underscore. Both throw Missing attribute
+    for the kebab-case name. freshClass, written in kebab-case,
+    still reads.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Strait chart locker · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .locker { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .plate { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .plate h2 { margin: 0; font-size: 1.1rem; }
+      .plate p { margin: 0; }
+      .plate.chart-stale { box-shadow: inset 4px 0 0 #8c2f1b; }
+      .plate.chart-fresh { box-shadow: inset 4px 0 0 #1f3d2b; }
+      .reading, .fault { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .faults { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ChartCorrectionController from "./chart_correction_controller.js"
+      import PlateObjectController from "./plate_object_controller.js"
+      import PlateStringController from "./plate_string_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        const item = document.createElement("li")
+        item.textContent = `${message} :: ${error.name}: ${error.message}`
+        document.querySelector("[data-faults]").append(item)
+      }
+      application.register("chart-correction", ChartCorrectionController)
+      application.register("plate-object", PlateObjectController)
+      application.register("plate-string", PlateStringController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>12 · Strait chart locker</span>
+      </nav>
+      <h1>Strait chart locker</h1>
+      <p class="lede">
+        Corrections for the Strait of Juan de Fuca. One plate is filed
+        in kebab-case and can be corrected. Two plates were filed in
+        the shape values use. Two more miss the attribute name.
+      </p>
+    </header>
+
+    <main>
+      <div class="locker">
+        <article
+          class="scenario plate chart-stale"
+          data-controller="chart-correction"
+          data-chart-correction-stale-class="chart-stale"
+          data-chart-correction-fresh-class="chart-fresh"
+        >
+          <h2 data-chart-correction-target="plateName">Plate 18465</h2>
+          <p>Admiralty Inlet to Point Wilson. The stale class is on the plate.</p>
+          <div class="actions">
+            <button type="button" data-action="chart-correction#correctPlate">Correct the plate</button>
+            <button type="button" data-action="chart-correction#assignClass">Assign the class property</button>
+          </div>
+          <p class="reading" data-chart-correction-target="reading" aria-live="polite"></p>
+          <p class="fault" data-chart-correction-target="fault" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario plate"
+          data-controller="plate-object"
+          data-plate-object-stale-class="chart-stale"
+        >
+          <h2 data-plate-object-target="plateName">Plate 18423</h2>
+          <p>Filed with a classes object, the way a value would be filed.</p>
+          <p class="reading" data-plate-object-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario plate"
+          data-controller="plate-string"
+          data-plate-string-stale-class="chart-stale"
+        >
+          <h2 data-plate-string-target="plateName">Plate 18400</h2>
+          <p>Filed with the class name as a bare string.</p>
+          <p class="reading" data-plate-string-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario plate"
+          data-controller="chart-correction"
+          data-chart-correction-staleClass="chart-stale"
+          data-chart-correction-fresh-class="chart-fresh"
+        >
+          <h2 data-chart-correction-target="plateName">Plate 18441</h2>
+          <p>The stale attribute was written in camelCase. Fresh is kebab-case.</p>
+          <div class="actions">
+            <button type="button" data-action="chart-correction#readUnguarded">Read the stale class</button>
+          </div>
+          <p class="reading" data-chart-correction-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario plate"
+          data-controller="chart-correction"
+          data-chart-correction-stale_class="chart-stale"
+          data-chart-correction-fresh-class="chart-fresh"
+        >
+          <h2 data-chart-correction-target="plateName">Plate 18484</h2>
+          <p>The stale attribute uses an underscore. Fresh is kebab-case.</p>
+          <p class="reading" data-chart-correction-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section>
+        <h2>Handled errors</h2>
+        <ul class="faults" data-faults></ul>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="chart_correction_controller.js"><code>chart_correction_controller.js</code></a> — live read, assignment, and a kebab-case miss</li>
+          <li><a href="plate_object_controller.js"><code>plate_object_controller.js</code></a> — an object where an array belongs</li>
+          <li><a href="plate_string_controller.js"><code>plate_string_controller.js</code></a> — a string where an array belongs</li>
+          <li>This page's source — five plates in the locker</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

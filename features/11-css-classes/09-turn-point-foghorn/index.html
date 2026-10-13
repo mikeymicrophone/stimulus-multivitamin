@@ -1,0 +1,117 @@
+<!doctype html>
+<!--
+  CSS classes · 09 · Turn Point foghorn
+
+  Teaches:
+  - Point Wilson has one sounding class. Spreading it into
+    classList.toggle turns the horn on, then off.
+  - Patos has two classes. Spreading them into toggle forces
+    horn-on on, and leaves horn-pulse untouched. A second press
+    stays on.
+  - Stuart Island loops each token. The first press clears both
+    classes. The second press brings both back.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Turn Point foghorn · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .station { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .horn-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .horn-card h2 { margin: 0; font-size: 1.15rem; }
+      .horn-card p { margin: 0; }
+      .horn { min-height: 2.2rem; border-radius: 8px; padding: 0.4rem 0.7rem; background: #f3ecdd; }
+      .horn.horn-on { background: #f6d7c3; font-weight: 700; }
+      .horn.horn-pulse { outline: 3px solid #b5651d; outline-offset: 2px; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FoghornKeyController from "./foghorn_key_controller.js"
+
+      const application = Application.start()
+      application.register("foghorn-key", FoghornKeyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>09 · Turn Point foghorn</span>
+      </nav>
+      <h1>Turn Point foghorn</h1>
+      <p class="lede">
+        Three horns along the boundary. Point Wilson is one class.
+        Patos and Stuart Island are a stack. Spreading that stack
+        into <code>classList.toggle</code> does not toggle it.
+      </p>
+    </header>
+
+    <main>
+      <div class="station">
+        <article
+          class="scenario horn-card"
+          data-controller="foghorn-key"
+          data-foghorn-key-sounding-class="horn-on"
+        >
+          <h2 data-foghorn-key-target="hornName">Point Wilson</h2>
+          <p>One class on the key. Spread toggle is a real toggle.</p>
+          <p class="horn" data-foghorn-key-target="horn">Diaphone</p>
+          <div class="actions">
+            <button type="button" data-action="foghorn-key#spreadToggle">Spread toggle</button>
+          </div>
+          <p class="reading" data-foghorn-key-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario horn-card"
+          data-controller="foghorn-key"
+          data-foghorn-key-sounding-class="horn-on horn-pulse"
+        >
+          <h2 data-foghorn-key-target="hornName">Patos</h2>
+          <p>Two classes. The spread treats the second as force.</p>
+          <p class="horn" data-foghorn-key-target="horn">Reed horn</p>
+          <div class="actions">
+            <button type="button" data-action="foghorn-key#spreadToggle">Spread toggle</button>
+          </div>
+          <p class="reading" data-foghorn-key-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario horn-card"
+          data-controller="foghorn-key"
+          data-foghorn-key-sounding-class="horn-on horn-pulse"
+        >
+          <h2 data-foghorn-key-target="hornName">Stuart Island</h2>
+          <p>The same stack, toggled one token at a time. It starts sounding.</p>
+          <p class="horn horn-on horn-pulse" data-foghorn-key-target="horn">Reed horn</p>
+          <div class="actions">
+            <button type="button" data-action="foghorn-key#loopToggle">Loop toggle</button>
+          </div>
+          <p class="reading" data-foghorn-key-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="foghorn_key_controller.js"><code>foghorn_key_controller.js</code></a> — spread toggle against a loop</li>
+          <li>This page's source — one class at Point Wilson, two at Patos and Stuart Island</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

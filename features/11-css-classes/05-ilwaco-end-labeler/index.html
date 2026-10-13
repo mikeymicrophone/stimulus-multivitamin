@@ -1,0 +1,120 @@
+<!doctype html>
+<!--
+  CSS classes · 05 · Ilwaco end labeler
+
+  Teaches:
+  - Line 1 has jammed class end-jam. The singular property is
+    that token. The plural list is one token.
+  - Line 2's attribute is empty. hasJammedClass is true.
+    jammedClass is undefined. jammedClasses is [].
+  - Line 3's attribute is only spaces. Same three facts.
+  - Stamping the singular property onto an empty slip adds the
+    class token undefined. Stamping the list adds nothing.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ilwaco end labeler · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .line-floor { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .machine { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .machine h2 { margin: 0; font-size: 1.15rem; }
+      .machine p { margin: 0; }
+      .tin { border-radius: 8px; padding: 0.45rem 0.7rem; background: #f3ecdd; }
+      .tin.end-jam { background: #f6d0c0; color: #8c2f1b; font-weight: 700; }
+      .tin.undefined { background: #111; color: #fff; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EndLabelerController from "./end_labeler_controller.js"
+
+      const application = Application.start()
+      application.register("end-labeler", EndLabelerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>05 · Ilwaco end labeler</span>
+      </nav>
+      <h1>Ilwaco end labeler</h1>
+      <p class="lede">
+        Pilchard line at Ilwaco. Line 1 wrote the jam class. Line 2
+        left the slip blank. Line 3 left only spaces. A blank slip is
+        still a present attribute.
+      </p>
+    </header>
+
+    <main>
+      <div class="line-floor">
+        <article
+          class="scenario machine"
+          data-controller="end-labeler"
+          data-end-labeler-jammed-class="end-jam"
+        >
+          <h2 data-end-labeler-target="lineName">Line 1</h2>
+          <p>Half-pound ovals. The jam slip says end-jam.</p>
+          <p class="tin" data-end-labeler-target="label">End label</p>
+          <div class="actions">
+            <button type="button" data-action="end-labeler#stampClass">Stamp the class</button>
+            <button type="button" data-action="end-labeler#stampList">Stamp the list</button>
+          </div>
+          <p class="reading" data-end-labeler-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario machine"
+          data-controller="end-labeler"
+          data-end-labeler-jammed-class=""
+        >
+          <h2 data-end-labeler-target="lineName">Line 2</h2>
+          <p>The jam slip was left blank.</p>
+          <p class="tin" data-end-labeler-target="label">End label</p>
+          <div class="actions">
+            <button type="button" data-action="end-labeler#stampClass">Stamp the class</button>
+            <button type="button" data-action="end-labeler#stampList">Stamp the list</button>
+          </div>
+          <p class="reading" data-end-labeler-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario machine"
+          data-controller="end-labeler"
+          data-end-labeler-jammed-class="   "
+        >
+          <h2 data-end-labeler-target="lineName">Line 3</h2>
+          <p>The jam slip is only spaces.</p>
+          <p class="tin" data-end-labeler-target="label">End label</p>
+          <div class="actions">
+            <button type="button" data-action="end-labeler#stampClass">Stamp the class</button>
+            <button type="button" data-action="end-labeler#stampList">Stamp the list</button>
+          </div>
+          <p class="reading" data-end-labeler-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="end_labeler_controller.js"><code>end_labeler_controller.js</code></a> — empty and whitespace class attributes</li>
+          <li>This page's source — end-jam, a blank slip, and a slip of spaces</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

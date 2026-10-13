@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  CSS classes · 07 · Mukilteo ramp lamps
+
+  Teaches:
+  - state is a String value. stateValueChanged paints the lamp.
+  - open, moving, and closed are logical classes. The action
+    only assigns stateValue.
+  - Mukilteo's tokens and Clinton's tokens are different, and
+    both come from markup. The controller does not name them.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Mukilteo ramp lamps · CSS classes · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .terminal { display: grid; gap: 0.75rem; max-width: 44rem; }
+      .ramp { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .ramp h2 { margin: 0; font-size: 1.15rem; }
+      .ramp p { margin: 0; }
+      .lamp { height: 0.9rem; border-radius: 999px; background: #d9d3c5; }
+      .lamp.ramp-open, .lamp.clinton-clear { background: #2f7d4a; }
+      .lamp.ramp-moving, .lamp.clinton-travel { background: #e0a100; }
+      .lamp.ramp-closed, .lamp.clinton-latched { background: #8c2f1b; }
+      .reading { min-height: 4.2rem; }
+      label { display: grid; gap: 0.2rem; max-width: 16rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RampLampController from "./ramp_lamp_controller.js"
+
+      const application = Application.start()
+      application.register("ramp-lamp", RampLampController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#css-classes">CSS classes</a> /
+        <span>07 · Mukilteo ramp lamps</span>
+      </nav>
+      <h1>Mukilteo ramp lamps</h1>
+      <p class="lede">
+        The Mukilteo–Clinton crossing. Each ramp lamp is painted from
+        the state value. Mukilteo and Clinton brought their own class
+        names for open, moving, and closed.
+      </p>
+    </header>
+
+    <main>
+      <div class="terminal">
+        <article
+          class="scenario ramp"
+          data-controller="ramp-lamp"
+          data-ramp-lamp-state-value="closed"
+          data-ramp-lamp-open-class="ramp-open"
+          data-ramp-lamp-moving-class="ramp-moving"
+          data-ramp-lamp-closed-class="ramp-closed"
+        >
+          <h2 data-ramp-lamp-target="rampName">Mukilteo</h2>
+          <div class="lamp" data-ramp-lamp-target="lamp"></div>
+          <label>
+            Ramp state
+            <select data-action="ramp-lamp#chooseState">
+              <option value="open">Open</option>
+              <option value="moving">Moving</option>
+              <option value="closed" selected>Closed</option>
+            </select>
+          </label>
+          <p class="reading" data-ramp-lamp-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario ramp"
+          data-controller="ramp-lamp"
+          data-ramp-lamp-state-value="open"
+          data-ramp-lamp-open-class="clinton-clear"
+          data-ramp-lamp-moving-class="clinton-travel"
+          data-ramp-lamp-closed-class="clinton-latched"
+        >
+          <h2 data-ramp-lamp-target="rampName">Clinton</h2>
+          <div class="lamp" data-ramp-lamp-target="lamp"></div>
+          <label>
+            Ramp state
+            <select data-action="ramp-lamp#chooseState">
+              <option value="open" selected>Open</option>
+              <option value="moving">Moving</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label>
+          <p class="reading" data-ramp-lamp-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="ramp_lamp_controller.js"><code>ramp_lamp_controller.js</code></a> — stateValueChanged paints the lamp from markup classes</li>
+          <li>This page's source — Mukilteo's ramp-closed and Clinton's clinton-clear</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

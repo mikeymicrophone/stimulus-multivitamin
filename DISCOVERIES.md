@@ -1784,6 +1784,222 @@ a history entry.
 [Keeper watch slate](features/10-value-change-callbacks/12-keeper-watch-slate/),
 [Admiralty Inlet board](features/10-value-change-callbacks/13-admiralty-inlet-board/).
 
+## CSS classes
+
+### The singular class throws only when the attribute is absent
+
+**What happens.** `this.[name]Class` throws `Error: Missing attribute
+"data-identifier-name-class"` when that attribute is not on the
+controller element. The message names the kebab-case attribute, not
+the logical name, and it is a plain `Error`. `this.[name]Classes`
+does not throw: it returns a new `[]` on every read.
+`has[Name]Class` is false. The reference says Stimulus throws if you
+access a CSS class property when the attribute is absent. That is
+the singular getter. The plural getter and `has[Name]Class` do not
+throw. In `connect()`, the error is caught and reported as
+`Error connecting controller`. The rest of that `connect()` does not
+run, and controllers later in the scan still connect. In an action
+it is `Error invoking action "click->identifier#method"`. In a value
+callback the error is not a `TypeError`, so the value observer does
+not prefix it with `Stimulus Value "identifier.name"`. It follows
+[A throw from a value callback skips the rest of the connect scan](#a-throw-from-a-value-callback-skips-the-rest-of-the-connect-scan):
+`handleError` stays quiet, `connect()` does not run, and every
+controller after that element in the scan is skipped.
+
+**Why it matters.** Wing kelp can read `scorchingClasses` and fall
+back to `steadyClass`. Reading `scorchingClass` from the button is
+the action error, and the connect reading stays. Nori reads it from
+`connect()` and stops after the sentence it wrote first. The lane
+slip at Vessel Traffic reads `alarmClass` from `laneValueChanged`.
+The fault is `Error: Missing attribute "data-lane-slip-alarm-class"`,
+the slip never says it connected, and the bell book after it stays
+on "Bell book has not connected."
+
+**What to do.** Branch on `has[Name]Class` before the singular
+getter. Use the plural list when an absent attribute should mean
+"add nothing." Keep a value callback that reads a class from
+throwing, or put that controller last on the page.
+
+**Seen in:** [Kelp dryer trays](features/11-css-classes/04-kelp-dryer-trays/),
+[Seattle traffic board](features/11-css-classes/13-seattle-traffic-board/).
+
+### An empty class attribute is present and the singular value is undefined
+
+**What happens.** `data-end-labeler-jammed-class=""` and
+`data-end-labeler-jammed-class="   "` are present, so
+`hasJammedClass` is true. Tokenizing keeps runs of non-whitespace,
+so the empty string and the spaces are both `[]` from
+`jammedClasses`. `jammedClass` is `undefined`. It does not throw,
+because the throw is only for a missing attribute. `has[Name]Class`
+does not mean the singular getter returns a string.
+
+**Why it matters.** A blank jam slip on line 2 looks filled in to a
+guard that only checks `hasJammedClass`. Stamping `jammedClass`
+onto the label adds the token `undefined`. Stamping the list adds
+nothing, and the label stays `tin`.
+
+**What to do.** Treat a missing attribute and a blank attribute as
+different. Fall back when `has[Name]Class` is false, and also when
+the plural list is empty. Spread the plural list into
+`classList.add` and `classList.remove`.
+
+**Why this section.** The empty list is Stimulus. The token
+`undefined` is the DOM stringifying the value `classList.add`
+received. It belongs here because the singular getter is what
+handed that value over.
+
+**Seen in:** [Ilwaco end labeler](features/11-css-classes/05-ilwaco-end-labeler/),
+[Netshed mend flags](features/11-css-classes/03-netshed-mend-flags/)
+(the gillnet's extra spaces are dropped, and three tokens remain).
+
+### Class properties are getters, and nothing watches the attribute
+
+**What happens.** `staleClass` and `staleClasses` have no setter.
+`this.staleClass = this.freshClass` throws `TypeError: Cannot set
+property staleClass of #<extended> which has only a getter`. The
+name in that message is the blessed constructor, `extended`, not the
+controller class. Each read of `staleClasses` tokenizes again, so
+`this.staleClasses === this.staleClasses` is false, and `push` on
+the array is gone by the next read. Writing the attribute with
+`setAttribute` does not run a callback. The read count stays `1`.
+The next `staleClass` is the new token.
+
+**Why it matters.** Correcting plate 18465 to `chart-fresh` does not
+look like a value change. Nothing else on the plate repaints unless
+the action does it. Assigning the property leaves the attribute on
+`chart-stale` and reports the `TypeError`. Unlike values, there is
+no writer and no `[name]ClassChanged`.
+
+**What to do.** Change the attribute with `setAttribute` or
+`removeAttribute`, then read again and apply the tokens yourself.
+Don't assign the class property. Don't mutate the array you just
+read.
+
+**Seen in:** [Strait chart locker](features/11-css-classes/12-strait-chart-locker/),
+[Terminal shed lamps](features/11-css-classes/11-terminal-shed-lamps/).
+
+### A classes object or a classes string is ignored
+
+**What happens.** `static classes` is read with the array walker.
+An object (`{ stale: "chart-stale" }`) and a string (`"stale"`) are
+not arrays, so no class properties are defined. `"staleClass" in
+controller` is false. `this.staleClass` is `undefined` and does not
+throw. `this.hasStaleClass` is `undefined`. The
+`data-plate-object-stale-class` attribute is never read. This is
+not the missing-attribute error, which is thrown only by a getter
+that was defined.
+
+**Why it matters.** A plate filed the way a value is filed, with a
+type or a default, connects and then has no class to apply. The
+attribute on the element looks correct and is unused.
+
+**What to do.** Declare `static classes` as an array of logical
+names. Put the CSS tokens in `data-[identifier]-[name]-class`.
+
+**Seen in:** [Strait chart locker](features/11-css-classes/12-strait-chart-locker/).
+
+### A class attribute has to be the exact kebab-case name
+
+**What happens.** The lookup is
+`data-${identifier}-${dasherize(name + "-class")}`. `stale` is
+`data-chart-correction-stale-class`. HTML lowercases attribute
+names, so `data-chart-correction-staleClass` is stored as
+`data-chart-correction-staleclass` and does not match. Underscores
+are not camelized. `data-chart-correction-stale_class` is a
+different attribute. Either miss makes `hasStaleClass` false and
+makes `staleClass` throw `Missing attribute
+"data-chart-correction-stale-class"`. A sibling `fresh` attribute
+written in kebab-case on the same element still reads. Values miss
+the same way and then return the type default. Classes miss and the
+singular getter throws. See
+[Value attributes are the exact kebab-case name](#value-attributes-are-the-exact-kebab-case-name).
+
+**Why it matters.** Plate 18441 holds `chart-stale` in the DOM and
+the controller still throws. Plate 18484's underscore attribute is
+present and unread. `freshClass` on both plates is `chart-fresh`.
+
+**What to do.** Write class attributes in kebab-case. A camelCase
+logical name in `static classes` belongs to a hyphenated attribute,
+the way `coldHold` belongs to `data-brine-tag-cold-hold-class`.
+
+**Why this section.** Lowercasing is the HTML parser. Stimulus is
+what requires the hyphenated name and throws, instead of falling
+back, when the attribute does not match.
+
+**Seen in:** [Strait chart locker](features/11-css-classes/12-strait-chart-locker/),
+[Icehouse brine tags](features/11-css-classes/01-icehouse-brine-tags/).
+
+### Inherited class names use the subclass identifier
+
+**What happens.** `static classes` is collected from the class and
+its ancestors. `ReefnetTally` declares `soaked` and inherits
+`overLimit`. `SetnetTally` declares no classes and still has
+`overLimitClass`. `soakedClass` is not a property on the gillnet or
+the setnet, so the read is `undefined` and does not throw. The
+attribute is the instance's identifier.
+`data-reefnet-tally-over-limit-class` is the reefnet's over-limit
+class. `data-gillnet-tally-over-limit-class` on that element is not
+read. The setnet reads `data-setnet-tally-over-limit-class`. The
+same rule for values is
+[Inherited values use the subclass identifier](#inherited-values-use-the-subclass-identifier).
+
+**Why it matters.** A reefnet card copied from the gillnet tally
+looks wired. The class it applies is `net-over`, from its own
+attribute, and `parent-over` stays on the element unused.
+
+**What to do.** Stamp inherited classes with the identifier of the
+controller that is actually on the element.
+
+**Seen in:** [Lummi reefnet tally](features/11-css-classes/10-lummi-reefnet-tally/).
+
+### A shorter identifier can share a longer identifier's class attribute
+
+**What happens.** The attribute name is
+`data-${identifier}-${dasherize(name + "-class")}`. For `wharf` and
+`shedLamp` that is `data-wharf-shed-lamp-class`. For `wharf-shed`
+and `lamp` it is the same string. Both controllers, on one element,
+read that attribute. Copying `amberClass` into it makes the next
+read on both controllers `shed-amber`, in the same action. `pile`
+does not collide: the wharf's pile is `data-wharf-pile-class` and
+the shed's pile is `data-wharf-shed-pile-class`. There is no class
+callback, so the action has to paint both. This is the same
+composition as
+[A shorter identifier can share a longer identifier's value attribute](#a-shorter-identifier-can-share-a-longer-identifiers-value-attribute),
+with `-class` instead of `-value`.
+
+**Why it matters.** Ambering the shed lamp from the wharf moves the
+shed's lamp too. Swapping the piles does not: fir stays on the
+wharf and spruce stays on the shed.
+
+**What to do.** Don't let one identifier be a hyphen-prefix of
+another when a class name on the shorter one can spell the rest
+(`wharf` / `wharf-shed`, `shedLamp` / `lamp`).
+
+**Seen in:** [Terminal shed lamps](features/11-css-classes/11-terminal-shed-lamps/).
+
+### Spreading class lists into classList.toggle forces the first class on
+
+**What happens.** `classList.toggle` takes a token and an optional
+force flag. `toggle(...["horn-on"])` toggles. `toggle(...["horn-on",
+"horn-pulse"])` is `toggle("horn-on", "horn-pulse")`. A non-empty
+string is forced true, so the first class is added and stays added
+on the next press. The second class is never toggled. Looping the
+list and toggling one token at a time clears the stack, then brings
+both tokens back.
+
+**Why it matters.** Patos stays `horn-on` no matter how many times
+the spread runs. Stuart Island, toggled per token, goes quiet and
+then sounds again. Point Wilson, with one class, really does toggle.
+
+**What to do.** Spread `[name]Classes` into `classList.add` and
+`classList.remove`. Toggle one token, or loop. Don't spread two or
+more classes into `toggle`.
+
+**Why this section.** The force flag is the DOM. It belongs here
+because `[name]Classes` is the array that gets spread.
+
+**Seen in:** [Turn Point foghorn](features/11-css-classes/09-turn-point-foghorn/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
