@@ -31,16 +31,16 @@ state.
 
 **Try it**
 
-Tide live reads "Tide 6.4 ft." Wind live reads "Wind 12 kn."
-Barometer live reads "Barometer 30.12 in." The fallbacks are
+Tide live reads "Tide 6.4 ft". Wind live reads "Wind 12 kn".
+Barometer live reads "Barometer 30.12 in". The fallbacks are
 hidden. Handled 0. Trip the tide sensor. The tide live line
 is hidden. The fallback reads "Tide tile offline. Last good
 reading 6.4 ft." The tide article has class `tile-offline`.
 The clerk reads
 `Handled Tide. Error invoking action "click->bay-tile#failSensor"`.
-Handled 1. Step the wind. Wind live reads "Wind 18 kn." Read
+Handled 1. Step the wind. Wind live reads "Wind 18 kn". Read
 a blank sensor. The caught line reads "Caught in the action.
 Barometer. Sensor blank." The barometer fallback reads
 "Barometer tile offline. Last good reading 30.12 in."
-Handled stays 1. Retry the tide. Tide live reads "Tide 6.4 ft."
+Handled stays 1. Retry the tide. Tide live reads "Tide 6.4 ft"
 and is shown. The tide article does not have `tile-offline`.
