@@ -25,8 +25,13 @@ not JSON, and a seed tally that sits after the fax.
   `JSON.parse`'s, and `handleError` is not called. See
   [A throw from a value callback skips the rest of the connect scan](../../../DISCOVERIES.md#a-throw-from-a-value-callback-skips-the-rest-of-the-connect-scan).
 - Filing `["bay"]` into the reading throws `TypeError: Stimulus Value
-  "nursery-card.readingValue" - expected value of type "object"...`.
-  Filing bay B after that still paints. The observer is still listening.
+  "nursery-card.readingValue" - expected value of type "object"...`
+  before the method. That throw is an `error` event, not
+  `unhandledrejection` and not `handleError`. The string map does not
+  keep the bad text. Filing bay B writes a real object, then throws
+  again while reading the list as `previousValue`, so the summary stays
+  on the last successful paint. Filing bay C parses, and the summary
+  moves.
 
 **Files**
 
@@ -52,7 +57,8 @@ log adds trays `["seed","spat","cultch"]`, previous `["seed","spat"]`.
 
 Scribble the bay. The log adds "Scribbled bay B. Card still reads A."
 File the same reading. The log adds only "Filed the same reading."
-File bay B. The log adds the reading with bay B.
+File bay B. The log adds "Filed bay B." and then a reading line with
+bay B. The summary ends in "bay B".
 
 Rewrite the lot. The log adds "Rewrote the lot." then "Lot 8, previous
 8." The attribute is `8`.
@@ -62,7 +68,16 @@ has not opened." The fault line is `SyntaxError: Unexpected token 'c',
 "chowder, pilot bread" is not valid JSON`. The handled line stays
 "Nothing was passed to handleError."
 
-File a list as the reading. The fault line becomes `TypeError: Stimulus
-Value "nursery-card.readingValue" - expected value of type "object" but
-instead got value "["bay"]" of type "array"`. File bay B again. The
-summary ends in "bay B" and the log gains another reading line.
+File a list as the reading. The log adds "Filed a list into the
+reading." The summary stays on bay B. The fault line becomes
+`TypeError: Stimulus Value "nursery-card.readingValue" - expected value
+of type "object" but instead got value "["bay"]" of type "array"`.
+The handled line stays "Nothing was passed to handleError."
+
+File bay B again. The log adds "Filed bay B." and no reading line. The
+fault line is that same type error again, because the previous text is
+still the list. The summary stays on bay B. The attribute is now the
+bay B object.
+
+File bay C. The log adds "Filed bay C." and then a reading line with
+bay C. The summary ends in "bay C".

@@ -6,7 +6,9 @@
  * parses. Pushing cultch on the returned trays, or scribbling the bay
  * on the returned reading, does not run the callback. Assigning a new
  * array or a new object does. Filing the same JSON does not. Rewriting
- * lot 08 runs the callback with (8, 8).
+ * lot 08 runs the callback with (8, 8). Filing a list into the
+ * reading throws before the method. The next bay throws again, because
+ * that previous text is still the list. The bay after that paints.
  */
 import { Controller } from "@hotwired/stimulus"
 
@@ -77,6 +79,12 @@ export default class extends Controller {
 
   fileBay() {
     this.readingValue = { depth_cm: 12, bay: "B" }
+    this.record("Filed bay B.")
+  }
+
+  fileDeepBay() {
+    this.readingValue = { depth_cm: 14, bay: "C" }
+    this.record("Filed bay C.")
   }
 
   fileListAsReading() {

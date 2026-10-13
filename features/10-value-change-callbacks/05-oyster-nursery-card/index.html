@@ -53,6 +53,11 @@
         const fault = event.reason
         document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
       })
+      window.addEventListener("error", (event) => {
+        const fault = event.error
+        if (!fault) return
+        document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
+      })
       application.register("nursery-card", NurseryCardController)
       application.register("hatchery-fax", HatcheryFaxController)
       application.register("seed-tally", SeedTallyController)
@@ -93,6 +98,7 @@
           <button type="button" data-action="nursery-card#scribbleBay">Scribble the bay</button>
           <button type="button" data-action="nursery-card#fileSameReading">File the same reading</button>
           <button type="button" data-action="nursery-card#fileBay">File bay B</button>
+          <button type="button" data-action="nursery-card#fileDeepBay">File bay C</button>
           <button type="button" data-action="nursery-card#rewriteLot">Rewrite the lot</button>
           <button type="button" data-action="nursery-card#fileListAsReading">File a list as the reading</button>
         </div>

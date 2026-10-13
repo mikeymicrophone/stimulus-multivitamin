@@ -23,6 +23,12 @@ export default class extends Controller {
     this.readingTarget.textContent = `${place} is ${voice}.`
     this.record(`${place} ${shown(sounding)}, previous ${shown(previous)}.`)
   }
+
+  record(line) {
+    const item = document.createElement("li")
+    item.textContent = line
+    this.logTarget.append(item)
+  }
 }
 
 function shown(value) {

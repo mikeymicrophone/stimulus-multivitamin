@@ -1696,17 +1696,26 @@ using the value's method name (`readingValue`, not `reading`). The
 method body does not run. `handleError` is not called. On the way in,
 the throw skips the rest of that controller's value callbacks, its
 target callbacks, and `connect()`, and it skips every controller later
-in the same scan. The observer has already started listening. A later
-change still runs. A throw from that later change skips the rest of
-that mutation batch only. It does not stop the observer. That is not
+in the same scan. That scan is inside the promise returned by
+`Application.start()`, so the `SyntaxError` is an unhandled rejection.
+The observer has already started listening. A later change still runs,
+and a throw from it is an uncaught `error` from the mutation observer,
+not a rejection and not `handleError`. The string map stores the new
+attribute text only after the callback returns, so a throw leaves the
+map on the previous text. The next assignment still parses
+`previousValue` from the attribute. If that text is the bad JSON, the
+method does not run, even though the attribute now holds a good value.
+A further assignment, whose previous text parses, does run. That is not
 the target-callback pause in
 [The target observer is paused while the callback runs](#the-target-observer-is-paused-while-the-callback-runs).
 
 **Why it matters.** A hatchery fax of `chowder, pilot bread` connects
 nothing after it, including a tally that has nothing wrong with it.
 The nursery ahead of the fax is fine. Filing `["bay"]` into an object
-value throws the prefixed type error, and filing a real reading
-afterward still paints.
+value throws the prefixed type error and leaves the summary on the
+last successful paint. Filing bay B writes a real object and throws
+again, because the previous text is still the list. Filing bay C is
+the one that paints.
 
 **What to do.** Keep untrusted JSON off a value that has a changed
 callback, or catch at the edge that writes the attribute. Put a card
