@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  Action parameters · 01 · Library hold shelf
+
+  Teaches:
+  - data-[identifier]-[name]-param. The identifier is the controller's
+    kebab-case name. The param name is kebab-case too.
+  - Stimulus camelizes the param name on "-" and "_". patron-name arrives
+    as event.params.patronName. call-number arrives as callNumber.
+  - HTML lowercases attribute names. data-hold-shelf-patronName-param is
+    stored as data-hold-shelf-patronname-param, so the key is patronname
+    and event.params.patronName stays missing.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Library hold shelf · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .hold-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.8rem; }
+      .hold-card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.35rem; }
+      .hold-card h3 { margin: 0; font-size: 1.05rem; }
+      .hold-card p { margin: 0; }
+      .hold-card .call { font-family: ui-monospace, Menlo, monospace; }
+      .slip { display: grid; gap: 0.35rem; margin-top: 1rem; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.9rem 1rem; background: #fff; }
+      .slip h3 { margin: 0; font-size: 1rem; }
+      .slip p { margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HoldShelfController from "./hold_shelf_controller.js"
+
+      const application = Application.start()
+      application.register("hold-shelf", HoldShelfController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>01 · Library hold shelf</span>
+      </nav>
+      <h1>Library hold shelf</h1>
+      <p class="lede">
+        East Branch circulation. Each hold slip passes the patron, the call
+        number, and the pickup date as action params. Multi-word names are
+        kebab-case in the markup and camelCase on <code>event.params</code>.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="hold-shelf">
+        <h2>East Branch · Holds to pull</h2>
+        <ul class="hold-list">
+          <li class="hold-card">
+            <h3>North Woods Field Guide</h3>
+            <p>Marisol Keene · pickup by 18 Oct 2026</p>
+            <p class="call">508.3 N81</p>
+            <button type="button"
+                    data-action="hold-shelf#pullHold"
+                    data-hold-shelf-title-param="North Woods Field Guide"
+                    data-hold-shelf-patron-name-param="Marisol Keene"
+                    data-hold-shelf-call-number-param="508.3 N81"
+                    data-hold-shelf-pickup-by-param="2026-10-18">
+              Pull this hold
+            </button>
+          </li>
+          <li class="hold-card">
+            <h3>Weeknight Soup</h3>
+            <p>Helen Cho · pickup by 20 Oct 2026</p>
+            <p class="call">641.5 C45</p>
+            <button type="button"
+                    data-action="hold-shelf#pullHold"
+                    data-hold-shelf-title-param="Weeknight Soup"
+                    data-hold-shelf-patron-name-param="Helen Cho"
+                    data-hold-shelf-call-number-param="641.5 C45"
+                    data-hold-shelf-pickup-by-param="2026-10-20">
+              Pull this hold
+            </button>
+          </li>
+          <li class="hold-card">
+            <h3>Harbor Charts</h3>
+            <p>Owen Hart · imported from the old catalog, which wrote the patron attribute in camelCase</p>
+            <p class="call">912.4 H32</p>
+            <button type="button"
+                    data-action="hold-shelf#pullHold"
+                    data-hold-shelf-title-param="Harbor Charts"
+                    data-hold-shelf-patronName-param="Owen Hart"
+                    data-hold-shelf-call-number-param="912.4 H32"
+                    data-hold-shelf-pickup-by-param="2026-10-21">
+              Pull this hold
+            </button>
+          </li>
+        </ul>
+
+        <div class="slip" data-hold-shelf-target="slip" hidden>
+          <h3>Last slip pulled</h3>
+          <p data-hold-shelf-target="summary" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="hold_shelf_controller.js"><code>hold_shelf_controller.js</code></a> — reads camelCase keys from <code>event.params</code></li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

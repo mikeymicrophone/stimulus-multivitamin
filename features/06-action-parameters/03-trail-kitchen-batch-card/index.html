@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+  Action parameters · 03 · Trail kitchen batch card
+
+  Teaches:
+  - A JSON array param becomes an array. A JSON object param becomes an
+    object. Stimulus does not camelize keys inside that object, so
+    serve_count stays serve_count.
+  - A value that only looks like JSON stays a string. {calories: 380}
+    has unquoted keys, JSON.parse throws, and there is no calorie count
+    to read.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Trail kitchen batch card · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .preset-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+      .batch-card { display: grid; gap: 0.4rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; max-width: 36rem; }
+      .batch-card h3 { margin: 0; }
+      .batch-card ul { margin: 0; padding-left: 1.2rem; }
+      .batch-card p { margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TrailKitchenController from "./trail_kitchen_controller.js"
+
+      const application = Application.start()
+      application.register("trail-kitchen", TrailKitchenController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>03 · Trail kitchen batch card</span>
+      </nav>
+      <h1>Trail kitchen batch card</h1>
+      <p class="lede">
+        A trail crew's field kitchen loads a dinner preset. Ingredients and
+        allergens arrive as JSON arrays, and the nutrition line arrives as
+        a JSON object. The whiteboard copy is not JSON, so it stays a string.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="trail-kitchen">
+        <h2>Cedar Loop crew · Dinner</h2>
+        <div class="preset-row">
+          <button type="button" data-action="trail-kitchen#loadBatch"
+                  data-trail-kitchen-meal-name-param="Chili night"
+                  data-trail-kitchen-ingredients-param='["kidney beans","tomato","cumin"]'
+                  data-trail-kitchen-nutrition-param='{"calories":420,"serve_count":8}'
+                  data-trail-kitchen-allergens-param='["gluten"]'>
+            Load chili night
+          </button>
+          <button type="button" data-action="trail-kitchen#loadBatch"
+                  data-trail-kitchen-meal-name-param="Whiteboard stew"
+                  data-trail-kitchen-ingredients-param='["lentils","kale"]'
+                  data-trail-kitchen-nutrition-param="{calories: 380}"
+                  data-trail-kitchen-allergens-param="[]">
+            Load the whiteboard stew
+          </button>
+        </div>
+        <article class="batch-card" data-trail-kitchen-target="card" hidden>
+          <h3 data-trail-kitchen-target="heading"></h3>
+          <ul data-trail-kitchen-target="ingredients"></ul>
+          <p data-trail-kitchen-target="nutrition"></p>
+          <p data-trail-kitchen-target="allergens"></p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="trail_kitchen_controller.js"><code>trail_kitchen_controller.js</code></a> — renders a batch only when the params are really an array and an object</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

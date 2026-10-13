@@ -1,0 +1,123 @@
+<!doctype html>
+<!--
+  Action parameters · 06 · Neighborhood potluck board
+
+  Teaches:
+  - A card added from the form carries dish-name, servings, and
+    vegetarian params. After Stimulus binds the action, signing up reads
+    them with the usual casts.
+  - button.click() on the next line does nothing. The action is not
+    bound until a microtask after the insert. See DISCOVERIES.md,
+    "Actions on a brand-new element are not bound in the same turn."
+  - Param attributes are read when the action runs, not when it was
+    bound. Doubling the chili servings attribute changes the next signup
+    without reconnecting the controller.
+  - Dish names are written with JSON.stringify so they stay strings.
+    Servings are written raw so "8" becomes the number 8.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Neighborhood potluck board · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .potluck-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); gap: 1.25rem; align-items: start; }
+      @media (max-width: 48rem) { .potluck-layout { grid-template-columns: 1fr; } }
+      .dish-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+      .dish-list li { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.85rem; background: #fffdf8; display: flex; justify-content: space-between; gap: 0.6rem; align-items: center; }
+      .dish-form { display: grid; gap: 0.55rem; }
+      .dish-form label { display: grid; gap: 0.15rem; font-size: 0.9rem; font-weight: 600; }
+      .dish-form input[type="text"], .dish-form input[type="number"] { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .check-line { display: flex; gap: 0.4rem; align-items: center; font-weight: 600; }
+      .form-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+      .board-status { min-height: 1.4em; }
+      .same-turn { display: block; border: 1px solid var(--capsule-amber, #e8912d); border-radius: 8px; padding: 0.6rem 0.75rem; background: #fffaf0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PotluckBoardController from "./potluck_board_controller.js"
+
+      const application = Application.start()
+      application.register("potluck-board", PotluckBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>06 · Neighborhood potluck board</span>
+      </nav>
+      <h1>Neighborhood potluck board</h1>
+      <p class="lede">
+        Maple Court block party. Dishes already on the board, and dishes
+        added from the form, sign up through action params. Changing the
+        servings attribute is picked up on the next click.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="potluck-board">
+        <h2>Maple Court · Saturday potluck</h2>
+        <div class="potluck-layout">
+          <div>
+            <ul class="dish-list" data-potluck-board-target="list">
+              <li>
+                <span>Turkey chili · 8 servings</span>
+                <button type="button"
+                        data-potluck-board-target="chiliButton"
+                        data-action="potluck-board#signUp"
+                        data-potluck-board-dish-name-param='"Turkey chili"'
+                        data-potluck-board-servings-param="8"
+                        data-potluck-board-vegetarian-param="false">
+                  I'll bring turkey chili
+                </button>
+              </li>
+            </ul>
+            <p>
+              <button type="button" data-action="potluck-board#doubleChili">Double the chili</button>
+            </p>
+          </div>
+          <form class="dish-form" data-action="submit->potluck-board#addDish">
+            <label>
+              Dish
+              <input type="text" name="dish" data-potluck-board-target="dishName" autocomplete="off" value="Apple crumble">
+            </label>
+            <label>
+              Servings
+              <input type="number" name="servings" min="1" data-potluck-board-target="servings" value="6">
+            </label>
+            <label class="check-line">
+              <input type="checkbox" name="vegetarian" data-potluck-board-target="vegetarian" checked>
+              Vegetarian
+            </label>
+            <div class="form-actions">
+              <button type="submit">Add to the board</button>
+              <button type="button" data-action="potluck-board#addAndClaimNow">Add and claim immediately</button>
+            </div>
+          </form>
+        </div>
+        <p class="board-status" data-potluck-board-target="status" aria-live="polite">Nobody has claimed a dish yet.</p>
+        <p class="same-turn" data-potluck-board-target="immediate" hidden></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="potluck_board_controller.js"><code>potluck_board_controller.js</code></a> — signs up from params, including cards added later</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Action parameters · 09 · Greenhouse watering round
+
+  Teaches:
+  - Params, values, and dataset read the same kinds of characters
+    differently. event.params.liters is the number 1.5. The button's
+    dataset.greenhouseBedLitersParam is the string "1.5".
+  - A String value keeps "08". A Number value runs Number(), so "08"
+    becomes 8. A param "08" fails JSON.parse and stays the string "08".
+    See DISCOVERIES.md for the all-digit param case.
+  - A Boolean value treats "FALSE" as false. The param "FALSE" stays the
+    string FALSE, because JSON booleans are lowercase.
+  - dataset does not know about the param name. The key keeps the
+    identifier and the Param suffix.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Greenhouse watering round · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .bench { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.6rem; max-width: 40rem; }
+      .bench dl { display: grid; grid-template-columns: 9rem 1fr; gap: 0.2rem 0.8rem; margin: 0; }
+      .bench dt { color: var(--muted-ink, #555); }
+      .bench dd { margin: 0; }
+      .pour-report { display: block; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.8rem 1rem; background: #fff; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import GreenhouseBedController from "./greenhouse_bed_controller.js"
+
+      const application = Application.start()
+      application.register("greenhouse-bed", GreenhouseBedController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>09 · Greenhouse watering round</span>
+      </nav>
+      <h1>Greenhouse watering round</h1>
+      <p class="lede">
+        The orchid house at Glasshouse Row. The bed's name, code, flow, and
+        shade are values. The pour button's liters, shade flag, and bed code
+        are params. Moisture is a plain data attribute read through dataset.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario bench" data-controller="greenhouse-bed"
+               data-greenhouse-bed-bed-name-value="Orchid house"
+               data-greenhouse-bed-bed-code-value="08"
+               data-greenhouse-bed-flow-liters-value="08"
+               data-greenhouse-bed-shaded-value="FALSE"
+               data-moisture="damp">
+        <h2>Glasshouse Row · Bed 08</h2>
+        <dl>
+          <dt>Bed</dt><dd>Orchid house</dd>
+          <dt>Code</dt><dd>08</dd>
+          <dt>Flow value</dt><dd>08 liters per minute, stored as a number value</dd>
+          <dt>Shade value</dt><dd>FALSE, stored as a boolean value</dd>
+          <dt>Moisture</dt><dd>damp, a plain data attribute</dd>
+        </dl>
+        <button type="button" data-action="greenhouse-bed#pour"
+                data-greenhouse-bed-liters-param="1.5"
+                data-greenhouse-bed-shaded-param="FALSE"
+                data-greenhouse-bed-bed-code-param="08">
+          Pour 1.5 liters
+        </button>
+        <p class="pour-report" data-greenhouse-bed-target="report" hidden aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="greenhouse_bed_controller.js"><code>greenhouse_bed_controller.js</code></a> — prints values, params, and dataset side by side</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

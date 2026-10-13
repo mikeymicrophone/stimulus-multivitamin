@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  Action parameters · 11 · Lighthouse watch log
+
+  Teaches:
+  - keydown.enter@document->watch-log#stamp:prevent is declared on the
+    section, so event.params come from the section: stationName and
+    watchName. They do not come from the focused visitor field, even
+    though that field has data-watch-log-visitor-name-param.
+  - :prevent stops Enter in the visitor field from filing the log.
+  - The buoy button declares its own action, so it reads buoyName and
+    bearingDegrees from the button. stationName, which lives on the
+    section, is missing there.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lighthouse watch log · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .watch { display: grid; gap: 0.8rem; max-width: 40rem; }
+      .watch-form { display: grid; gap: 0.45rem; }
+      .watch-form label { display: grid; gap: 0.15rem; font-weight: 600; font-size: 0.9rem; }
+      .watch-form input { width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .buoy-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .stamp { min-height: 2.8em; border: 2px solid var(--bottle-green, #1f3d2b); border-radius: 10px; padding: 0.7rem 0.9rem; background: #fff; }
+      .file-status { min-height: 1.4em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WatchLogController from "./watch_log_controller.js"
+
+      const application = Application.start()
+      application.register("watch-log", WatchLogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>11 · Lighthouse watch log</span>
+      </nav>
+      <h1>Lighthouse watch log</h1>
+      <p class="lede">
+        Cape Ann Light, evening watch. Enter stamps the watch from the
+        section's params, no matter which field is focused. A buoy button
+        carries its own params and does not see the station.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario watch" data-controller="watch-log"
+               data-action="keydown.enter@document->watch-log#stamp:prevent"
+               data-watch-log-station-name-param="Cape Ann Light"
+               data-watch-log-watch-name-param="Evening">
+        <h2>Cape Ann Light · Evening watch</h2>
+        <form class="watch-form" data-action="submit->watch-log#fileLog">
+          <label>
+            Visitor
+            <input type="text" name="visitor" value="Ada Morales" autocomplete="off"
+                   data-watch-log-visitor-name-param="Ada Morales">
+          </label>
+          <button type="submit">File the log</button>
+        </form>
+        <div class="buoy-row">
+          <button type="button" data-action="watch-log#markBuoy"
+                  data-watch-log-buoy-name-param="Northeast bell"
+                  data-watch-log-bearing-degrees-param="42">
+            Mark northeast bell
+          </button>
+        </div>
+        <p class="stamp" data-watch-log-target="stamp" aria-live="polite">No stamp yet.</p>
+        <p class="file-status" data-watch-log-target="fileStatus">The log has not been filed.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="watch_log_controller.js"><code>watch_log_controller.js</code></a> — stamps from the section and marks a buoy from its button</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<!--
+  Action parameters · 05 · Campus mail tray
+
+  Teaches:
+  - Two actions on one element read the same params. mail-tray#route and
+    mail-tray#weigh both see routeCode, postageCents, and fragile. There
+    is no way to give the two methods different param sets on one element.
+  - Each action builds a new object from the attributes. A property added
+    to event.params inside route() is gone when weigh() runs.
+  - A second button carries its own attributes and a single action, so
+    only route() runs, with that button's route code.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Campus mail tray · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .tray-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+      .parcel { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 0.9rem; background: #fffdf8; display: grid; gap: 0.35rem; max-width: 18rem; }
+      .parcel h3 { margin: 0; font-size: 1rem; }
+      .parcel p { margin: 0; }
+      .mail-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+      .mail-log li { border-bottom: 1px solid var(--rule, #ddd); padding: 0.35rem 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MailTrayController from "./mail_tray_controller.js"
+
+      const application = Application.start()
+      application.register("mail-tray", MailTrayController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>05 · Campus mail tray</span>
+      </nav>
+      <h1>Campus mail tray</h1>
+      <p class="lede">
+        North Campus mail room. Sending a parcel routes it and weighs it
+        from one button. Both actions read that button's params, and the
+        second action gets a fresh object.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="mail-tray">
+        <h2>North Campus · Afternoon tray</h2>
+        <div class="tray-row">
+          <article class="parcel">
+            <h3>East dorm, fragile glass</h3>
+            <p>Route EAST · 168 cents · fragile</p>
+            <button type="button"
+                    data-action="mail-tray#route mail-tray#weigh"
+                    data-mail-tray-route-code-param="EAST"
+                    data-mail-tray-postage-cents-param="168"
+                    data-mail-tray-fragile-param="true">
+              Send east dorm
+            </button>
+          </article>
+          <article class="parcel">
+            <h3>West lab, route only</h3>
+            <p>Route WEST · 84 cents · not fragile</p>
+            <button type="button"
+                    data-action="mail-tray#route"
+                    data-mail-tray-route-code-param="WEST"
+                    data-mail-tray-postage-cents-param="84"
+                    data-mail-tray-fragile-param="false">
+              Route west lab
+            </button>
+          </article>
+        </div>
+        <ol class="mail-log" data-mail-tray-target="log" aria-live="polite"></ol>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="mail_tray_controller.js"><code>mail_tray_controller.js</code></a> — routes, then weighs, from the same params</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

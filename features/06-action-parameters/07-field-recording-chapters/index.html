@@ -1,0 +1,127 @@
+<!doctype html>
+<!--
+  Action parameters · 07 · Field recording chapters
+
+  Teaches:
+  - A chapter submit button carries chapterTitle and startSeconds.
+    click->episode-player#jump:prevent and
+    keydown.enter->episode-player#jump:prevent both read those params.
+    :prevent keeps the click and the Enter key from submitting the
+    chapter form. The filter runs before the option, so only Enter is
+    cancelled by the keydown action.
+  - The player’s keydown.left and keydown.right read skipSeconds from the
+    player element, the element that declares those actions. ArrowRight
+    while a chapter button is focused still skips 15 seconds. It does not
+    read the chapter’s startSeconds.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Field recording chapters · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .session-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 1fr); gap: 1.25rem; align-items: start; }
+      @media (max-width: 48rem) { .session-layout { grid-template-columns: 1fr; } }
+      .player { display: grid; gap: 0.7rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; }
+      .player:focus { outline: 3px solid var(--capsule-amber, #e8912d); }
+      .chapter-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+      .chapter-list button { text-align: left; }
+      .position { font-variant-numeric: tabular-nums; min-height: 1.4em; }
+      .notes-form { display: grid; gap: 0.5rem; }
+      .notes-form label { display: grid; gap: 0.15rem; font-weight: 600; font-size: 0.9rem; }
+      .notes-form textarea { width: 100%; box-sizing: border-box; min-height: 7rem; padding: 0.4rem 0.5rem; border: 1px solid #cfc6b3; border-radius: 6px; background: #fffdf8; }
+      .notes-status { min-height: 1.4em; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EpisodePlayerController from "./episode_player_controller.js"
+
+      const application = Application.start()
+      application.register("episode-player", EpisodePlayerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>07 · Field recording chapters</span>
+      </nav>
+      <h1>Field recording chapters</h1>
+      <p class="lede">
+        A harbor-seal session for the coastal archive. Chapter buttons jump
+        on click or Enter, carrying a title and a start time. Arrow keys on
+        the player skip by the player's own param, not the chapter's.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="episode-player">
+        <h2>Coastal archive · Harbor seals, reel 4</h2>
+        <div class="session-layout">
+          <div class="player" tabindex="0"
+               data-action="keydown.right->episode-player#skip:prevent keydown.left->episode-player#skip:prevent"
+               data-episode-player-skip-seconds-param="15">
+            <p class="position" data-episode-player-target="position" aria-live="polite"></p>
+            <form data-action="submit->episode-player#chapterSubmitted">
+              <ul class="chapter-list">
+                <li>
+                  <button type="submit"
+                          data-action="click->episode-player#jump:prevent keydown.enter->episode-player#jump:prevent"
+                          data-episode-player-chapter-title-param="Haul-out"
+                          data-episode-player-start-seconds-param="0">
+                    <span>Haul-out</span> · 0:00
+                  </button>
+                </li>
+                <li>
+                  <button type="submit"
+                          data-action="click->episode-player#jump:prevent keydown.enter->episode-player#jump:prevent"
+                          data-episode-player-chapter-title-param="Tide pool"
+                          data-episode-player-start-seconds-param="184">
+                    <span>Tide pool</span> · 3:04
+                  </button>
+                </li>
+                <li>
+                  <button type="submit"
+                          data-action="click->episode-player#jump:prevent keydown.enter->episode-player#jump:prevent"
+                          data-episode-player-chapter-title-param="Fog horn"
+                          data-episode-player-start-seconds-param="512">
+                    <span>Fog horn</span> · 8:32
+                  </button>
+                </li>
+              </ul>
+            </form>
+            <p class="chapter-status" data-episode-player-target="chapterStatus">The chapter form has not submitted.</p>
+            <p class="muted">These chapter buttons submit their form unless <code>:prevent</code> cancels the click and the Enter key. Focus the player and press an arrow to skip 15 seconds. The notes form sits outside this box, so arrows there do not skip.</p>
+          </div>
+          <form class="notes-form" data-action="submit->episode-player#saveNotes">
+            <label>
+              Session notes
+              <textarea name="notes">Haul-out was loud. Tide pool starts just after three minutes.</textarea>
+            </label>
+            <button type="submit">Save notes</button>
+            <p class="notes-status" data-episode-player-target="notesStatus" aria-live="polite">Notes are still in the form.</p>
+          </form>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="episode_player_controller.js"><code>episode_player_controller.js</code></a> — jumps and skips from <code>event.params</code></li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

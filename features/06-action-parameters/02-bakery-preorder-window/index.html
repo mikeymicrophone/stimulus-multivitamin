@@ -1,0 +1,113 @@
+<!doctype html>
+<!--
+  Action parameters · 02 · Bakery preorder window
+
+  Teaches:
+  - JSON.parse casts param values. "2" and "1.5" become numbers. "true"
+    and "false" become booleans. "null" becomes null. Words that are not
+    valid JSON, such as "Caraway rye", stay strings.
+  - "FALSE" stays the string FALSE. JSON booleans are lowercase only.
+  - "2e1" is valid JSON and becomes the number 20.
+  - A key that was never set is undefined. That is not the same as a
+    param whose value is the JSON token null.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Bakery preorder window · Action parameters · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .preset-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+      .ticket { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+      .ticket li { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.55rem 0.75rem; background: #fffdf8; }
+      .ticket-wrap { display: grid; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BakeryOrderController from "./bakery_order_controller.js"
+
+      const application = Application.start()
+      application.register("bakery-order", BakeryOrderController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#action-parameters">Action parameters</a> /
+        <span>02 · Bakery preorder window</span>
+      </nav>
+      <h1>Bakery preorder window</h1>
+      <p class="lede">
+        Hearth &amp; Rye takes Saturday preorders from a strip of presets.
+        Quantity, sliced, and nut-free ride along as params, and each one
+        is cast by <code>JSON.parse</code> before the ticket line is written.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario" data-controller="bakery-order">
+        <h2>Hearth &amp; Rye · Saturday window</h2>
+        <div class="preset-row">
+          <button type="button" data-action="bakery-order#addLoaf"
+                  data-bakery-order-loaf-name-param="Caraway rye"
+                  data-bakery-order-quantity-param="2"
+                  data-bakery-order-sliced-param="false">
+            2 caraway rye, unsliced
+          </button>
+          <button type="button" data-action="bakery-order#addLoaf"
+                  data-bakery-order-loaf-name-param="Maple granola"
+                  data-bakery-order-quantity-param="1.5"
+                  data-bakery-order-sliced-param="false">
+            1.5 lb maple granola
+          </button>
+          <button type="button" data-action="bakery-order#addLoaf"
+                  data-bakery-order-loaf-name-param="Flourless chocolate"
+                  data-bakery-order-quantity-param="1"
+                  data-bakery-order-nut-free-param="true"
+                  data-bakery-order-gift-note-param="null">
+            Flourless chocolate, nut-free, no gift note
+          </button>
+          <button type="button" data-action="bakery-order#addLoaf"
+                  data-bakery-order-loaf-name-param="Seeded boule"
+                  data-bakery-order-quantity-param="1"
+                  data-bakery-order-sliced-param="true">
+            Seeded boule, sliced, gift note omitted
+          </button>
+          <button type="button" data-action="bakery-order#addLoaf"
+                  data-bakery-order-loaf-name-param="Almond croissant"
+                  data-bakery-order-quantity-param="6"
+                  data-bakery-order-nut-free-param="FALSE">
+            Almond croissant, spreadsheet says FALSE
+          </button>
+          <button type="button" data-action="bakery-order#addSack"
+                  data-bakery-order-sack-pounds-param="2e1">
+            Wholesale sack coded 2e1
+          </button>
+        </div>
+        <div class="ticket-wrap">
+          <p data-bakery-order-target="empty">The ticket is empty. Add a preset.</p>
+          <ul class="ticket" data-bakery-order-target="ticket" aria-live="polite"></ul>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bakery_order_controller.js"><code>bakery_order_controller.js</code></a> — records the cast type of each param</li>
+          <li>This page's source — markup, importmap, and controller registration</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
