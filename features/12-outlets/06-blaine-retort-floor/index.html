@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  Outlets · 06 · Blaine retort floor
+
+  Teaches:
+  - Shell 2 matches .retort-shell and its controller token is
+    retort-shell. The controller is not registered yet.
+  - hasRetortShellOutlet is true. The element getter returns
+    the shell. The plural getter warns and returns []. The
+    singular getter throws the missing-instance error.
+  - The basket matches the class and its token is retort-basket.
+    It is not an outlet element.
+  - Registering retort-shell connects the shell. The callback
+    runs before the shell's connect() writes the cook flag.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Blaine retort floor · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .floor { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .shell, .board { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .shell h2, .board h2 { margin: 0; font-size: 1.15rem; }
+      .shell p, .board p { margin: 0; }
+      .reading, .fault { min-height: 4.2rem; }
+      .log { white-space: pre-wrap; min-height: 4rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RetortFloorController from "./retort_floor_controller.js"
+      import RetortBasketController from "./retort_basket_controller.js"
+
+      const application = Application.start()
+      application.register("retort-floor", RetortFloorController)
+      application.register("retort-basket", RetortBasketController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>06 · Blaine retort floor</span>
+      </nav>
+      <h1>Blaine retort floor</h1>
+      <p class="lede">
+        The Alaska Packers floor at Blaine. Shell 2 is bolted down and
+        its controller has not been loaded. The basket beside it is
+        painted like a shell. Loading the shell controller is a separate
+        step from noticing the steel.
+      </p>
+    </header>
+
+    <main>
+      <div
+        class="floor"
+        data-controller="retort-floor"
+        data-retort-floor-retort-shell-outlet=".retort-shell"
+      >
+        <article id="shell-two" class="retort-shell shell" data-controller="retort-shell">
+          <h2>Shell 2</h2>
+          <p>Forty cans of sockeye, door shut, controller not loaded.</p>
+          <p class="status" data-retort-shell-target="status">Shell cook has not been set.</p>
+        </article>
+        <article id="shell-basket" class="retort-shell shell" data-controller="retort-basket" data-retort-floor-target="basket">
+          <h2>Cooling basket</h2>
+          <p>Same paint as a shell. It holds cans, not steam.</p>
+        </article>
+        <section class="scenario board">
+          <h2>Floor board</h2>
+          <div class="actions">
+            <button type="button" data-action="retort-floor#readShell">Read the shell</button>
+            <button type="button" data-action="retort-floor#registerShell">Load the shell controller</button>
+          </div>
+          <p class="reading" data-retort-floor-target="reading" aria-live="polite"></p>
+          <p class="fault" data-retort-floor-target="fault">Floor has not read the shell.</p>
+          <p class="log" data-retort-floor-target="log" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="retort_floor_controller.js"><code>retort_floor_controller.js</code></a> — element, plural, singular, then a late register</li>
+          <li><a href="retort_shell_controller.js"><code>retort_shell_controller.js</code></a> — imported, registered from the button</li>
+          <li><a href="retort_basket_controller.js"><code>retort_basket_controller.js</code></a> — the painted basket</li>
+          <li>This page's source — shell 2's controller token is on the element from the start</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

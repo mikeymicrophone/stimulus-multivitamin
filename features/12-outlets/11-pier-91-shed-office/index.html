@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  Outlets · 11 · Pier 91 shed office
+
+  Teaches:
+  - pier + shed-lamp and pier-shed + lamp are one attribute,
+    data-pier-shed-lamp-outlet.
+  - The lamp element carries both tokens, so each controller
+    finds it. They are not the same outlet property.
+  - pile-lamp is data-pier-pile-lamp-outlet and stays put
+    when the shared attribute moves to the spare.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pier 91 shed office · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .apron { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .office, .lamp { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .office h2, .lamp h2 { margin: 0; font-size: 1.15rem; }
+      .office p, .lamp p { margin: 0; }
+      .reading { min-height: 2.8rem; }
+      .log { white-space: pre-wrap; min-height: 5rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PierController from "./pier_controller.js"
+      import PierShedController from "./pier_shed_controller.js"
+      import ShedLampController from "./shed_lamp_controller.js"
+      import LampController from "./lamp_controller.js"
+      import PileLampController from "./pile_lamp_controller.js"
+
+      const application = Application.start()
+      application.register("pier", PierController)
+      application.register("pier-shed", PierShedController)
+      application.register("shed-lamp", ShedLampController)
+      application.register("lamp", LampController)
+      application.register("pile-lamp", PileLampController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>11 · Pier 91 shed office</span>
+      </nav>
+      <h1>Pier 91 shed office</h1>
+      <p class="lede">
+        The pier office and the shed office share a wall at Pier 91.
+        One attribute names the shed lamp for both of them. The pile
+        lamp is a different name and stays on the north pile.
+      </p>
+    </header>
+
+    <main>
+      <div class="apron">
+        <article id="shed-lamp" class="lamp" data-controller="shed-lamp lamp">
+          <h2>Shed lamp</h2>
+          <p class="status" data-shed-lamp-target="status"></p>
+        </article>
+        <article id="pile-lamp" class="lamp" data-controller="pile-lamp">
+          <h2>North pile</h2>
+          <p>The pile lamp is not the shed lamp.</p>
+        </article>
+        <article id="spare-lamp" class="lamp" data-controller="shed-lamp lamp">
+          <h2>Spare lamp</h2>
+          <p class="status" data-shed-lamp-target="status"></p>
+        </article>
+
+        <section
+          class="scenario office"
+          data-controller="pier pier-shed"
+          data-pier-shed-lamp-outlet="#shed-lamp"
+          data-pier-pile-lamp-outlet="#pile-lamp"
+        >
+          <h2>Pier office and shed office</h2>
+          <p class="reading" data-pier-target="reading"></p>
+          <p class="reading" data-pier-shed-target="reading"></p>
+          <div class="actions">
+            <button type="button" data-action="pier#pointAtSpare">Point both offices at the spare</button>
+          </div>
+          <p class="log" data-shed-log aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pier_controller.js"><code>pier_controller.js</code></a> — shed-lamp and pile-lamp</li>
+          <li><a href="pier_shed_controller.js"><code>pier_shed_controller.js</code></a> — lamp, through the shared attribute</li>
+          <li><a href="shed_lamp_controller.js"><code>shed_lamp_controller.js</code></a> — the shed-lamp token</li>
+          <li><a href="lamp_controller.js"><code>lamp_controller.js</code></a> — the lamp token on the same element</li>
+          <li><a href="pile_lamp_controller.js"><code>pile_lamp_controller.js</code></a> — the pile, which does not share the attribute</li>
+          <li>This page's source — one attribute, two offices</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

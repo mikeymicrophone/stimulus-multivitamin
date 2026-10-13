@@ -1,0 +1,143 @@
+<!doctype html>
+<!--
+  Outlets · 13 · Rosario watch floor
+
+  Teaches:
+  - The desk calls the sector bell and reads its pattern.
+    That callback runs before the desk's connect().
+  - The night order is a meta element in head. The getter
+    works. nightOrderOutletConnected does not run.
+  - The lane slip's outlet callback throws. handleError
+    stays quiet. The slip never connects. The bell book
+    after it never connects.
+  - Filing "[" as a selector throws SyntaxError later, from
+    the mutation observer, and handleError stays quiet.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <meta id="night-order" data-controller="night-order" data-night-order-watch-value="forenoon" content="Rosario forenoon">
+    <title>Rosario watch floor · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .floor { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .desk, .bell, .slip, .book { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .desk h2, .bell h2, .slip h2, .book h2 { margin: 0; font-size: 1.15rem; }
+      .desk p, .bell p, .slip p, .book p { margin: 0; }
+      .reading, .note { min-height: 4.6rem; }
+      .note { min-height: 1.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RosarioDeskController from "./rosario_desk_controller.js"
+      import SectorBellController from "./sector_bell_controller.js"
+      import NightOrderController from "./night_order_controller.js"
+      import LaneSlipController from "./lane_slip_controller.js"
+      import LaneBellController from "./lane_bell_controller.js"
+      import BellBookController from "./bell_book_controller.js"
+
+      const application = Application.start()
+      const noteFault = (fault) => {
+        if (!fault) return
+        document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
+      }
+      application.handleError = (error, message) => {
+        document.querySelector("[data-handled]").textContent = `${message} :: ${error.name}: ${error.message}`
+      }
+      window.addEventListener("unhandledrejection", (event) => noteFault(event.reason))
+      window.addEventListener("error", (event) => noteFault(event.error))
+      application.register("rosario-desk", RosarioDeskController)
+      application.register("sector-bell", SectorBellController)
+      application.register("night-order", NightOrderController)
+      application.register("lane-slip", LaneSlipController)
+      application.register("lane-bell", LaneBellController)
+      application.register("bell-book", BellBookController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>13 · Rosario watch floor</span>
+      </nav>
+      <h1>Rosario watch floor</h1>
+      <p class="lede">
+        Rosario Strait. The desk rings the sector bell and reads the
+        night order filed in the head of the page. A lane slip after
+        the desk throws when its bell connects as an outlet. The bell
+        book after that slip never opens.
+      </p>
+    </header>
+
+    <main>
+      <div class="floor">
+        <article id="sector-bell" class="bell" data-controller="sector-bell" data-sector-bell-pattern-value="two short">
+          <h2>Sector bell</h2>
+          <p class="status" data-sector-bell-target="status">Sector bell has not connected.</p>
+        </article>
+
+        <section
+          class="scenario desk"
+          data-controller="rosario-desk"
+          data-rosario-desk-sector-bell-outlet="#sector-bell"
+          data-rosario-desk-night-order-outlet="#night-order"
+        >
+          <h2>Rosario desk</h2>
+          <div class="actions">
+            <button type="button" data-action="rosario-desk#ringBell">Ring the sector bell</button>
+            <button type="button" data-action="rosario-desk#fileBracket">File a bracket selector</button>
+          </div>
+          <p class="reading" data-rosario-desk-target="reading" aria-live="polite"></p>
+          <p class="note" data-rosario-desk-target="note">Desk has not rung.</p>
+        </section>
+
+        <article id="lane-bell" class="bell" data-controller="lane-bell">
+          <h2>Lane bell</h2>
+          <p class="reading" data-lane-bell-target="reading">Lane bell has not connected.</p>
+        </article>
+
+        <article class="scenario slip" data-controller="lane-slip" data-lane-slip-lane-bell-outlet="#lane-bell">
+          <h2>Lane slip</h2>
+          <p>The slip reads its bell from the outlet callback and throws.</p>
+          <p class="reading" data-lane-slip-target="reading">Lane slip has not connected.</p>
+        </article>
+
+        <article class="scenario book" data-controller="bell-book">
+          <h2>Bell book</h2>
+          <p class="reading" data-bell-book-target="reading">Bell book has not connected.</p>
+        </article>
+      </div>
+
+      <section>
+        <h2>What the page caught</h2>
+        <p data-fault>No uncaught error.</p>
+        <p data-handled>handleError quiet.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="rosario_desk_controller.js"><code>rosario_desk_controller.js</code></a> — sector bell, night order, and the bracket selector</li>
+          <li><a href="sector_bell_controller.js"><code>sector_bell_controller.js</code></a> — pattern and ring()</li>
+          <li><a href="night_order_controller.js"><code>night_order_controller.js</code></a> — the meta element in head</li>
+          <li><a href="lane_slip_controller.js"><code>lane_slip_controller.js</code></a> — throws from the outlet callback</li>
+          <li><a href="lane_bell_controller.js"><code>lane_bell_controller.js</code></a> — the bell the slip already has</li>
+          <li><a href="bell_book_controller.js"><code>bell_book_controller.js</code></a> — the book after the slip</li>
+          <li>This page's source — night order in head, slip before the book</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

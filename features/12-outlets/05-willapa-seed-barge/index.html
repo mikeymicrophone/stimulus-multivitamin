@@ -1,0 +1,148 @@
+<!doctype html>
+<!--
+  Outlets · 05 · Willapa seed barge
+
+  Teaches:
+  - Nahcotta has a real seed-pump outlet.
+  - A missing attribute, an empty attribute, and a selector
+    that hits the wrong controller all leave hasSeedPumpOutlet
+    false. The singular getter throws "Missing outlet element"
+    and quotes the selector, "null" or "" or ".willapa-float".
+  - The float is on the page. The error is not the handbook's
+    missing data-controller sentence.
+  - The Tokeland barge reads the outlet in connect(). That
+    throw is "Error connecting controller". The tally board
+    after it still connects.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Willapa seed barge · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .bay { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .barge, .float, .tally { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .barge h2, .float h2, .tally h2 { margin: 0; font-size: 1.15rem; }
+      .barge p, .float p, .tally p { margin: 0; }
+      .reading, .fault { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SeedBargeController from "./seed_barge_controller.js"
+      import SeedPumpController from "./seed_pump_controller.js"
+      import SeedFloatController from "./seed_float_controller.js"
+      import TallyBoardController from "./tally_board_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        document.querySelector("[data-handled]").textContent = `${message} :: ${error.name}: ${error.message}`
+      }
+      application.register("seed-barge", SeedBargeController)
+      application.register("seed-pump", SeedPumpController)
+      application.register("seed-float", SeedFloatController)
+      application.register("tally-board", TallyBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>05 · Willapa seed barge</span>
+      </nav>
+      <h1>Willapa seed barge</h1>
+      <p class="lede">
+        Nahcotta has a pump. The next barges name a pump that is not
+        there: no attribute, an empty selector, or the oyster float
+        whose controller is not a pump. Tokeland reads a missing pump
+        while connecting. The tally board is after that.
+      </p>
+    </header>
+
+    <main>
+      <div class="bay">
+        <article id="pump-nahcotta" class="pump" data-controller="seed-pump" data-seed-pump-station-value="Nahcotta" data-seed-pump-strain-value="3">
+          <h2>Nahcotta pump</h2>
+          <p>Three turns, the seed hose is primed.</p>
+        </article>
+
+        <article id="float-oyster" class="float willapa-float" data-controller="seed-float" data-seed-float-station-value="Oyster float">
+          <h2>Oyster float</h2>
+          <p>The float is in the bay. It is not a pump.</p>
+        </article>
+
+        <article class="scenario barge" data-controller="seed-barge" data-seed-barge-seed-pump-outlet="#pump-nahcotta">
+          <h2>Nahcotta barge</h2>
+          <p class="reading" data-seed-barge-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article class="scenario barge" data-controller="seed-barge">
+          <h2>Unmarked barge</h2>
+          <p>No outlet attribute on this card.</p>
+          <div class="actions">
+            <button type="button" data-action="seed-barge#readPump">Read the pump</button>
+          </div>
+          <p class="reading" data-seed-barge-target="reading" aria-live="polite"></p>
+          <p class="fault" data-seed-barge-target="fault">Unmarked barge has not read.</p>
+        </article>
+
+        <article class="scenario barge" data-controller="seed-barge" data-seed-barge-seed-pump-outlet="">
+          <h2>Blank barge</h2>
+          <p>The outlet attribute is present and empty.</p>
+          <div class="actions">
+            <button type="button" data-action="seed-barge#readPump">Read the pump</button>
+          </div>
+          <p class="reading" data-seed-barge-target="reading" aria-live="polite"></p>
+          <p class="fault" data-seed-barge-target="fault">Blank barge has not read.</p>
+        </article>
+
+        <article class="scenario barge" data-controller="seed-barge" data-seed-barge-seed-pump-outlet=".willapa-float">
+          <h2>Float barge</h2>
+          <p>The selector matches the oyster float.</p>
+          <div class="actions">
+            <button type="button" data-action="seed-barge#readPump">Read the pump</button>
+          </div>
+          <p class="reading" data-seed-barge-target="reading" aria-live="polite"></p>
+          <p class="fault" data-seed-barge-target="fault">Float barge has not read.</p>
+        </article>
+
+        <article class="scenario barge" data-controller="seed-barge" data-seed-barge-seed-pump-outlet="#missing-pump" data-seed-barge-reads-on-connect-value="true">
+          <h2>Tokeland barge</h2>
+          <p class="reading" data-seed-barge-target="reading">Tokeland barge has not finished connecting.</p>
+        </article>
+
+        <article class="scenario tally" data-controller="tally-board">
+          <h2>Tally board</h2>
+          <p class="reading" data-tally-board-target="reading">Tally board has not connected.</p>
+        </article>
+      </div>
+
+      <section>
+        <h2>What the page caught</h2>
+        <p data-handled>handleError quiet.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="seed_barge_controller.js"><code>seed_barge_controller.js</code></a> — reads a pump, or records the missing-element error</li>
+          <li><a href="seed_pump_controller.js"><code>seed_pump_controller.js</code></a> — the Nahcotta pump</li>
+          <li><a href="seed_float_controller.js"><code>seed_float_controller.js</code></a> — the float the selector can see</li>
+          <li><a href="tally_board_controller.js"><code>tally_board_controller.js</code></a> — the board after Tokeland</li>
+          <li>This page's source — four ways to miss a pump, then a connect() that throws</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

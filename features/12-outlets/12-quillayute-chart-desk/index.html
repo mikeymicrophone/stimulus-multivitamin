@@ -1,0 +1,162 @@
+<!doctype html>
+<!--
+  Outlets · 12 · Quillayute chart desk
+
+  Teaches:
+  - The tide desk inherits horn and declares bell. Both
+    attributes use tide-desk. The chart-desk attribute is unused.
+  - An object or a string static outlets defines no properties.
+  - data-staff-plate-tideStaff-outlet does not match outlet
+    tide-staff. The staff itself is connected.
+  - keeper--log and keeper-log share keeperLogOutlet. The
+    later name wins the getter. Both callbacks use that method.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Quillayute chart desk · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .locker { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .plate, .mark { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .plate h2, .mark h2 { margin: 0; font-size: 1.15rem; }
+      .plate p, .mark p { margin: 0; }
+      .reading, .fault { min-height: 2.8rem; }
+      .log { white-space: pre-wrap; min-height: 4.5rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideDeskController from "./tide_desk_controller.js"
+      import HornController from "./horn_controller.js"
+      import BellController from "./bell_controller.js"
+      import ObjectPlateController from "./object_plate_controller.js"
+      import StringPlateController from "./string_plate_controller.js"
+      import StaffPlateController from "./staff_plate_controller.js"
+      import TideStaffController from "./tide_staff_controller.js"
+      import CollisionPlateController from "./collision_plate_controller.js"
+      import KeeperLogController from "./keeper_log_controller.js"
+
+      const application = Application.start()
+      application.register("tide-desk", TideDeskController)
+      application.register("horn", HornController)
+      application.register("bell", BellController)
+      application.register("object-plate", ObjectPlateController)
+      application.register("string-plate", StringPlateController)
+      application.register("staff-plate", StaffPlateController)
+      application.register("tide-staff", TideStaffController)
+      application.register("collision-plate", CollisionPlateController)
+      application.register("keeper-log", KeeperLogController)
+      application.register("keeper--log", KeeperLogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>12 · Quillayute chart desk</span>
+      </nav>
+      <h1>Quillayute chart desk</h1>
+      <p class="lede">
+        Plates filed at the Quillayute River station. One desk
+        inherits a horn. Two plates were filed like values. One
+        plate hyphenates the staff name in the wrong place. The
+        last plate uses a log name twice, once with a namespace.
+      </p>
+    </header>
+
+    <main>
+      <div class="locker">
+        <article id="cape-horn" class="mark" data-controller="horn">
+          <h2>Cape horn</h2>
+          <p class="status" data-horn-target="status"></p>
+        </article>
+        <article id="decoy-horn" class="mark" data-controller="horn">
+          <h2>Decoy horn</h2>
+          <p class="status" data-horn-target="status"></p>
+        </article>
+        <article id="cape-bell" class="mark" data-controller="bell">
+          <h2>Cape bell</h2>
+          <p class="status" data-bell-target="status"></p>
+        </article>
+        <article
+          class="scenario plate"
+          data-controller="tide-desk"
+          data-tide-desk-horn-outlet="#cape-horn"
+          data-chart-desk-horn-outlet="#decoy-horn"
+          data-tide-desk-bell-outlet="#cape-bell"
+        >
+          <h2>Tide desk</h2>
+          <p class="reading" data-tide-desk-target="reading"></p>
+        </article>
+
+        <article id="quillayute-staff" class="mark" data-controller="tide-staff">
+          <h2>Quillayute staff</h2>
+          <p class="status" data-tide-staff-target="status"></p>
+        </article>
+        <article class="scenario plate" data-controller="object-plate">
+          <h2>Object plate</h2>
+          <p>Filed as an object, the way a value is filed.</p>
+          <p class="reading" data-object-plate-target="reading"></p>
+        </article>
+        <article class="scenario plate" data-controller="string-plate">
+          <h2>String plate</h2>
+          <p>Filed as a single string.</p>
+          <p class="reading" data-string-plate-target="reading"></p>
+        </article>
+        <article class="scenario plate" data-controller="staff-plate" data-staff-plate-tideStaff-outlet="#quillayute-staff">
+          <h2>Staff plate</h2>
+          <p>The attribute uses tideStaff, not tide-staff.</p>
+          <div class="actions">
+            <button type="button" data-action="staff-plate#readStaff">Read the staff</button>
+          </div>
+          <p class="reading" data-staff-plate-target="reading"></p>
+          <p class="fault" data-staff-plate-target="fault">Staff plate has not read.</p>
+        </article>
+
+        <article id="namespaced-log" class="mark" data-controller="keeper--log">
+          <h2>Namespaced log</h2>
+          <p class="status" data-keeper--log-target="status"></p>
+        </article>
+        <article id="dashed-log" class="mark" data-controller="keeper-log">
+          <h2>Dashed log</h2>
+          <p class="status" data-keeper-log-target="status"></p>
+        </article>
+        <article
+          class="scenario plate"
+          data-controller="collision-plate"
+          data-collision-plate-keeper--log-outlet="#namespaced-log"
+          data-collision-plate-keeper-log-outlet="#dashed-log"
+        >
+          <h2>Collision plate</h2>
+          <p class="log" data-collision-plate-target="log" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_desk_controller.js"><code>tide_desk_controller.js</code></a> — inherited horn, own bell</li>
+          <li><a href="chart_desk_controller.js"><code>chart_desk_controller.js</code></a> — the parent outlet list</li>
+          <li><a href="object_plate_controller.js"><code>object_plate_controller.js</code></a> — outlets filed as an object</li>
+          <li><a href="string_plate_controller.js"><code>string_plate_controller.js</code></a> — outlets filed as a string</li>
+          <li><a href="staff_plate_controller.js"><code>staff_plate_controller.js</code></a> — kebab outlet, camelCase attribute</li>
+          <li><a href="collision_plate_controller.js"><code>collision_plate_controller.js</code></a> — two names, one property</li>
+          <li><a href="keeper_log_controller.js"><code>keeper_log_controller.js</code></a> — registered under both log identifiers</li>
+          <li><a href="tide_staff_controller.js"><code>tide_staff_controller.js</code></a>, <a href="horn_controller.js"><code>horn_controller.js</code></a>, <a href="bell_controller.js"><code>bell_controller.js</code></a> — the marks the plates name</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -2000,6 +2000,418 @@ because `[name]Classes` is the array that gets spread.
 
 **Seen in:** [Turn Point foghorn](features/11-css-classes/09-turn-point-foghorn/).
 
+## Outlets
+
+### A missing outlet throws one of two errors, and the handbook names a third
+
+**What happens.** `this.[name]Outlet` and `this.[name]OutletElement`
+throw `Error: Missing outlet element "name" for host controller
+"identifier". Stimulus couldn't find a matching outlet element
+using selector "…"`. The quoted selector is the attribute text.
+An absent attribute is the word `null`. An empty attribute is
+an empty pair of quotes. A selector that matches an element
+whose `data-controller` token is not the outlet name is the
+same error: that element is not an outlet. The handbook's
+sentence about a missing `data-controller` attribute is not
+what 3.2.2 throws.
+
+When the element matches and the token is present, but no
+controller instance exists, the errors split. `has[Name]Outlet`
+is true. `[name]OutletElement` returns the element.
+`[name]OutletElements` includes it. `[name]Outlet` throws
+`Error: The provided outlet element is missing an outlet
+controller "name" instance for host controller "identifier"`.
+`[name]Outlets` does not throw. It `console.warn`s that same
+sentence, once per missing element per read, and returns the
+controllers it could find, which may be none. The warning is
+not `handleError`.
+
+A `connect()` that reads the singular getter and throws is
+caught as `Error connecting controller`. Controllers later in
+the scan still connect. That is not the callback throw in
+[A throw from an outlet callback skips the rest of the connect scan](#a-throw-from-an-outlet-callback-skips-the-rest-of-the-connect-scan).
+
+**Why it matters.** The float at Willapa matches the barge's
+selector and the barge still says the outlet element is
+missing. Shell 2 at Blaine looks present — `has` is true and
+the element id is there — and the singular getter still
+throws because the controller was never registered. The plural
+list is empty and the console has already warned. Tokeland's
+`connect()` throw does not silence the tally board.
+
+**What to do.** Treat `has[Name]Outlet` as "an element with
+this token matches the selector," not "the controller getter
+will succeed." Use the element getters when you only need the
+node. Read the plural list when a missing instance should be
+skipped. Branch before the singular getter. Don't describe
+the failure with the handbook's `data-controller` sentence.
+
+**Seen in:** [Willapa seed barge](features/12-outlets/05-willapa-seed-barge/),
+[Blaine retort floor](features/12-outlets/06-blaine-retort-floor/).
+
+### Outlet callbacks and connect() do not share a clock
+
+**What happens.** `[name]OutletConnected(outlet, element)` can
+run before either `connect()`. Which one depends on document
+order.
+
+When the outlet element is later than the host, the host's
+`connect()` finishes with no callback yet. The callback runs
+from the outlet controller's startup, before that outlet's
+`connect()`. Values and targets are already live, because
+those observers start first. State written in the outlet's
+`connect()` is not. Registering the controller later has the
+same shape: the callback runs, then the new controller's
+`connect()`.
+
+When the outlet element is earlier, its `connect()` has
+finished before the host starts. The callback runs during the
+host's outlet observer startup, before the host's `connect()`.
+
+Reading `[name]Outlet` or `[name]Outlets` from the host's
+`connect()` force-connects a later outlet inside that
+`connect()`. The callback, then the outlet's `connect()`, run
+before the getter returns. `has[Name]Outlet` and the element
+getters do not force-connect. The reference-count consequence
+is
+[Reading the outlet controller in connect() keeps it alive after removal](#reading-the-outlet-controller-in-connect-keeps-it-alive-after-removal).
+
+**Why it matters.** Ediz's height is readable in the entrance
+callback and the watch flag is not, because the flag is set
+in `connect()`. Travis is the same, because the early gate
+reads the controller list while connecting. Gibson is already
+latched when the late gate's callback runs. Shell 2's cook
+flag is missing in the callback that registration fires, and
+set a moment later. The Rosario desk's sector callback has
+already run when the desk's `connect()` reads the count.
+
+**What to do.** Don't require `connect()` state inside an
+outlet callback. Read values and targets there, and read
+flags the outlet's `connect()` owns only after that
+`connect()` has had a chance to run. If the host must call
+the outlet during its own `connect()`, put the outlet earlier
+in the document, or call it from the callback and tolerate
+the outlet's `connect()` not having run.
+
+**Seen in:** [Neah Bay entrance log](features/12-outlets/03-neah-bay-entrance-log/),
+[Blaine retort floor](features/12-outlets/06-blaine-retort-floor/),
+[Sequim Bay staff gate](features/12-outlets/09-sequim-bay-staff-gate/),
+[Rosario watch floor](features/12-outlets/13-rosario-watch-floor/).
+
+### Reading the outlet controller in connect() keeps it alive after removal
+
+**What happens.** `[name]Outlet` and `[name]Outlets` call
+through to connect a matching element whose controller is not
+connected yet. That bumps the scope's reference count. The
+scope observer later matches the same element and bumps it
+again. Removing the element drops the count by one, so the
+outlet's `disconnect()` does not run. The host's
+`[name]OutletDisconnected` still runs, because that comes
+from the selector observer. Putting the element back fires
+`[name]OutletConnected` again and does not call `connect()`
+a second time. The same instance is still in
+`application.controllers`.
+
+`has[Name]Outlet`, `[name]OutletElement`, and
+`[name]OutletElements` only look at the selector and the
+controller token. They do not bump the count. An outlet that
+connected on its own disconnects when it is removed.
+
+**Why it matters.** Pulling Travis leaves life at `c` and
+leaves the card's connect sentence in place when the staff
+is hung again. Pulling Gibson, whose gate never read the
+controller getter, runs `disconnect()` and life becomes `cd`.
+
+**What to do.** In `connect()`, read `has[Name]Outlet` and
+the element list if you must look. Call the controller from
+the outlet callback, or from an action after both have
+connected. Put the outlet earlier in the document when the
+host's `connect()` truly has to call it.
+
+**Seen in:** [Sequim Bay staff gate](features/12-outlets/09-sequim-bay-staff-gate/).
+
+### The host's disconnect() runs before outletDisconnected, and the outlet stays up
+
+**What happens.** Removing the host's controller token runs
+the host's `disconnect()` first. Outlet elements are still
+listed. `[name]OutletDisconnected` runs after that, from
+`outletObserver.stop()`. The outlet controllers are not
+disconnected. Their `disconnect()` does not run. A host that
+goes away is not a teardown of the controllers it named.
+
+**Why it matters.** Closing the Neah Bay log records the
+staffs as still present, then records each outlet
+disconnected, and Ediz's removal is the only one that ran a
+staff `disconnect()`. Waadah and Slip Point still show the
+watch as set.
+
+**What to do.** Stop work that belongs to the host in the
+host's `disconnect()`. Don't stop the outlet's timers there
+unless you call the outlet yourself. Use the outlet callback
+for "I no longer see you," and the outlet's `disconnect()`
+for "I left the document."
+
+**Seen in:** [Neah Bay entrance log](features/12-outlets/03-neah-bay-entrance-log/).
+
+### A removal inside an outlet callback delays outletDisconnected
+
+**What happens.** The selector observer is paused while
+`[name]OutletConnected` or `[name]OutletDisconnected` runs.
+A removal inside the callback is not delivered to that
+observer. The scope observer is not paused, so the removed
+outlet's own `disconnect()` runs on the next mutation
+delivery. `[name]OutletDisconnected` does not. The public
+outlet list already omits the element, because the getters
+query the document. The observer still has the element until
+something refreshes it. Writing the selector attribute again,
+even to an equivalent selector, refreshes and then fires
+`[name]OutletDisconnected` for an element that is already out
+of the document.
+
+This is the same pause as
+[The target observer is paused while the callback runs](#the-target-observer-is-paused-while-the-callback-runs),
+on the outlet selector observer. The scope observer keeps
+running beside it, which targets do not have.
+
+**Why it matters.** Hanging the spare at Ballard pulls the
+small lamp immediately. The small lamp's life becomes `cd`.
+The bank's disconnected count stays 0 until recount writes
+`.lock-lamp, .lock-lamp`. The disconnected line then says
+the lamp is not in the document.
+
+**What to do.** Don't remove or insert other outlets for the
+same name inside the callback if you need the paired
+callback now. Remove them from the action, after the
+callback has returned. If a callback must pull a lamp, treat
+the outlet's `disconnect()` as the immediate signal and
+expect `outletDisconnected` on the next selector change.
+
+**Seen in:** [Ballard lamp bank](features/12-outlets/10-ballard-lamp-bank/).
+
+### A throw from an outlet callback skips the rest of the connect scan
+
+**What happens.** `[name]OutletConnected` is invoked with no
+try/catch, from `outletObserver.start()`, which runs before
+`connect()` and outside the try that becomes `Error
+connecting controller`. A throw rejects the promise returned
+by `Application.start()` and is also reported as an error
+event. `handleError` is not called. The host's `connect()`
+does not run. Controllers later in the document do not
+connect. Controllers that already connected stay up.
+
+An outlet selector that is not valid CSS throws
+`SyntaxError` from `Element.matches` during that same start,
+and aborts the scan the same way. Setting the bad selector
+after the host has connected throws from the mutation
+observer instead: an error event, not a rejected `start()`,
+and not `handleError`. The host stays connected. The
+disconnected callback for the previous match does not run,
+because the refresh throws before it can unmatch. Later
+reads of the outlet getters throw `SyntaxError` from
+`querySelectorAll`.
+
+**Why it matters.** The Rosario lane slip never says it
+connected, and the bell book after it stays on "Bell book
+has not connected." The desk above the slip is fine. The
+fault line is `Error: lane slip lost the bell` and the
+handled line stays quiet. Filing `[` onto the desk after
+that replaces the fault with the `matches` SyntaxError and
+still does not call `handleError`.
+
+**What to do.** Keep outlet callbacks from throwing. A
+missing outlet inside a callback should be guarded the way
+an action is guarded. Don't put an untrusted string in an
+outlet attribute. Put a controller that might throw last
+only if you accept that everything after it will not
+connect; the lane slip shows that "last" still has to be
+after the controllers you need.
+
+**Seen in:** [Rosario watch floor](features/12-outlets/13-rosario-watch-floor/).
+
+### An outlet in head is readable and never calls back
+
+**What happens.** Outlet getters search from
+`document.documentElement`. The selector observer is
+constructed on `document.body`. A controller on an element
+that stays in `head` — a `meta`, not a `div`, which the
+parser would move into the body — connects, because the
+scope observer watches the document element. `has[Name]Outlet`
+is true and `[name]Outlet` returns the controller.
+`[name]OutletConnected` and `[name]OutletDisconnected` do
+not run for it.
+
+**Why it matters.** The Rosario night order is in `head`.
+The desk reads `forenoon` and the tag `META`, and the night
+callback count stays 0. A watch that waits for the callback
+to paint the order never paints it.
+
+**What to do.** Put outlet elements in the body when you
+need the callbacks. Read a head element through the getter
+on purpose, and don't wait for `outletConnected` to tell
+you it is there.
+
+**Why this section.** The parser moving a `div` out of
+`head` would be the platform. The split here is Stimulus:
+the scope observer and the getters see the document
+element, and the outlet selector observer does not.
+
+**Seen in:** [Rosario watch floor](features/12-outlets/13-rosario-watch-floor/).
+
+### A dispatch does not reach a sibling outlet
+
+**What happens.** `this.dispatch(eventName)` fires
+`identifier:eventName` on the host element and bubbles.
+An outlet is found by selector, not by ancestry, so it is
+often a sibling. A `identifier:eventName->outlet#method`
+action on that sibling does not run. The same event with
+`@window` does. `blast()` on the outlet returns a value.
+Nothing about the event hands a return value back. If the
+outlet getter throws, code after it in that action does not
+run, so the dispatch never happens. A window listener that
+is simply absent does not throw.
+
+**Why it matters.** Calling the Marrowstone horn returns
+"two blasts" and Marrowstone's own listener stays quiet.
+Kilisut hears the window. Dropping the outlet and calling
+again throws the missing-element error, the dispatch is
+skipped, and Kilisut does not hear a second sound.
+
+**What to do.** Use an outlet when you need a return value
+or a specific controller. Use `dispatch` when any listener
+may care and a missing listener must not throw. Listen at
+`window` or on a shared ancestor when the outlet is not
+inside the host. Don't dispatch after an unguarded outlet
+read if the event still has to fire when the outlet is gone.
+
+**Seen in:** [Marrowstone fog desk](features/12-outlets/08-marrowstone-fog-desk/).
+
+### A namespaced outlet and its dashed twin share one property
+
+**What happens.** Property names go through
+`namespaceCamelize`: `--` is replaced with `-`, then the
+string is camelized. `keeper--log` and `keeper-log` both
+become `keeperLog`. `static outlets` lists both, and the
+later entry's getter overwrites the earlier one.
+`keeperLogOutlet` reads only the later name. The attributes
+stay distinct (`data-collision-plate-keeper--log-outlet`
+and `data-collision-plate-keeper-log-outlet`). Both names
+still call `keeperLogOutletConnected` and
+`keeperLogOutletDisconnected`, because the callback method
+is chosen with the same camelizing. The outlet instance
+passed in still has its real identifier.
+
+The handbook shows that `admin--user-status` is read as
+`adminUserStatusOutlet`. It does not say that
+`admin-user-status` is the same property.
+
+**Why it matters.** The Quillayute collision plate logs both
+identifiers, then the getter returns the dashed log only.
+A desk that declares both and reads one property is talking
+to whichever name came last in the array.
+
+**What to do.** Don't declare two outlet names that
+camelize to the same property. If a namespace and a dashed
+name both exist, give the host one of them.
+
+**Seen in:** [Quillayute chart desk](features/12-outlets/12-quillayute-chart-desk/).
+
+### Outlet attributes are copied, not dasherized
+
+**What happens.** The attribute is
+`data-${identifier}-${outletName}-outlet`. The outlet name
+is the identifier string from `static outlets`, copied as
+written. Class names are dasherized. Outlet names are not.
+`tide-staff` is `data-staff-plate-tide-staff-outlet`.
+`data-staff-plate-tideStaff-outlet` is lowercased by the
+HTML parser to `data-staff-plate-tidestaff-outlet` and does
+not match. `hasTideStaffOutlet` is false. The singular
+getter throws the missing-element error with selector
+`null`. The staff controller can be connected the whole
+time, under the attribute it actually uses.
+
+**Why it matters.** The Quillayute staff says it connected.
+The plate that names `tideStaff` in the attribute still
+cannot see it.
+
+**What to do.** Put the identifier, already kebab-case or
+already namespaced, in `static outlets`. Write the attribute
+with that same string. A camelCase logical name belongs to
+classes and values, not to an outlet identifier.
+
+**Why this section.** Lowercasing is the HTML parser.
+Stimulus is what requires the outlet name unchanged and
+then reports selector `null` when the attribute does not
+match.
+
+**Seen in:** [Quillayute chart desk](features/12-outlets/12-quillayute-chart-desk/),
+[New Dungeness lens desk](features/12-outlets/07-new-dungeness-lens-desk/)
+(the slate attribute keeps `--`).
+
+### A non-array static outlets is ignored
+
+**What happens.** `static outlets` is read with the array
+walker. An object (`{ tideStaff: "#quillayute-staff" }`)
+and a string (`"tide-staff"`) are not arrays, so no outlet
+properties are defined. `"tideStaffOutlet" in controller`
+is false. `this.tideStaffOutlet` is `undefined` and does
+not throw. No selector is observed. This is the same shape
+as
+[A classes object or a classes string is ignored](#a-classes-object-or-a-classes-string-is-ignored).
+
+**Why it matters.** A plate filed the way a value is filed
+connects and then has no outlet. The staff on the page is
+unused.
+
+**What to do.** Declare `static outlets` as an array of
+controller identifiers.
+
+**Seen in:** [Quillayute chart desk](features/12-outlets/12-quillayute-chart-desk/).
+
+### Inherited outlet names use the subclass identifier
+
+**What happens.** `static outlets` is collected from the
+class and its ancestors. The attribute name uses the
+instance's identifier. A tide desk that inherits `horn` and
+declares `bell` reads `data-tide-desk-horn-outlet` and
+`data-tide-desk-bell-outlet`. `data-chart-desk-horn-outlet`
+on that element is not read. The same rule for values is
+[Inherited values use the subclass identifier](#inherited-values-use-the-subclass-identifier).
+
+**Why it matters.** The tide desk's horn is cape-horn, the
+id in its own attribute. The decoy horn named by the parent
+attribute stays on the element unused.
+
+**What to do.** Stamp inherited outlets with the identifier
+of the controller that is actually on the element.
+
+**Seen in:** [Quillayute chart desk](features/12-outlets/12-quillayute-chart-desk/).
+
+### A shorter identifier can share a longer identifier's outlet attribute
+
+**What happens.** The attribute name is
+`data-${identifier}-${outlet}-outlet`. For `pier` and
+`shed-lamp` that is `data-pier-shed-lamp-outlet`. For
+`pier-shed` and `lamp` it is the same string. Both
+controllers, on one element, read that attribute. Each
+still filters matches by its own outlet token, so the lamp
+element needs both `shed-lamp` and `lamp` if both getters
+should find it. Changing the attribute moves both outlets.
+`pile-lamp` does not collide: the pier's pile is
+`data-pier-pile-lamp-outlet`. This is the same composition
+as
+[A shorter identifier can share a longer identifier's value attribute](#a-shorter-identifier-can-share-a-longer-identifiers-value-attribute),
+with `-outlet` instead of `-value`.
+
+**Why it matters.** Pointing the shared attribute at the
+spare moves the pier's shed lamp and the shed office's
+lamp together. The north pile stays where it was.
+
+**What to do.** Don't let one identifier be a hyphen-prefix
+of another when an outlet name on the shorter one can spell
+the rest (`pier` / `pier-shed`, `shed-lamp` / `lamp`).
+
+**Seen in:** [Pier 91 shed office](features/12-outlets/11-pier-91-shed-office/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports

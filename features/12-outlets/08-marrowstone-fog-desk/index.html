@@ -1,0 +1,113 @@
+<!doctype html>
+<!--
+  Outlets · 08 · Marrowstone fog desk
+
+  Teaches:
+  - The desk calls foghornOutlet.blast() and gets the pattern
+    back. A missing outlet throws before anything else runs.
+  - dispatch("sound") bubbles from the desk. Marrowstone's
+    local action does not hear it. Kilisut listens at window
+    and does. Kilisut is not an outlet, and it cannot hand a
+    return value back.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Marrowstone fog desk · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .strait { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .horn, .desk { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .horn h2, .desk h2 { margin: 0; font-size: 1.15rem; }
+      .horn p, .desk p { margin: 0; }
+      .reading, .fault { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FogDeskController from "./fog_desk_controller.js"
+      import FoghornController from "./foghorn_controller.js"
+
+      const application = Application.start()
+      application.register("fog-desk", FogDeskController)
+      application.register("foghorn", FoghornController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>08 · Marrowstone fog desk</span>
+      </nav>
+      <h1>Marrowstone fog desk</h1>
+      <p class="lede">
+        The desk at Fort Flagler can call the Marrowstone horn and
+        read what it returns. A sound event leaves the desk and does
+        not land on that horn. Kilisut, across the water, hears the
+        window and has nothing to hand back.
+      </p>
+    </header>
+
+    <main>
+      <div class="strait">
+        <article
+          id="marrowstone-horn"
+          class="horn"
+          data-controller="foghorn"
+          data-foghorn-station-value="Marrowstone"
+          data-foghorn-pattern-value="two blasts"
+          data-action="fog-desk:sound->foghorn#hearLocal"
+        >
+          <h2>Marrowstone horn</h2>
+          <p data-foghorn-target="heard">Marrowstone is quiet.</p>
+        </article>
+
+        <section
+          class="scenario desk"
+          data-controller="fog-desk"
+          data-fog-desk-foghorn-outlet="#marrowstone-horn"
+        >
+          <h2>Fog desk</h2>
+          <div class="actions">
+            <button type="button" data-action="fog-desk#callHorn">Call the horn</button>
+            <button type="button" data-action="fog-desk#dropOutlet">Drop the outlet</button>
+          </div>
+          <p class="reading" data-fog-desk-target="reading" aria-live="polite"></p>
+          <p class="fault" data-fog-desk-target="fault">No fault.</p>
+        </section>
+
+        <article
+          id="kilisut-horn"
+          class="horn"
+          data-controller="foghorn"
+          data-foghorn-station-value="Kilisut"
+          data-foghorn-pattern-value="one blast"
+          data-action="fog-desk:sound@window->foghorn#hearWindow"
+        >
+          <h2>Kilisut horn</h2>
+          <p data-foghorn-target="heard">Kilisut is quiet.</p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fog_desk_controller.js"><code>fog_desk_controller.js</code></a> — calls the outlet, then dispatches</li>
+          <li><a href="foghorn_controller.js"><code>foghorn_controller.js</code></a> — blast() returns the pattern; two ways to hear</li>
+          <li>This page's source — Marrowstone listens on itself, Kilisut listens at window</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

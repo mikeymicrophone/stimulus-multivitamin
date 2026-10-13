@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Outlets · 10 · Ballard lamp bank
+
+  Teaches:
+  - Lamps already on the bank connect before the bank, so the
+    callback sees life "c".
+  - Hanging the spare removes the small lamp inside
+    lockLampOutletConnected. The small lamp's disconnect()
+    runs. The bank's disconnected callback does not.
+  - Recount writes a different selector string that matches
+    the same lamps. The paused removal is noticed then, and
+    disconnected fires for an element already out of the document.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Ballard lamp bank · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .locks { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .bank, .lamp { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .bank h2, .lamp h2 { margin: 0; font-size: 1.15rem; }
+      .bank p, .lamp p { margin: 0; }
+      .rack { display: grid; gap: 0.5rem; }
+      .log { white-space: pre-wrap; min-height: 10rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LampBankController from "./lamp_bank_controller.js"
+      import LockLampController from "./lock_lamp_controller.js"
+
+      const application = Application.start()
+      application.register("lamp-bank", LampBankController)
+      application.register("lock-lamp", LockLampController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>10 · Ballard lamp bank</span>
+      </nav>
+      <h1>Ballard lamp bank</h1>
+      <p class="lede">
+        The large lock and the small lock at Ballard. A spare hung
+        on the bank crowds the small lamp off in the same breath.
+        The small lamp goes out at once. The bank's disconnect note
+        waits until the keeper rewrites the selector.
+      </p>
+    </header>
+
+    <main>
+      <div class="locks">
+        <article id="lamp-large" class="lock-lamp lamp" data-controller="lock-lamp">
+          <h2>Large lock</h2>
+          <p class="status" data-lock-lamp-target="status"></p>
+        </article>
+        <article id="lamp-small" class="lock-lamp lamp" data-controller="lock-lamp">
+          <h2>Small lock</h2>
+          <p class="status" data-lock-lamp-target="status"></p>
+        </article>
+        <section
+          class="scenario bank"
+          data-controller="lamp-bank"
+          data-lamp-bank-lock-lamp-outlet=".lock-lamp"
+        >
+          <h2>Lamp bank</h2>
+          <div class="rack" data-lamp-bank-target="rack"></div>
+          <div class="actions">
+            <button type="button" data-action="lamp-bank#hangSpare">Hang the spare</button>
+            <button type="button" data-action="lamp-bank#recount">Recount the bank</button>
+          </div>
+          <p class="log" data-lamp-bank-target="log" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lamp_bank_controller.js"><code>lamp_bank_controller.js</code></a> — pulls the small lamp inside the connected callback</li>
+          <li><a href="lock_lamp_controller.js"><code>lock_lamp_controller.js</code></a> — life on connect and disconnect</li>
+          <li>This page's source — large and small are on the wall before the bank</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
