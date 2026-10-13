@@ -1,0 +1,109 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 09 · La Conner cannery pass
+
+  Teaches:
+  - The basket dispatches. The floor, an ancestor,
+    hears retort-basket:cooked. The inspector is a
+    sibling and does not.
+  - The floor then calls the inspector outlet and
+    gets a return value. An event cannot do that.
+  - The outlet read happens after the event is
+    already filed. Dropping the outlet throws, and
+    the floor still has the cook.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>La Conner cannery pass · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CanneryFloorController from "./cannery_floor_controller.js"
+      import RetortBasketController from "./retort_basket_controller.js"
+      import BatchInspectorController from "./batch_inspector_controller.js"
+
+      const application = Application.start()
+      application.register("cannery-floor", CanneryFloorController)
+      application.register("retort-basket", RetortBasketController)
+      application.register("batch-inspector", BatchInspectorController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>09 · La Conner cannery pass</span>
+      </nav>
+      <h1>La Conner cannery pass</h1>
+      <p class="lede">
+        A basket cooks inside the floor, so the floor hears it.
+        The inspector stands beside the floor, not inside it.
+        The floor asks the inspector through an outlet and gets
+        an answer back. The event itself never arrives there.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="cannery-floor"
+          data-cannery-floor-batch-inspector-outlet="#inspector"
+          data-action="retort-basket:cooked->cannery-floor#receive"
+        >
+          <h2>Cannery floor</h2>
+          <p id="floor-reading" class="reading" data-cannery-floor-target="reading" aria-live="polite"></p>
+
+          <article class="card" data-controller="retort-basket">
+            <h2>Retort basket</h2>
+            <div class="actions">
+              <button type="button" data-action="retort-basket#cook">Cook the basket</button>
+              <button type="button" data-action="cannery-floor#dropOutlet">Drop the outlet</button>
+            </div>
+            <p id="basket-reading" data-retort-basket-target="reading"></p>
+          </article>
+        </section>
+
+        <article
+          id="inspector"
+          class="card"
+          data-controller="batch-inspector"
+          data-action="retort-basket:cooked->batch-inspector#missed"
+        >
+          <h2>Batch inspector</h2>
+          <p id="inspector-reading" data-batch-inspector-target="reading"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="retort_basket_controller.js"><code>retort_basket_controller.js</code></a> — dispatches the cook</li>
+          <li><a href="cannery_floor_controller.js"><code>cannery_floor_controller.js</code></a> — hears the bubble, then calls the outlet</li>
+          <li><a href="batch_inspector_controller.js"><code>batch_inspector_controller.js</code></a> — returns a value; the sibling action stays quiet</li>
+          <li>This page's source — the inspector is not inside the floor</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

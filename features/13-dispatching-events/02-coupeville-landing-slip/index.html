@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 02 · Coupeville landing slip
+
+  Teaches:
+  - Omitting prefix uses the identifier: slip-caller:landed.
+  - prefix: "terminal" fires terminal:landed.
+  - prefix: false and prefix: "" fire landed, with no colon.
+  - prefix: "false" fires false:landed. The string is kept.
+  - null and 0 are falsy too, so they also fire landed.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Coupeville landing slip · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SlipLogController from "./slip_log_controller.js"
+      import SlipCallerController from "./slip_caller_controller.js"
+
+      const application = Application.start()
+      application.register("slip-log", SlipLogController)
+      application.register("slip-caller", SlipCallerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>02 · Coupeville landing slip</span>
+      </nav>
+      <h1>Coupeville landing slip</h1>
+      <p class="lede">
+        Penn Cove. The caller names the landing. The default name
+        wears the controller. A terminal prefix, a dropped prefix,
+        and the word "false" each arrive as a different event.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="board card"
+        data-controller="slip-log"
+        data-action="slip-caller:landed->slip-log#hearDefault terminal:landed->slip-log#hearTerminal landed->slip-log#hearBare false:landed->slip-log#hearWord"
+      >
+        <h2>Slip log</h2>
+        <p id="slip-reading" class="reading" data-slip-log-target="reading" aria-live="polite"></p>
+
+        <article class="card" data-controller="slip-caller">
+          <h2>Slip caller</h2>
+          <div class="actions">
+            <button type="button" data-action="slip-caller#land" data-slip-caller-prefix-kind-param="default">Default prefix</button>
+            <button type="button" data-action="slip-caller#land" data-slip-caller-prefix-kind-param="terminal">Terminal prefix</button>
+            <button type="button" data-action="slip-caller#land" data-slip-caller-prefix-kind-param="false">Prefix false</button>
+            <button type="button" data-action="slip-caller#land" data-slip-caller-prefix-kind-param="empty">Empty prefix</button>
+            <button type="button" data-action="slip-caller#land" data-slip-caller-prefix-kind-param="word">The word false</button>
+            <button type="button" data-action="slip-caller#landFalsy">Falsy prefixes</button>
+          </div>
+          <p id="caller-note" data-slip-caller-target="note">No landing yet.</p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="slip_caller_controller.js"><code>slip_caller_controller.js</code></a> — passes prefix, including false and ""</li>
+          <li><a href="slip_log_controller.js"><code>slip_log_controller.js</code></a> — one action per event name</li>
+          <li>This page's source — four listeners on the log</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

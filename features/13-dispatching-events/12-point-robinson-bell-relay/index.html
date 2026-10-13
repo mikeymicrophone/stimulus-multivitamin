@@ -1,0 +1,90 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 12 · Point Robinson bell relay
+
+  Teaches:
+  - A listener can dispatch before later listeners of
+    the outer event run. The nested listeners finish
+    first, then the outer list continues.
+  - The reply's defaultPrevented does not set the
+    strike's defaultPrevented. They are two events.
+  - A hop limit is what stops the echo. dispatch()
+    does not queue or guard re-entry.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Point Robinson bell relay · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 4.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RelayLogController from "./relay_log_controller.js"
+      import BellRelayController from "./bell_relay_controller.js"
+
+      const application = Application.start()
+      application.register("relay-log", RelayLogController)
+      application.register("bell-relay", BellRelayController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>12 · Point Robinson bell relay</span>
+      </nav>
+      <h1>Point Robinson bell relay</h1>
+      <p class="lede">
+        Point Robinson answers a strike with a reply, and the
+        reply can strike again. The second strike finishes
+        before the first strike's record is written. A hop
+        limit keeps the relay from ringing forever.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="board card"
+        data-controller="relay-log"
+        data-action="bell-relay:strike->relay-log#answer bell-relay:strike->relay-log#record bell-relay:reply->relay-log#fileReply"
+      >
+        <h2>Relay log</h2>
+        <article class="card" data-controller="bell-relay">
+          <h2>Bell</h2>
+          <div class="actions">
+            <button type="button" data-action="bell-relay#strikeOnce">Strike once</button>
+            <button type="button" data-action="bell-relay#strikeEcho">Strike and echo</button>
+          </div>
+          <p id="bell-reading" class="reading" data-bell-relay-target="reading" aria-live="polite"></p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bell_relay_controller.js"><code>bell_relay_controller.js</code></a> — starts a strike and reads the tape</li>
+          <li><a href="relay_log_controller.js"><code>relay_log_controller.js</code></a> — answers by dispatching, then records</li>
+          <li>This page's source — answer is listed before record</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

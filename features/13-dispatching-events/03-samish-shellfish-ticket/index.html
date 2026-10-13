@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 03 · Samish shellfish ticket
+
+  Teaches:
+  - detail is the payload. The listener and the returned
+    event share that object.
+  - Omitting detail passes a new {} on every call.
+  - detail: null stays null. It is not replaced with {}.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Samish shellfish ticket · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 3.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BuyerBoardController from "./buyer_board_controller.js"
+      import BedTicketController from "./bed_ticket_controller.js"
+
+      const application = Application.start()
+      application.register("buyer-board", BuyerBoardController)
+      application.register("bed-ticket", BedTicketController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>03 · Samish shellfish ticket</span>
+      </nav>
+      <h1>Samish shellfish ticket</h1>
+      <p class="lede">
+        A sack off the Samish beds carries bed, pounds, grade,
+        and tags in the event detail. An empty ticket and a
+        null ticket are not the same payload.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="board card"
+        data-controller="buyer-board"
+        data-action="bed-ticket:sacked->buyer-board#fileSack bed-ticket:cleared->buyer-board#fileClear"
+      >
+        <h2>Buyer board</h2>
+        <p id="board-reading" class="reading" data-buyer-board-target="reading" aria-live="polite"></p>
+
+        <article class="card" data-controller="bed-ticket">
+          <h2>Bed ticket</h2>
+          <div class="actions">
+            <button type="button" data-action="bed-ticket#postSack">Sack 42 lb</button>
+            <button type="button" data-action="bed-ticket#postOmitted">Post without detail</button>
+            <button type="button" data-action="bed-ticket#postNull">Post a null detail</button>
+          </div>
+          <p id="ticket-note" data-bed-ticket-target="note">No sack yet.</p>
+        </article>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bed_ticket_controller.js"><code>bed_ticket_controller.js</code></a> — passes detail, omits it, and passes null</li>
+          <li><a href="buyer_board_controller.js"><code>buyer_board_controller.js</code></a> — reads event.detail, including null</li>
+          <li>This page's source — the board listens for sacked and cleared</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

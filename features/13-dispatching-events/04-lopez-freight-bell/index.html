@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 04 · Lopez freight bell
+
+  Teaches:
+  - target defaults to the controller element. The event
+    bubbles from there to ancestors, document, and window.
+  - target: another element starts the bubble there.
+    Descendants of the desk do not hear the desk.
+  - target: document reaches document and, if it bubbles,
+    window. target: window stays on window.
+  - bubbles: false is heard only by the target.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lopez freight bell · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PierLogController from "./pier_log_controller.js"
+      import FreightDeskController from "./freight_desk_controller.js"
+      import ShedBellController from "./shed_bell_controller.js"
+      import DocumentClerkController from "./document_clerk_controller.js"
+      import WindowWatchController from "./window_watch_controller.js"
+
+      const application = Application.start()
+      application.register("pier-log", PierLogController)
+      application.register("freight-desk", FreightDeskController)
+      application.register("shed-bell", ShedBellController)
+      application.register("document-clerk", DocumentClerkController)
+      application.register("window-watch", WindowWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>04 · Lopez freight bell</span>
+      </nav>
+      <h1>Lopez freight bell</h1>
+      <p class="lede">
+        Fisherman Bay. The desk rings a freight call. The same
+        event can start on the desk, on the shed bell, on the
+        document, or on the window. Where it starts decides who
+        is up the bubble from there.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="pier-log"
+          data-action="freight-desk:called->pier-log#hear freight-desk:cleared->pier-log#clear"
+        >
+          <h2>Pier log</h2>
+          <p id="pier-reading" data-pier-log-target="reading" aria-live="polite"></p>
+
+          <article class="card" data-controller="freight-desk">
+            <h2>Freight desk</h2>
+            <div class="actions">
+              <button type="button" data-action="freight-desk#callDesk">Call from the desk</button>
+              <button type="button" data-action="freight-desk#callShed">Call on the shed</button>
+              <button type="button" data-action="freight-desk#callShedStill">Call the shed without bubbling</button>
+              <button type="button" data-action="freight-desk#callDocument">Call on the document</button>
+              <button type="button" data-action="freight-desk#callWindow">Call on the window</button>
+            </div>
+            <p id="desk-report" data-freight-desk-target="report">No call yet.</p>
+
+            <article
+              id="shed-bell"
+              class="card"
+              data-controller="shed-bell"
+              data-freight-desk-target="shed"
+              data-action="freight-desk:called->shed-bell#hear"
+            >
+              <h2>Shed bell</h2>
+              <p id="shed-reading" data-shed-bell-target="reading">Shed is quiet.</p>
+            </article>
+          </article>
+        </section>
+
+        <p
+          class="card"
+          data-controller="document-clerk"
+          data-action="freight-desk:called@document->document-clerk#hear freight-desk:cleared@document->document-clerk#clear"
+        >
+          <span id="clerk-reading" data-document-clerk-target="reading">Clerk is quiet.</span>
+        </p>
+
+        <p
+          class="card"
+          data-controller="window-watch"
+          data-action="freight-desk:called@window->window-watch#hear freight-desk:cleared@window->window-watch#clear"
+        >
+          <span id="watch-reading" data-window-watch-target="reading">Watch is quiet.</span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="freight_desk_controller.js"><code>freight_desk_controller.js</code></a> — chooses the target</li>
+          <li><a href="pier_log_controller.js"><code>pier_log_controller.js</code></a> — the ancestor</li>
+          <li><a href="shed_bell_controller.js"><code>shed_bell_controller.js</code></a> — a descendant used as a target</li>
+          <li><a href="document_clerk_controller.js"><code>document_clerk_controller.js</code></a> — listens at document</li>
+          <li><a href="window_watch_controller.js"><code>window_watch_controller.js</code></a> — listens at window</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

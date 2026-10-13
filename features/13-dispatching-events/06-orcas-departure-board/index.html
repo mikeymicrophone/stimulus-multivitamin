@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 06 · Orcas departure board
+
+  Teaches:
+  - dispatch returns the event after listeners run.
+    defaultPrevented is the veto.
+  - Later listeners still run and can see the veto.
+  - cancelable: false ignores preventDefault.
+  - A throwing listener is caught. The return value
+    and the later listeners still happen.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Orcas departure board · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HarborMasterController from "./harbor_master_controller.js"
+      import DepartureBoardController from "./departure_board_controller.js"
+      import JammedWinchController from "./jammed_winch_controller.js"
+      import WharfHandController from "./wharf_hand_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        const fault = document.querySelector("[data-fault]")
+        fault.hidden = false
+        fault.textContent = `${message} :: ${error.name}: ${error.message}`
+      }
+      application.register("harbor-master", HarborMasterController)
+      application.register("departure-board", DepartureBoardController)
+      application.register("jammed-winch", JammedWinchController)
+      application.register("wharf-hand", WharfHandController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>06 · Orcas departure board</span>
+      </nav>
+      <h1>Orcas departure board</h1>
+      <p class="lede">
+        The Chelan is alongside at Orcas. The harbor master can
+        refuse the departure. The wharf hand hears the same event
+        afterward and can see whether the refusal stuck.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="harbor-master"
+          data-action="departure-board:departed->harbor-master#review"
+        >
+          <h2>Harbor master</h2>
+          <p id="master-reading" class="reading" data-harbor-master-target="reading" aria-live="polite"></p>
+
+          <article
+            class="card"
+            data-controller="departure-board jammed-winch"
+            data-action="departure-board:departed->jammed-winch#seize"
+          >
+            <h2>Departure board</h2>
+            <div class="actions">
+              <label><input id="refuse-box" type="checkbox" data-action="change->harbor-master#setRefuse"> Refuse departure</label>
+              <button type="button" data-action="departure-board#depart" data-departure-board-cancelable-param="true">Depart</button>
+              <button type="button" data-action="departure-board#depart" data-departure-board-cancelable-param="false">Depart fixed</button>
+              <button type="button" data-action="departure-board#depart" data-departure-board-cancelable-param="true" data-departure-board-jam-param="true">Jam and depart</button>
+            </div>
+            <p id="board-reading" class="reading" data-departure-board-target="reading"></p>
+            <p id="fault" data-fault hidden>No fault.</p>
+          </article>
+        </section>
+
+        <p
+          class="card"
+          data-controller="wharf-hand"
+          data-action="departure-board:departed@window->wharf-hand#note"
+        >
+          <span id="wharf-reading" data-wharf-hand-target="reading">Wharf is clear.</span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="departure_board_controller.js"><code>departure_board_controller.js</code></a> — reads defaultPrevented on the returned event</li>
+          <li><a href="harbor_master_controller.js"><code>harbor_master_controller.js</code></a> — calls preventDefault</li>
+          <li><a href="wharf_hand_controller.js"><code>wharf_hand_controller.js</code></a> — a later listener at window</li>
+          <li><a href="jammed_winch_controller.js"><code>jammed_winch_controller.js</code></a> — throws when the pawl is jammed</li>
+          <li>This page's source — handleError writes the fault line</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

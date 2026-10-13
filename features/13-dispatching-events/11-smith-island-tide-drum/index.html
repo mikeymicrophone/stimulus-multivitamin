@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 11 · Smith Island tide drum
+
+  Teaches:
+  - The drum dispatches in connect() before the striker
+    exists, so the striker misses the set. The striker
+    dispatches in connect() and the drum hears it.
+  - A later striker is missed by nothing that is already
+    listening. It does not hear the earlier armed event.
+  - remove() leaves the controller in place until the
+    mutation observer runs. A bubble from the detached
+    striker does not reach the drum. A dispatch aimed
+    at the saved drum element does.
+  - Pulling the drum disconnects the drum first. The
+    striker still hears the drum's window goodbye.
+    The drum does not hear the striker's later leaving.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Smith Island tide drum · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PageEarController from "./page_ear_controller.js"
+      import TideDrumController from "./tide_drum_controller.js"
+      import TideStrikerController from "./tide_striker_controller.js"
+
+      const application = Application.start()
+      application.register("page-ear", PageEarController)
+      application.register("tide-drum", TideDrumController)
+      application.register("tide-striker", TideStrikerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>11 · Smith Island tide drum</span>
+      </nav>
+      <h1>Smith Island tide drum</h1>
+      <p class="lede">
+        The drum on Smith Island sets itself as it connects.
+        The striker arms a moment later. Pulling a striker,
+        then the whole drum, shows which dispatches still
+        have somewhere to land.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <p
+          id="page-ear"
+          class="card"
+          data-controller="page-ear"
+          data-action="tide-striker:armed@window->page-ear#armed tide-striker:leaving@window->page-ear#leaving tide-striker:step@window->page-ear#step tide-drum:step@window->page-ear#step tide-drum:goodbye@window->page-ear#goodbye"
+        >
+          <span id="page-armed" data-page-ear-target="armed">Page armed none.</span>
+          <span id="page-leaving" data-page-ear-target="leaving">Page leaving none.</span>
+          <span id="page-order" data-page-ear-target="order">Order none.</span>
+          <span id="page-goodbye" data-page-ear-target="goodbye">Page heard no goodbye.</span>
+          <span id="goodbye-witness">No goodbye yet.</span>
+        </p>
+
+        <section class="card" data-controller="tide-drum" data-action="tide-striker:armed->tide-drum#armed tide-striker:leaving->tide-drum#leavingFromChild">
+          <h2>Tide drum</h2>
+          <p id="drum-reading" class="reading" data-tide-drum-target="reading" aria-live="polite"></p>
+          <p id="drum-leaving" data-tide-drum-target="leaving">Drum leaving none.</p>
+          <p id="drum-sync" data-tide-drum-target="sync">Nothing removed.</p>
+          <p id="drum-after" data-tide-drum-target="after">Removal has not settled.</p>
+          <div class="actions">
+            <button type="button" data-action="tide-drum#addEast">Hang the east striker</button>
+            <button type="button" data-action="tide-drum#pullWest">Pull the west striker</button>
+            <button type="button" data-action="tide-drum#pullDrum">Pull the drum</button>
+          </div>
+          <div data-tide-drum-target="well">
+            <article
+              data-controller="tide-striker"
+              data-tide-drum-target="west"
+              data-tide-striker-name-value="west"
+              data-action="tide-drum:set->tide-striker#hearSet tide-striker:armed@window->tide-striker#hearArmed tide-drum:goodbye@window->tide-striker#hearGoodbye"
+            >
+              <h2>West striker</h2>
+              <p id="west-reading" data-tide-striker-target="reading"></p>
+            </article>
+          </div>
+          <template data-tide-drum-target="template">
+            <article
+              data-controller="tide-striker"
+              data-tide-striker-name-value="east"
+              data-action="tide-drum:set->tide-striker#hearSet tide-striker:armed@window->tide-striker#hearArmed tide-drum:goodbye@window->tide-striker#hearGoodbye"
+            >
+              <h2>East striker</h2>
+              <p data-tide-striker-target="reading"></p>
+            </article>
+          </template>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_drum_controller.js"><code>tide_drum_controller.js</code></a> — dispatches from connect and disconnect</li>
+          <li><a href="tide_striker_controller.js"><code>tide_striker_controller.js</code></a> — arms on connect, aims leaving at the saved drum</li>
+          <li><a href="page_ear_controller.js"><code>page_ear_controller.js</code></a> — stays on the page and listens at window</li>
+          <li>This page's source — the east striker is a template until it is hung</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

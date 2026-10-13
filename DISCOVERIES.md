@@ -180,7 +180,8 @@ calls.
 The child should keep a reference from `connect()` and tolerate a parent
 that is already gone.
 
-**Seen in:** [Insurance quote connect order](features/02-lifecycle-callbacks/11-insurance-quote-connect-order/).
+**Seen in:** [Insurance quote connect order](features/02-lifecycle-callbacks/11-insurance-quote-connect-order/),
+[Smith Island tide drum](features/13-dispatching-events/11-smith-island-tide-drum/).
 
 ### There is no unload callback
 
@@ -202,8 +203,10 @@ those listeners when the controller disconnects for a real DOM removal.
 
 **What happens.** `connect()` and `disconnect()` run from a
 `MutationObserver` callback, as a microtask after the code that changed
-the DOM finishes. On the line after `element.remove()`, the controller
-is still connected.
+the DOM finishes. On the line after `element.remove()`,
+`element.isConnected` is already false, and
+`getControllerForElementAndIdentifier` still returns the controller.
+`disconnect()` has not run.
 
 **Why it matters.** Counting instances, destroying a third-party widget,
 or reading layout immediately after a DOM write is one frame too early.
@@ -211,7 +214,8 @@ or reading layout immediately after a DOM write is one frame too early.
 **What to do.** Wait until after Stimulus has reacted (`queueMicrotask`,
 or the next animation frame) before asking "is it gone?".
 
-**Seen in:** [Pet clinic visit date pickers](features/02-lifecycle-callbacks/04-pet-clinic-visit-date-pickers/).
+**Seen in:** [Pet clinic visit date pickers](features/02-lifecycle-callbacks/04-pet-clinic-visit-date-pickers/),
+[Smith Island tide drum](features/13-dispatching-events/11-smith-island-tide-drum/).
 
 ### Events from a detached element don't reach old ancestors
 
@@ -226,7 +230,8 @@ to nobody.
 **What to do.** Keep a reference to the parent element from `connect()`,
 and dispatch there with `this.dispatch(name, { target: parentElement })`.
 
-**Seen in:** [Auction lot countdowns](features/02-lifecycle-callbacks/01-auction-lot-countdowns/).
+**Seen in:** [Auction lot countdowns](features/02-lifecycle-callbacks/01-auction-lot-countdowns/),
+[Smith Island tide drum](features/13-dispatching-events/11-smith-island-tide-drum/).
 
 **Why this section.** The silent `closest()` / bubbling failure is the
 DOM; it's here because Stimulus calls `disconnect()` after the node has
@@ -285,7 +290,8 @@ element. The invalid form is sent.
 **What to do.** Call `event.stopImmediatePropagation()` to skip later
 actions on the same element. Put the guard first in the list.
 
-**Seen in:** [Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/).
+**Seen in:** [Newsletter signup with live validation](features/03-actions/02-newsletter-signup-with-live-validation/),
+[Admiralty pilot orders](features/13-dispatching-events/10-admiralty-pilot-orders/).
 
 ### A rejected promise from an action never reaches `handleError`
 
@@ -2275,7 +2281,10 @@ is simply absent does not throw.
 "two blasts" and Marrowstone's own listener stays quiet.
 Kilisut hears the window. Dropping the outlet and calling
 again throws the missing-element error, the dispatch is
-skipped, and Kilisut does not hear a second sound.
+skipped, and Kilisut does not hear a second sound. La
+Conner dispatches before the outlet read, so the cook is
+filed and that same error is caught afterward. The
+sibling inspector's action still does not run.
 
 **What to do.** Use an outlet when you need a return value
 or a specific controller. Use `dispatch` when any listener
@@ -2284,7 +2293,8 @@ may care and a missing listener must not throw. Listen at
 inside the host. Don't dispatch after an unguarded outlet
 read if the event still has to fire when the outlet is gone.
 
-**Seen in:** [Marrowstone fog desk](features/12-outlets/08-marrowstone-fog-desk/).
+**Seen in:** [Marrowstone fog desk](features/12-outlets/08-marrowstone-fog-desk/),
+[La Conner cannery pass](features/13-dispatching-events/09-la-conner-cannery-pass/).
 
 ### A namespaced outlet and its dashed twin share one property
 
@@ -2412,6 +2422,428 @@ of another when an outlet name on the shorter one can spell
 the rest (`pier` / `pier-shed`, `shed-lamp` / `lamp`).
 
 **Seen in:** [Pier 91 shed office](features/12-outlets/11-pier-91-shed-office/).
+
+## Dispatching custom events
+
+### The default type is the identifier, a colon, and the name you passed
+
+**What happens.** `dispatch("posted")` on a controller registered
+as `tide-staff` fires `tide-staff:posted`. `dispatch("line-changed")`
+fires `tide-staff:line-changed`. The name argument is copied as
+written. It is not camelized, and it is not dasherized. A different
+controller's `dispatch("posted")` is a different type.
+`gauge-card:posted` does not run a `tide-staff:posted` action.
+
+**Why it matters.** The Port Gamble log files the staff reading,
+then the south line, then the gauge, as three types. The gauge
+posting 8.1 ft does not look like the staff posting 8.4 ft.
+
+**What to do.** Listen for `identifier:name`, hyphens included.
+Don't treat one event name as shared across controllers unless
+you set `prefix` yourself.
+
+**Seen in:** [Port Gamble tide staff](features/13-dispatching-events/01-port-gamble-tide-staff/).
+
+### A falsy `prefix` drops the identifier
+
+**What happens.** The event type is `prefix ? prefix + ":" + name : name`.
+The default prefix is `this.identifier`, so an omitted prefix on
+the slip caller is `slip-caller:landed`. A custom string replaces
+it (`terminal:landed`). `false`, `""`, `null`, and `0` are falsy,
+so the type is the bare name `landed`. The string `"false"` is
+truthy, so the type is `false:landed`.
+
+A param attribute `"false"` arrives as the boolean `false`, not
+the string `"false"`. Comparing it to `"false"` leaves the prefix
+at the identifier. See
+[Params are `JSON.parse`; values and `dataset` are not](#params-are-jsonparse-values-and-dataset-are-not).
+
+**Why it matters.** The Coupeville slip counts a bare landing for
+Prefix false, Empty prefix, and the four falsy values together.
+The word false is a different event. The default and terminal
+prefixes do not hear either of those.
+
+**What to do.** Pass `prefix: false` or `prefix: ""` when the
+event name must stand alone. Pass the string `"false"` only when
+that string is the prefix you want. Read a param as the type the
+typecast actually produces.
+
+**Seen in:** [Coupeville landing slip](features/13-dispatching-events/02-coupeville-landing-slip/).
+
+### `detail` is shared by reference
+
+**What happens.** The object passed as `detail` is the object on
+the event. A listener can write a field, a later listener reads
+that write, and the returned event is that same object. Omitting
+`detail` uses a new `{}` for that call only. The next omitted
+call gets a different object. `detail: null` stays `null`. The
+default `{}` applies only when the property is missing.
+
+**Why it matters.** The Samish sack comes back as the same object,
+with bed Samish. Two omitted dispatches are fresh and not null.
+A null detail is null on the board. At Edmonds the deck sets
+`fathoms` to 0, the mate sees 0, and the bell's returned detail
+is 0 and the same object.
+
+**What to do.** Treat `detail` as a shared scratch pad, or copy
+the fields the caller still needs before a listener can change
+them. Don't rely on one omitted `{}` surviving for the next
+event. Pass `null` only when the listener is written to see null.
+
+**Why this section.** Object identity is JavaScript. It's here
+because `dispatch` takes `detail` as the payload and does not
+copy it.
+
+**Seen in:** [Samish shellfish ticket](features/13-dispatching-events/03-samish-shellfish-ticket/),
+[Edmonds ramp pitfalls](features/13-dispatching-events/13-edmonds-ramp-pitfalls/).
+
+### `target` is where the event starts
+
+**What happens.** The default target is the controller element.
+`target` moves the start to another element, `document`, or
+`window`. Bubbling still walks up from that start, in the order
+in
+[One click runs actions in a fixed order: element, ancestors, `@document`, `@window`](#one-click-runs-actions-in-a-fixed-order-element-ancestors-document-window).
+A descendant of the dispatcher does not hear an event that
+started on the dispatcher. An event that starts on a descendant
+is heard there, then by ancestors, `@document`, and `@window`.
+`bubbles: false` is heard only by listeners on the target.
+`target: document` skips every element and is heard by
+`@document`, then `@window`. `target: window` is heard only by
+`@window`. It does not travel down to `document`.
+
+A sibling does not hear the bubble. That is the same limit as
+[A dispatch does not reach a sibling outlet](#a-dispatch-does-not-reach-a-sibling-outlet).
+
+**Why it matters.** The Lopez desk call is heard by the pier,
+the clerk, and the watch, and the shed under the desk stays
+quiet. Calling on the shed is heard by the shed and then by
+everyone above it. Calling the shed without bubbling is heard
+by the shed alone. Calling on `window` leaves the clerk quiet.
+The Edmonds horn shed, a sibling of the deck, stays quiet.
+
+**What to do.** Pass `target` when the event should start
+somewhere other than the host. Pass `bubbles: false` when only
+that node should hear it. Use `@window` or an ancestor for a
+listener that is not on the path up.
+
+**Why this section.** Which way an event travels is the DOM.
+Stimulus adds the `target` option and the default of
+`this.element`.
+
+**Seen in:** [Lopez freight bell](features/13-dispatching-events/04-lopez-freight-bell/),
+[Edmonds ramp pitfalls](features/13-dispatching-events/13-edmonds-ramp-pitfalls/).
+
+### `composed` is ignored, and the string `"false"` does not turn the flags off
+
+**What happens.** `dispatch` constructs the `CustomEvent` with
+`detail`, `bubbles`, and `cancelable` only. A `composed: true`
+option is dropped. `event.composed` stays false. `bubbles` and
+`cancelable` default to true.
+
+The string `"false"` for either flag stays true. The DOM
+converts the option with a boolean conversion, and a non-empty
+string is true. `0` is false for both. An event that does not
+bubble is not heard by an ancestor or by `@window`. An event
+that is not cancelable ignores `preventDefault`: the listener
+still runs, and `defaultPrevented` stays false.
+
+A node inside an open shadow root is a different tree. Stimulus
+does not connect a controller there. A `dispatch` aimed at that
+node, `composed` option and all, reaches nobody outside the
+shadow: not the host, not the ancestor log, not `@window`. A
+hand-built `CustomEvent` with `composed: true` does cross. That
+event is cancelable only if the constructor is given
+`cancelable: true`. The DOM default is false, so a veto on a
+hand-built event does not stick unless you ask. `dispatch` is
+cancelable unless you pass `cancelable: false`.
+
+**Why it matters.** Hoisting baker with `composed: true` still
+reports composed false, and the veto sticks. The worded hoist
+bubbles and is vetoed. The zero hoist does neither. The lamp
+inside the shadow reports composed false and the host stays
+quiet. The hand-built hoist is composed, the host hears it,
+and the veto sticks because cancelable was set.
+
+**What to do.** Don't pass `composed` to `dispatch` and expect
+the event to leave a shadow root. Build the event yourself when
+it has to cross, and set `cancelable` if a listener should be
+able to veto it. Pass a real boolean for `bubbles` and
+`cancelable`. `0` turns them off. The string `"false"` does not.
+
+**Why this section.** Boolean conversion and shadow retargeting
+are the platform. Stimulus is what drops `composed` and defaults
+the other two flags to true.
+
+**Seen in:** [Point Wilson signal flags](features/13-dispatching-events/05-point-wilson-signal-flags/).
+
+### The returned event has already been through its listeners
+
+**What happens.** `dispatch` returns the event after
+`dispatchEvent`. `defaultPrevented` is whatever the listeners
+left. A listener calls `preventDefault` to veto, and the caller
+decides from that flag. `cancelable: false` makes the call a
+no-op: the listener still runs, and `defaultPrevented` stays
+false.
+
+A throw inside an action is caught as
+`Error invoking action "…"`. `dispatch` still returns. Listeners
+later in the order still run. The order is the one in
+[One click runs actions in a fixed order: element, ancestors, `@document`, `@window`](#one-click-runs-actions-in-a-fixed-order-element-ancestors-document-window).
+
+**Why it matters.** The Orcas board holds the Chelan when the
+harbor master refuses, and lets her go when the event is not
+cancelable even though the master still calls `preventDefault`.
+Jamming the winch prints the invoking error, the master still
+refuses, and the wharf still sees `defaultPrevented` true.
+
+**What to do.** Read `defaultPrevented` on the returned event
+before doing the work the listeners were allowed to stop. Pass
+`cancelable: false` only when a veto must not stick. Don't wrap
+`dispatch` in try/catch to hear an action throw; use
+`handleError`. Don't assume a throw skipped the window listener.
+
+**Seen in:** [Orcas departure board](features/13-dispatching-events/06-orcas-departure-board/).
+
+### A namespaced identifier keeps `--` in the event name
+
+**What happens.** The prefix is the identifier string, not the
+camelized property name. `keeper--slate` dispatches
+`keeper--slate:signed` and `keeper--slate:watch-relieved`.
+`keeper-slate:signed`, one hyphen, does not match.
+`lens-cabinet:rotated` is the ordinary hyphenated identifier.
+Outlet properties collapse `--` to `-`. Event names do not. See
+[A namespaced outlet and its dashed twin share one property](#a-namespaced-outlet-and-its-dashed-twin-share-one-property).
+
+`data-action` hears the full type on the element, at
+`@document`, and at `@window`, in that order. Params on the
+action's element sit beside `detail`. `"Lime Kiln"` stays a
+string because it is not JSON. See
+[Params are `JSON.parse`; values and `dataset` are not](#params-are-jsonparse-values-and-dataset-are-not).
+
+**Why it matters.** The Lime Kiln book files local, then
+document, then window, for the double-hyphen name. The
+one-hyphen decoy stays at 0. Relieving the watch and rotating
+the lens are different types.
+
+**What to do.** Listen for the identifier as it was registered,
+including `--`. Don't camelize it, and don't collapse the
+namespace to one hyphen.
+
+**Seen in:** [Lime Kiln keeper slate](features/13-dispatching-events/07-lime-kiln-keeper-slate/).
+
+### `event.params` is stamped before the action is allowed to run
+
+**What happens.** Each binding assigns `event.params` before it
+decides whether the method runs. A `:self` filter that then
+declines still leaves its params on the event. When `dispatch`
+returns, `event.params` is the last binding that handled the
+event, including one whose method did not run. During a method,
+`event.params` is that binding's own params. The typecast is
+unchanged: `"3"` is a number, `"true"` and `"false"` are
+booleans, and `"03"` stays a string. See
+[Each action gets a fresh `event.params`, and the next action replaces it](#each-action-gets-a-fresh-eventparams-and-the-next-action-replaces-it)
+and
+[Action params turn all-digit strings into numbers](#action-params-turn-all-digit-strings-into-numbers).
+
+**Why it matters.** The Goose Point floor records belt 3, hold
+true, and lot `03` as a string. The belt clerk records belt 7
+and hold false. Late self never runs, and the returned event
+still says belt 9, hold false, and lot `08` as a string, because
+that binding was last.
+
+**What to do.** Read `event.params` inside the method, or copy
+them before you return from it. Don't read `event.params` on the
+object `dispatch` returned and expect your own action's params,
+or expect them to be absent because a later `:self` did not run.
+
+**Seen in:** [Goose Point retort tickets](features/13-dispatching-events/08-goose-point-retort-tickets/).
+
+### An ancestor hears the bubble; an outlet can return a value
+
+**What happens.** A controller with a different identifier, on
+an ancestor, hears a bubbling dispatch. The event does not
+carry a return value back. An outlet method can return a value,
+and the singular getter throws when the outlet is missing. If
+that throw happens before `dispatch`, the event never fires.
+Dispatching first, then reading the outlet inside try/catch,
+files the event and still reports the missing outlet. The
+sibling's action for the same type does not run. See
+[A dispatch does not reach a sibling outlet](#a-dispatch-does-not-reach-a-sibling-outlet).
+
+**Why it matters.** La Conner files `retort-basket:cooked` and
+the inspector returns "accepted". After the outlet attribute is
+removed, the floor still files the cook, the inspector's text
+does not change, and the fault is the missing-element error
+with selector `null`.
+
+**What to do.** Dispatch, then call the outlet. Catch the
+missing-outlet error when the event must go out either way. Use
+the outlet when you need the return value. Use the ancestor, or
+`@window`, when a missing listener must not throw.
+
+**Seen in:** [La Conner cannery pass](features/13-dispatching-events/09-la-conner-cannery-pass/).
+
+### `@window` listeners for one event sort by action index
+
+**What happens.** Bindings that share one native listener are
+sorted by their index in that element's `data-action`, not by
+document order. Equal indexes keep connection order. For a
+bubbling event the groups are still element, ancestors,
+`@document`, then `@window`. Inside the window group, a later
+element's index-0 action runs before an earlier element's
+index-1 action.
+
+`stopPropagation` and `stopImmediatePropagation` apply to a
+custom event the same way they apply to a click. See
+[`stopPropagation()` does not stop the next action on the same element](#stoppropagation-does-not-stop-the-next-action-on-the-same-element).
+
+**Why it matters.** The Admiralty tape for a plain hail is
+`log bell station book late early`. Late watch is below early
+watch in the page, and its hail action is the first token.
+Early watch's hail is the second token, after a clear action,
+so it answers last. Stopping the hail leaves `log bell`.
+Cutting it leaves `log`.
+
+**What to do.** Don't put another action before the window
+action you need to win a race with a different window listener.
+Give the action the index you mean, or listen on an ancestor
+when document order is the order you want. Put a guard that
+must skip the next action on the same element first, and call
+`stopImmediatePropagation`.
+
+**Seen in:** [Admiralty pilot orders](features/13-dispatching-events/10-admiralty-pilot-orders/).
+Goose Point's two window actions are both index 0, so the later
+one stamps the returned params. See
+[Goose Point retort tickets](features/13-dispatching-events/08-goose-point-retort-tickets/).
+
+### A `connect()` dispatch is heard only by controllers already listening
+
+**What happens.** Action listeners are started before
+`controller.connect()`. A controller hears its own dispatch from
+`connect()`. It does not hear a dispatch that already happened.
+When both controllers were registered before `start()`, the
+parent connects first, so a dispatch in the parent's
+`connect()` runs before the child is listening. The child's
+`connect()` dispatch is heard by that parent. A controller
+connected later does not hear the earlier child's dispatch. See
+[Parent-before-child connect order only holds when both are registered before start](#parent-before-child-connect-order-only-holds-when-both-are-registered-before-start).
+
+**Why it matters.** The Smith Island drum's set goes out before
+the west striker is listening. The striker hears its own armed
+event, and the drum hears that armed event. The east striker,
+hung later, misses the set and misses west's armed event. West
+hears east when east arms.
+
+**What to do.** Don't announce from the parent's `connect()` and
+expect children to answer. Announce from the child's
+`connect()`, or dispatch again when a listener connects. A
+controller that must not handle its own event should not listen
+for the type it dispatches during `connect()`.
+
+**Seen in:** [Smith Island tide drum](features/13-dispatching-events/11-smith-island-tide-drum/).
+
+### `disconnect()` still has its listeners
+
+**What happens.** The context calls `controller.disconnect()`
+and then stops the binding observer. Actions still run during
+`disconnect()`. On the line after `remove()`, the element is
+already disconnected from the document and the controller is
+still registered. The callback itself waits for the microtask
+in
+[Lifecycle callbacks are batched after the DOM change](#lifecycle-callbacks-are-batched-after-the-dom-change).
+
+A bubbling dispatch from the detached element does not reach
+the old ancestor. A dispatch with `target` set to the element
+saved in `connect()`, and `bubbles: false`, does. A dispatch
+with `target: window` is heard by window listeners that are
+still connected. See
+[Events from a detached element don't reach old ancestors](#events-from-a-detached-element-dont-reach-old-ancestors).
+
+Removing a subtree disconnects the parent first. During the
+parent's `disconnect()` the child is still connected and hears
+a window goodbye. The child's later window dispatch is heard by
+a listener that stayed on the page, not by the parent. See
+[The parent disconnects first when a subtree is removed](#the-parent-disconnects-first-when-a-subtree-is-removed).
+
+**Why it matters.** Pulling the west striker reports the element
+gone and the controller still present. After the microtask the
+drum has the leaving note that was aimed at the saved drum
+element. The detached bubble is not that note. Pulling the drum
+lets the east striker hear the drum's goodbye, then the page
+hears the east striker's own window step. The order is west,
+then the drum, then east.
+
+**What to do.** Say goodbye from `disconnect()` with
+`target: window`, or with the parent element you saved while
+you were connected. Don't bubble from `this.element` after it
+has been removed. A parent hears a child's last word when the
+child is removed alone. It does not hear that word when the
+parent is removed with the child, because the parent has
+already disconnected.
+
+**Seen in:** [Smith Island tide drum](features/13-dispatching-events/11-smith-island-tide-drum/).
+
+### A listener that dispatches again runs the nested event first
+
+**What happens.** `dispatch` is synchronous. A listener that
+calls `dispatch` finishes that nested event, including every
+listener on it, before the outer listener list continues.
+`defaultPrevented` belongs to the event it was called on. A
+veto on the nested event does not mark the outer event. There
+is no re-entrancy guard.
+
+The prefix is the calling controller's identifier. A log that
+wants to fire another controller's event has to pass that
+identifier as `prefix`. A bare `dispatch("strike")` from
+`relay-log` is `relay-log:strike`, and the `bell-relay:strike`
+actions do not run.
+
+**Why it matters.** One echo at Point Robinson answers, files
+the reply, records the veto, then strikes again and does that
+a second time, and only then records the outer strike as open.
+The outer event's `defaultPrevented` stays false. Without the
+`bell-relay` prefix the reply and the nested strike would be
+named for the log, and the tape would stop early.
+
+**What to do.** Keep a hop count, or some other guard, in
+`detail` when a listener answers by dispatching the same type.
+Pass `prefix` when the event name belongs to a different
+controller. Read `defaultPrevented` on the event you just
+dispatched, not on the event you are handling, when the veto
+you care about is the nested one.
+
+**Seen in:** [Point Robinson bell relay](features/13-dispatching-events/12-point-robinson-bell-relay/).
+
+### `prefix: false` collides with native event names
+
+**What happens.** `dispatch("click", { prefix: false })` fires
+an event whose type is `click`. Actions written for a real
+click run. The object is a `CustomEvent`, not a `MouseEvent`,
+and it carries `detail`. A real click is a `MouseEvent` and
+has no `detail`. The same split applies to `change`: the
+dispatched event is a `CustomEvent` and not an `InputEvent`,
+and a `new Event("change")` is neither. A sibling still does
+not hear the bubbling custom event.
+
+**Why it matters.** The Edmonds horn counts one custom click
+with detail Edmonds, then a mouse click with no detail.
+Posting a change reports a custom event and the detail feet.
+Typing 9.5 reports a native event and the input's value. The
+horn shed stays quiet the whole time.
+
+**What to do.** Don't use `prefix: false` with `click`,
+`change`, `submit`, or any other type you also listen for as
+a native event, unless the method can tell a `CustomEvent`
+from the browser's event. Prefer a prefixed name. Copy
+`detail` if a listener will write it. See
+[`detail` is shared by reference](#detail-is-shared-by-reference).
+
+**Why this section.** What `click` and `change` mean is the
+DOM. Stimulus is what will invoke those actions for a
+`CustomEvent` of the same type.
+
+**Seen in:** [Edmonds ramp pitfalls](features/13-dispatching-events/13-edmonds-ramp-pitfalls/).
 
 ## Running the examples
 

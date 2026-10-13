@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 13 · Edmonds ramp pitfalls
+
+  Teaches:
+  - The deck hears the bell. The horn shed, a sibling,
+    does not.
+  - prefix: false and the name "click" or "change"
+    runs the actions written for those native events.
+    The object is a CustomEvent, not a MouseEvent
+    or an InputEvent.
+  - detail is shared by reference. The deck's write
+    is what the mate and the caller both see.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Edmonds ramp pitfalls · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p, .card label { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RampDeckController from "./ramp_deck_controller.js"
+      import RampBellController from "./ramp_bell_controller.js"
+      import HornShedController from "./horn_shed_controller.js"
+      import DetailMateController from "./detail_mate_controller.js"
+
+      const application = Application.start()
+      application.register("ramp-deck", RampDeckController)
+      application.register("ramp-bell", RampBellController)
+      application.register("horn-shed", HornShedController)
+      application.register("detail-mate", DetailMateController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>13 · Edmonds ramp pitfalls</span>
+      </nav>
+      <h1>Edmonds ramp pitfalls</h1>
+      <p class="lede">
+        The Kingston ferry ramp at Edmonds. The bell can be
+        heard up the dock and not across it. A nameless
+        prefix collides with click and change. The fathom
+        count is one object, and the deck's correction is
+        everyone's correction.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card" data-controller="ramp-deck" data-action="ramp-bell:sounded->ramp-deck#hear">
+          <h2>Ramp deck</h2>
+          <p id="deck-reading" data-ramp-deck-target="reading" aria-live="polite"></p>
+
+          <article class="card" data-controller="ramp-bell">
+            <h2>Ramp bell</h2>
+            <div class="actions">
+              <button type="button" data-action="ramp-bell#sound">Sound the bell</button>
+              <button type="button" id="horn-button" data-ramp-bell-target="hornButton" data-action="click->ramp-bell#countClick">Horn button</button>
+              <button type="button" data-action="ramp-bell#fakeClick">Dispatch click</button>
+              <label>Staff gauge <input id="gauge" data-ramp-bell-target="gauge" data-action="change->ramp-bell#readGauge" value="12"></label>
+              <button type="button" data-action="ramp-bell#postChange">Post a change</button>
+              <button type="button" data-action="ramp-bell#typeTide">Type 9.5</button>
+            </div>
+            <p id="bell-reading" class="reading" data-ramp-bell-target="reading"></p>
+            <p id="click-reading" data-ramp-bell-target="click">No click yet.</p>
+            <p id="change-reading" data-ramp-bell-target="change">No change yet.</p>
+          </article>
+        </section>
+
+        <article class="card" data-controller="horn-shed" data-action="ramp-bell:sounded->horn-shed#hear">
+          <h2>Horn shed</h2>
+          <p id="shed-reading" data-horn-shed-target="reading"></p>
+        </article>
+
+        <p class="card" data-controller="detail-mate" data-action="ramp-bell:sounded@window->detail-mate#hear">
+          <span id="mate-reading" data-detail-mate-target="reading"></span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="ramp_bell_controller.js"><code>ramp_bell_controller.js</code></a> — sounds, and dispatches click and change with no prefix</li>
+          <li><a href="ramp_deck_controller.js"><code>ramp_deck_controller.js</code></a> — ancestor that rewrites detail</li>
+          <li><a href="horn_shed_controller.js"><code>horn_shed_controller.js</code></a> — sibling that never hears the bell</li>
+          <li><a href="detail_mate_controller.js"><code>detail_mate_controller.js</code></a> — window listener that sees the rewritten detail</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

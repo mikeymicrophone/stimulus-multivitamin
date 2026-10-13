@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Dispatching custom events · 08 · Goose Point retort tickets
+
+  Teaches:
+  - event.detail is the cook payload. event.params are
+    the listener's data-[identifier]-*-param values.
+  - Typecast still applies: 3 is a number, true is a
+    boolean, 03 stays a string.
+  - Each binding stamps its own params onto the event
+    before its method runs. The object dispatch()
+    returns is the last binding's params.
+  - A :self action that does not run still stamps
+    params, when its listener was invoked.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Goose Point retort tickets · Dispatching custom events · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 3.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CookFloorController from "./cook_floor_controller.js"
+      import RetortController from "./retort_controller.js"
+      import BeltClerkController from "./belt_clerk_controller.js"
+      import LateSelfController from "./late_self_controller.js"
+
+      const application = Application.start()
+      application.register("cook-floor", CookFloorController)
+      application.register("retort", RetortController)
+      application.register("belt-clerk", BeltClerkController)
+      application.register("late-self", LateSelfController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#dispatching-events">Dispatching custom events</a> /
+        <span>08 · Goose Point retort tickets</span>
+      </nav>
+      <h1>Goose Point retort tickets</h1>
+      <p class="lede">
+        Willapa Bay. Batch 14 cooks at 15 psi. The floor's
+        ticket, the belt clerk's ticket, and a late self-filter
+        each carry their own params beside that one detail.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section
+          class="card"
+          data-controller="cook-floor"
+          data-action="retort:cooked->cook-floor#record"
+          data-cook-floor-belt-param="3"
+          data-cook-floor-hold-param="true"
+          data-cook-floor-lot-code-param="03"
+        >
+          <h2>Cook floor</h2>
+          <p id="floor-reading" class="reading" data-cook-floor-target="reading" aria-live="polite"></p>
+
+          <article class="card" data-controller="retort">
+            <h2>Retort</h2>
+            <div class="actions">
+              <button type="button" data-action="retort#cookBatch">Cook batch 14</button>
+            </div>
+            <p id="retort-reading" class="reading" data-retort-target="reading">Retort is cold.</p>
+          </article>
+        </section>
+
+        <p
+          class="card"
+          data-controller="belt-clerk"
+          data-action="retort:cooked@window->belt-clerk#record"
+          data-belt-clerk-belt-param="7"
+          data-belt-clerk-hold-param="false"
+          data-belt-clerk-lot-code-param="03"
+        >
+          <span id="clerk-reading" data-belt-clerk-target="reading">Clerk has no ticket.</span>
+        </p>
+
+        <p
+          class="card"
+          data-controller="late-self"
+          data-action="retort:cooked@window->late-self#take:self"
+          data-late-self-belt-param="9"
+          data-late-self-hold-param="false"
+          data-late-self-lot-code-param="08"
+        >
+          <span id="late-reading" data-late-self-target="reading">Late self has not run.</span>
+        </p>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="retort_controller.js"><code>retort_controller.js</code></a> — dispatches the cook and reads the returned params</li>
+          <li><a href="cook_floor_controller.js"><code>cook_floor_controller.js</code></a> — ancestor params, belt 3</li>
+          <li><a href="belt_clerk_controller.js"><code>belt_clerk_controller.js</code></a> — window params, belt 7</li>
+          <li><a href="late_self_controller.js"><code>late_self_controller.js</code></a> — a <code>:self</code> window action that should not run</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
