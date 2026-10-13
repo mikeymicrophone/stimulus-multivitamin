@@ -15,7 +15,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static outlets = ["bay-staff"]
   static values = { readsOutlets: Boolean }
-  static targets = ["log"]
+  static targets = ["log", "haul"]
 
   bayStaffOutletConnected(outlet, element) {
     const latch = element.dataset.latch || "missing"
@@ -41,6 +41,12 @@ export default class extends Controller {
   pullStaff() {
     this.heldStaff = this.bayStaffOutletElement
     this.heldStaff.remove()
+    if (!this.hasHaulTarget) return
+    const staff = this.heldStaff
+    setTimeout(() => {
+      staff.removeAttribute("data-controller")
+      this.haulTarget.append(staff)
+    }, 0)
   }
 
   putStaffBack() {

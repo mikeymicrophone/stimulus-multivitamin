@@ -13,7 +13,7 @@ export default class extends Controller {
   static targets = ["reading"]
 
   connect() {
-    this.paint("connected")
+    this.paint("connected.")
   }
 
   shedLampOutletConnected(_outlet, element) {
@@ -27,8 +27,8 @@ export default class extends Controller {
   pointAtSpare() {
     this.element.setAttribute("data-pier-shed-lamp-outlet", "#spare-lamp")
     queueMicrotask(() => {
-      this.paint("spare")
-      this.application.getControllerForElementAndIdentifier(this.element, "pier-shed").paint("spare")
+      this.paint("spare.")
+      this.application.getControllerForElementAndIdentifier(this.element, "pier-shed").paint("spare.")
     })
   }
 

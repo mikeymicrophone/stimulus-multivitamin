@@ -44,5 +44,5 @@ Life c." Pull Travis. The early log adds "Travis disconnected.
 Life c." Travis's card is gone. Put Travis back. The log adds
 "Travis callback. Latch set. Life c." and the card still says
 "Travis connect. Latch set. Life c." Pull Gibson. The late log
-adds "Gibson disconnected. Life cd." and Gibson's card says
-"Gibson disconnect. Life cd."
+adds "Gibson disconnected. Life cd." and Gibson's card, hauled
+to the float, says "Gibson disconnect. Life cd."

@@ -34,7 +34,7 @@ Kestrel and Murrelet each open "paint set." The line opens
 "Connected Kestrel. Paint set." then "Line connected.
 hasSkiffOutlet true. Holding skiff-kestrel." Follow Murrelet.
 The line adds "Disconnected Kestrel." and "Connected Murrelet.
-Paint set." Clear the line. It adds "Disconnected Murrelet."
-and "Line cleared. hasSkiffOutlet false." Put Gull on the line.
+Paint set." Clear the line. It adds "Line cleared. hasSkiffOutlet false."
+and then "Disconnected Murrelet." Put Gull on the line.
 It adds "Connected Gull. Paint missing." Gull's own line becomes
 "Gull paint set."

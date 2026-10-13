@@ -5,15 +5,18 @@
  * receive the outlet controller and its element. The callback
  * runs before this staff's connect() when the staff is added
  * after the log. Closing the log runs disconnect() before the
- * outlet callbacks, and the staffs stay connected.
+ * outlet callbacks, and the staffs stay connected. The log
+ * paragraph is kept from connect(), because target getters
+ * are empty once this token is gone from data-controller.
  */
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static outlets = ["tide-staff"]
-  static targets = ["log", "slip"]
+  static targets = ["log", "slip", "ashore"]
 
   connect() {
+    this.logLine = this.logTarget
     this.write("Log connected.")
   }
 
@@ -32,7 +35,12 @@ export default class extends Controller {
   }
 
   pullEdiz() {
-    this.slipTarget.remove()
+    const staff = this.slipTarget
+    staff.remove()
+    setTimeout(() => {
+      staff.removeAttribute("data-controller")
+      this.ashoreTarget.append(staff)
+    }, 0)
   }
 
   hangSlipPoint() {
@@ -51,6 +59,6 @@ export default class extends Controller {
   }
 
   write(line) {
-    this.logTarget.textContent = `${this.logTarget.textContent}${line}\n`
+    this.logLine.textContent = `${this.logLine.textContent}${line}\n`
   }
 }

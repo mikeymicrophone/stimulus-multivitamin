@@ -47,7 +47,7 @@ namespace.
 
 Cape horn, the decoy horn, and the cape bell each say they
 connected. The tide desk says "Horn cape-horn. Bell cape-bell.
-Own attribute cape-horn. Parent attribute decoy-horn." The
+Own attribute #cape-horn. Parent attribute #decoy-horn." The
 object plate says "Object plate tideStaffOutlet in false.
 Value undefined." The string plate says "String plate
 tideStaffOutlet in false." The staff plate says "Staff plate

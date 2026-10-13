@@ -16,12 +16,12 @@ export default class extends Controller {
   static targets = ["reading"]
 
   connect() {
-    this.render("connected")
+    this.render("connected.")
   }
 
   easeWinch() {
     const strain = this.winchOutlet.ease()
-    this.render(`eased to ${strain}`)
+    this.render(`eased to ${strain}.`)
   }
 
   render(reason) {

@@ -15,7 +15,7 @@ export default class extends Controller {
   static targets = ["reading", "fault"]
 
   connect() {
-    this.render("not called", "no", "connected")
+    this.render("not called", "no", "connected.")
   }
 
   callHorn() {
@@ -28,13 +28,13 @@ export default class extends Controller {
     } catch (error) {
       this.faultTarget.textContent = `${error.name}: ${error.message}`
     }
-    this.render(returned, dispatched, "called")
+    this.render(returned, dispatched, "called.")
   }
 
   dropOutlet() {
     this.element.removeAttribute("data-fog-desk-foghorn-outlet")
     this.faultTarget.textContent = "Outlet attribute removed."
-    this.render("not called", "no", "dropped")
+    this.render("not called", "no", "dropped.")
   }
 
   render(returned, dispatched, reason) {

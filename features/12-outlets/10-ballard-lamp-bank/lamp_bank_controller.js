@@ -6,6 +6,8 @@
  * that callback. The small lamp's disconnect() runs. The
  * bank's lockLampOutletDisconnected does not, until recount
  * writes the selector again and the observer refreshes.
+ * The hang note waits one turn so the scope observer has
+ * delivered the small lamp's disconnect().
  */
 import { Controller } from "@hotwired/stimulus"
 
@@ -46,12 +48,12 @@ export default class extends Controller {
     spare.setAttribute("data-controller", "lock-lamp")
     spare.innerHTML = `<h2>Spare</h2><p class="status" data-lock-lamp-target="status"></p>`
     this.rackTarget.append(spare)
-    queueMicrotask(() => {
+    setTimeout(() => {
       const life = this.pulledLamp ? this.pulledLamp.dataset.life : "none"
       const present = this.pulledLamp ? this.pulledLamp.isConnected : false
       const outlets = this.lockLampOutlets.map((lamp) => lamp.element.id).join(" ")
       this.write(`After the hang, small life ${life}. In document ${present}. Disconnected callbacks ${this.disconnectedNames.length}. Outlets ${outlets}.`)
-    })
+    }, 0)
   }
 
   recount() {

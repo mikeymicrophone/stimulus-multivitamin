@@ -22,8 +22,8 @@
     <style>
       [hidden] { display: none !important; }
       .entrance { display: grid; gap: 0.75rem; max-width: 46rem; }
-      .log-card, .staff { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
-      .log-card h2, .staff h2 { margin: 0; font-size: 1.15rem; }
+      .log-card, .staff, .ashore { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .log-card h2, .staff h2, .ashore h2 { margin: 0; font-size: 1.15rem; }
       .log-card p, .staff p { margin: 0; }
       .log { white-space: pre-wrap; min-height: 8rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
       .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -88,6 +88,11 @@
           <p>Four feet, the cove is still filling.</p>
           <p class="status" data-tide-staff-target="status"></p>
         </article>
+
+        <section class="ashore" data-entrance-log-target="ashore">
+          <h2>Ashore</h2>
+          <p>A pulled staff lands here, without its controller, so the disconnect line stays readable.</p>
+        </section>
       </div>
 
       <section class="source-links">

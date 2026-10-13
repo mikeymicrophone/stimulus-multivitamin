@@ -13,7 +13,7 @@ export default class extends Controller {
   static targets = ["reading"]
 
   connect() {
-    this.paint("connected")
+    this.paint("connected.")
   }
 
   lampOutletConnected(_outlet, element) {

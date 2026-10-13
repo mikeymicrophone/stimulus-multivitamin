@@ -31,7 +31,8 @@ properties.
 
 **Seen in:** [Recipe card collection](features/01-controllers/05-recipe-card-collection/),
 [Pilot boarding board](features/08-target-callbacks/01-pilot-boarding-board/),
-[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/),
+[Neah Bay entrance log](features/12-outlets/03-neah-bay-entrance-log/).
 
 ### Action params turn all-digit strings into numbers
 

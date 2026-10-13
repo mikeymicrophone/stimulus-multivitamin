@@ -14,12 +14,12 @@ export default class extends Controller {
   static targets = ["housing", "reading"]
 
   connect() {
-    this.render("connected")
+    this.render("connected.")
   }
 
   closeEveryHose() {
     const grades = this.fuelPumpOutlets.map((pump) => pump.closeHose())
-    this.render(`closed ${grades.join(" ")}`)
+    this.render(`closed ${grades.join(" ")}.`)
   }
 
   render(reason) {

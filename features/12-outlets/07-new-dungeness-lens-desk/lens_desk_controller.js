@@ -14,17 +14,17 @@ export default class extends Controller {
   static targets = ["reading"]
 
   connect() {
-    this.render("connected")
+    this.render("connected.")
   }
 
   advanceLens() {
     const order = this.lensCabinetOutlet.advanceOrder()
-    this.render(`order ${order}`)
+    this.render(`order ${order}.`)
   }
 
   signSlate() {
     const keeper = this.keeperSlateOutlet.signWatch()
-    this.render(`signed by ${keeper}`)
+    this.render(`signed by ${keeper}.`)
   }
 
   render(reason) {
