@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  Outlets · 02 · Friday Harbor fuel dock
+
+  Teaches:
+  - data-fuel-dock-fuel-pump-outlet=".fuel-pump" matches
+    every pump. fuel-pump is a multi-word identifier, so the
+    properties are fuelPumpOutlet and fuelPumpOutlets.
+  - The singular outlet is the first match in document order.
+  - The housing has the same class and a different controller.
+    It is not in the element list.
+  - closeHose() and openValue are called on each outlet.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Friday Harbor fuel dock · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .dock { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .pump, .board { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .pump h2, .board h2 { margin: 0; font-size: 1.15rem; }
+      .pump p, .board p { margin: 0; }
+      .pump.hose-open { border-color: #1f3d2b; }
+      .reading { min-height: 5.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FuelDockController from "./fuel_dock_controller.js"
+      import FuelPumpController from "./fuel_pump_controller.js"
+      import PumpHousingController from "./pump_housing_controller.js"
+
+      const application = Application.start()
+      application.register("fuel-dock", FuelDockController)
+      application.register("fuel-pump", FuelPumpController)
+      application.register("pump-housing", PumpHousingController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>02 · Friday Harbor fuel dock</span>
+      </nav>
+      <h1>Friday Harbor fuel dock</h1>
+      <p class="lede">
+        The Union dock at Friday Harbor. Diesel is first on the float,
+        then gasoline. The empty housing wears the same paint and is
+        not a pump. Closing the dock shuts every hose the selector found.
+      </p>
+    </header>
+
+    <main>
+      <div
+        class="dock"
+        data-controller="fuel-dock"
+        data-fuel-dock-fuel-pump-outlet=".fuel-pump"
+      >
+        <article id="pump-diesel" class="fuel-pump pump hose-open" data-controller="fuel-pump" data-fuel-pump-open-value="true" data-fuel-pump-grade-value="Diesel">
+          <h2>Diesel</h2>
+          <p>The shore hose, nearest the ramp.</p>
+        </article>
+        <article id="pump-gas" class="fuel-pump pump hose-open" data-controller="fuel-pump" data-fuel-pump-open-value="true" data-fuel-pump-grade-value="Gas">
+          <h2>Gasoline</h2>
+          <p>The outer hose, past the cleats.</p>
+        </article>
+        <article id="pump-housing" class="fuel-pump pump" data-controller="pump-housing" data-fuel-dock-target="housing">
+          <h2>Empty housing</h2>
+          <p>Painted with the pumps. No hose, no meter.</p>
+        </article>
+
+        <section class="scenario board">
+          <h2>Dock board</h2>
+          <div class="actions">
+            <button type="button" data-action="fuel-dock#closeEveryHose">Close every hose</button>
+          </div>
+          <p class="reading" data-fuel-dock-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fuel_dock_controller.js"><code>fuel_dock_controller.js</code></a> — one selector, the singular pump and the list</li>
+          <li><a href="fuel_pump_controller.js"><code>fuel_pump_controller.js</code></a> — grade, open value, and closeHose()</li>
+          <li><a href="pump_housing_controller.js"><code>pump_housing_controller.js</code></a> — the class match that is not an outlet</li>
+          <li>This page's source — diesel before gasoline, housing last</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  Outlets · 04 · La Push skiff line
+
+  Teaches:
+  - The line opens on #skiff-kestrel. Following Murrelet
+    changes the outlet attribute. The old skiff disconnects
+    from the line and the new one connects.
+  - Clearing the attribute drops the outlet. hasSkiffOutlet
+    becomes false.
+  - Gull matches the new selector only after its controller
+    token is added. The callback runs before Gull's connect()
+    paints the hull.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>La Push skiff line · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .beach { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .line, .skiff { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .line h2, .skiff h2 { margin: 0; font-size: 1.15rem; }
+      .line p, .skiff p { margin: 0; }
+      .log { white-space: pre-wrap; min-height: 8rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SkiffLineController from "./skiff_line_controller.js"
+      import SkiffController from "./skiff_controller.js"
+
+      const application = Application.start()
+      application.register("skiff-line", SkiffLineController)
+      application.register("skiff", SkiffController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>04 · La Push skiff line</span>
+      </nav>
+      <h1>La Push skiff line</h1>
+      <p class="lede">
+        First Beach, before the ebb. The line is tied to Kestrel.
+        Murrelet is already painted. Gull is a bare hull until the
+        line names it and the skiff controller is added.
+      </p>
+    </header>
+
+    <main>
+      <div class="beach">
+        <article id="skiff-kestrel" class="skiff" data-controller="skiff" data-skiff-boat-value="Kestrel">
+          <h2>Kestrel</h2>
+          <p class="status" data-skiff-target="status"></p>
+        </article>
+        <article id="skiff-murrelet" class="skiff" data-controller="skiff" data-skiff-boat-value="Murrelet">
+          <h2>Murrelet</h2>
+          <p class="status" data-skiff-target="status"></p>
+        </article>
+        <section
+          class="scenario line"
+          data-controller="skiff-line"
+          data-skiff-line-skiff-outlet="#skiff-kestrel"
+        >
+          <h2>Skiff line</h2>
+          <article id="skiff-gull" class="skiff" data-skiff-line-target="gull">
+            <h2>Gull</h2>
+            <p>Bare hull, no controller yet.</p>
+            <p class="status" data-skiff-target="status">Gull has no paint.</p>
+          </article>
+          <div class="actions">
+            <button type="button" data-action="skiff-line#followMurrelet">Follow Murrelet</button>
+            <button type="button" data-action="skiff-line#clearLine">Clear the line</button>
+            <button type="button" data-action="skiff-line#putGullOnTheLine">Put Gull on the line</button>
+          </div>
+          <p class="log" data-skiff-line-target="log" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="skiff_line_controller.js"><code>skiff_line_controller.js</code></a> — retargets the selector and adds a controller token</li>
+          <li><a href="skiff_controller.js"><code>skiff_controller.js</code></a> — paint is set in connect()</li>
+          <li>This page's source — Kestrel and Murrelet are controllers; Gull is not</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  Outlets · 07 · New Dungeness lens desk
+
+  Teaches:
+  - "lens-cabinet" is kebab-case. The property is
+    lensCabinetOutlet. The attribute is
+    data-lens-desk-lens-cabinet-outlet.
+  - "keeper--slate" keeps the namespace hyphen. The property
+    is keeperSlateOutlet. The attribute is
+    data-lens-desk-keeper--slate-outlet.
+  - The two properties are different. The desk reads the
+    cabinet's order and legend, and the slate's keeper, and
+    calls advanceOrder() and signWatch().
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>New Dungeness lens desk · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .lantern { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .cabinet, .slate, .desk { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .cabinet h2, .slate h2, .desk h2 { margin: 0; font-size: 1.15rem; }
+      .cabinet p, .slate p, .desk p { margin: 0; }
+      .reading { min-height: 5.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LensDeskController from "./lens_desk_controller.js"
+      import LensCabinetController from "./lens_cabinet_controller.js"
+      import KeeperSlateController from "./keeper_slate_controller.js"
+
+      const application = Application.start()
+      application.register("lens-desk", LensDeskController)
+      application.register("lens-cabinet", LensCabinetController)
+      application.register("keeper--slate", KeeperSlateController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>07 · New Dungeness lens desk</span>
+      </nav>
+      <h1>New Dungeness lens desk</h1>
+      <p class="lede">
+        The first-order Fresnel at New Dungeness, and the keeper's
+        slate for the watch. The desk names each one with its own
+        identifier: a hyphenated cabinet, and a namespaced slate.
+      </p>
+    </header>
+
+    <main>
+      <div class="lantern">
+        <article id="fresnel" data-controller="lens-cabinet" data-lens-cabinet-order-value="1">
+          <h2>Fresnel cabinet</h2>
+          <p data-lens-cabinet-target="legend">First order</p>
+        </article>
+        <article id="slate" data-controller="keeper--slate" data-keeper--slate-keeper-value="Mara" data-keeper--slate-signed-value="false">
+          <h2>Keeper slate</h2>
+          <p>Mara has not signed the forenoon watch.</p>
+        </article>
+        <section
+          class="scenario desk"
+          data-controller="lens-desk"
+          data-lens-desk-lens-cabinet-outlet="#fresnel"
+          data-lens-desk-keeper--slate-outlet="#slate"
+        >
+          <h2>Lens desk</h2>
+          <div class="actions">
+            <button type="button" data-action="lens-desk#advanceLens">Advance the order</button>
+            <button type="button" data-action="lens-desk#signSlate">Sign the slate</button>
+          </div>
+          <p class="reading" data-lens-desk-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lens_desk_controller.js"><code>lens_desk_controller.js</code></a> — two outlet identifiers, two properties</li>
+          <li><a href="lens_cabinet_controller.js"><code>lens_cabinet_controller.js</code></a> — order value, legend target, advanceOrder()</li>
+          <li><a href="keeper_slate_controller.js"><code>keeper_slate_controller.js</code></a> — the keeper--slate identifier</li>
+          <li>This page's source — the slate attribute keeps the double hyphen</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+  Outlets · 09 · Sequim Bay staff gate
+
+  Teaches:
+  - The early gate is before Travis and reads bayStaffOutlets
+    in connect(). The callback runs before Travis's connect().
+    Pulling Travis fires the outlet callback and skips
+    Travis's disconnect(). Putting Travis back fires the
+    callback again and skips connect().
+  - The late gate is after Gibson and reads only the element
+    list. Gibson's connect() has finished. Pulling Gibson
+    runs disconnect().
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Sequim Bay staff gate · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .bay { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .gate, .staff { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .gate h2, .staff h2 { margin: 0; font-size: 1.15rem; }
+      .gate p, .staff p { margin: 0; }
+      .log { white-space: pre-wrap; min-height: 7rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import StaffGateController from "./staff_gate_controller.js"
+      import BayStaffController from "./bay_staff_controller.js"
+
+      const application = Application.start()
+      application.register("staff-gate", StaffGateController)
+      application.register("bay-staff", BayStaffController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>09 · Sequim Bay staff gate</span>
+      </nav>
+      <h1>Sequim Bay staff gate</h1>
+      <p class="lede">
+        Two gates on Sequim Bay. The early gate reads its staff
+        while connecting, before Travis has latched. The late gate
+        waits, and Gibson is already latched. Pulling the two staffs
+        does not do the same work.
+      </p>
+    </header>
+
+    <main>
+      <div class="bay">
+        <article
+          id="early-gate"
+          class="scenario gate"
+          data-controller="staff-gate"
+          data-staff-gate-bay-staff-outlet="#travis"
+          data-staff-gate-reads-outlets-value="true"
+        >
+          <h2>Early gate</h2>
+          <div class="actions">
+            <button type="button" data-action="staff-gate#pullStaff">Pull Travis</button>
+            <button type="button" data-action="staff-gate#putStaffBack">Put Travis back</button>
+          </div>
+          <p class="log" data-staff-gate-target="log" aria-live="polite"></p>
+        </article>
+
+        <article id="travis" class="staff" data-controller="bay-staff" data-bay-staff-station-value="Travis">
+          <h2>Travis spit</h2>
+          <p class="status" data-bay-staff-target="status">Travis has not connected.</p>
+        </article>
+
+        <article id="gibson" class="staff" data-controller="bay-staff" data-bay-staff-station-value="Gibson">
+          <h2>Gibson cove</h2>
+          <p class="status" data-bay-staff-target="status">Gibson has not connected.</p>
+        </article>
+
+        <article
+          id="late-gate"
+          class="scenario gate"
+          data-controller="staff-gate"
+          data-staff-gate-bay-staff-outlet="#gibson"
+        >
+          <h2>Late gate</h2>
+          <div class="actions">
+            <button type="button" data-action="staff-gate#pullStaff">Pull Gibson</button>
+          </div>
+          <p class="log" data-staff-gate-target="log" aria-live="polite"></p>
+          <div class="haul" data-staff-gate-target="haul">
+            <h2>Hauled to the float</h2>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="staff_gate_controller.js"><code>staff_gate_controller.js</code></a> — one gate reads controllers in connect(), the other reads elements</li>
+          <li><a href="bay_staff_controller.js"><code>bay_staff_controller.js</code></a> — latch and life, written in connect() and disconnect()</li>
+          <li>This page's source — Travis follows the early gate; Gibson precedes the late gate</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

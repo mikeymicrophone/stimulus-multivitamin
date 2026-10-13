@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  Outlets · 03 · Neah Bay entrance log
+
+  Teaches:
+  - tideStaffOutletConnected(outlet, element) and
+    tideStaffOutletDisconnected(outlet, element).
+  - The staffs are after the log, so the callback sees the
+    height value and not the watch flag connect() writes.
+  - Removing a staff runs the staff's disconnect(), then the
+    log's outlet callback.
+  - Removing the log's controller runs the log's disconnect()
+    first. The outlet callbacks follow. The staffs stay up.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Neah Bay entrance log · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .entrance { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .log-card, .staff, .ashore { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .log-card h2, .staff h2, .ashore h2 { margin: 0; font-size: 1.15rem; }
+      .log-card p, .staff p { margin: 0; }
+      .log { white-space: pre-wrap; min-height: 8rem; background: #f6f1e6; border-radius: 8px; padding: 0.6rem 0.7rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import EntranceLogController from "./entrance_log_controller.js"
+      import TideStaffController from "./tide_staff_controller.js"
+
+      const application = Application.start()
+      application.register("entrance-log", EntranceLogController)
+      application.register("tide-staff", TideStaffController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>03 · Neah Bay entrance log</span>
+      </nav>
+      <h1>Neah Bay entrance log</h1>
+      <p class="lede">
+        The Makah entrance watch. Ediz Hook and Waadah Island are
+        staffs the log does not contain. A staff announces itself
+        before it has marked the watch. Closing the log lets the
+        staffs keep standing.
+      </p>
+    </header>
+
+    <main>
+      <div
+        class="entrance"
+        data-controller="entrance-log"
+        data-entrance-log-tide-staff-outlet=".entrance-staff"
+      >
+        <section class="scenario log-card">
+          <h2>Entrance log</h2>
+          <div class="actions">
+            <button type="button" data-action="entrance-log#pullEdiz">Pull the Ediz staff</button>
+            <button type="button" data-action="entrance-log#hangSlipPoint">Hang Slip Point</button>
+            <button type="button" data-action="entrance-log#closeLog">Close the log</button>
+          </div>
+          <p class="log" data-entrance-log-target="log" aria-live="polite"></p>
+        </section>
+
+        <article id="ediz" class="entrance-staff staff" data-controller="tide-staff" data-tide-staff-station-value="Ediz" data-tide-staff-height-value="6" data-entrance-log-target="slip">
+          <h2>Ediz Hook</h2>
+          <p>Six feet on the entrance staff.</p>
+          <p class="status" data-tide-staff-target="status"></p>
+        </article>
+
+        <article id="waadah" class="entrance-staff staff" data-controller="tide-staff" data-tide-staff-station-value="Waadah" data-tide-staff-height-value="4">
+          <h2>Waadah Island</h2>
+          <p>Four feet, the cove is still filling.</p>
+          <p class="status" data-tide-staff-target="status"></p>
+        </article>
+
+        <section class="ashore" data-entrance-log-target="ashore">
+          <h2>Ashore</h2>
+          <p>A pulled staff lands here, without its controller, so the disconnect line stays readable.</p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="entrance_log_controller.js"><code>entrance_log_controller.js</code></a> — connected and disconnected callbacks</li>
+          <li><a href="tide_staff_controller.js"><code>tide_staff_controller.js</code></a> — height value, then the watch flag in connect()</li>
+          <li>This page's source — the log is before either staff</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

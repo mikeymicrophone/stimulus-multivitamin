@@ -1,0 +1,109 @@
+<!doctype html>
+<!--
+  Outlets · 01 · Port Townsend hoist log
+
+  Teaches:
+  - static outlets = ["winch"] declares the other identifier.
+  - data-hoist-log-winch-outlet="#quincy-winch" is a CSS
+    selector. The winch is not inside the log.
+  - this.winchOutlet is the controller. ease() returns the
+    new strain. strainValue and labelTarget are the outlet's.
+  - hasWinchOutlet, winchOutletElement, winchOutlets, and
+    winchOutletElements agree when one id matches.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Port Townsend hoist log · Outlets · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .dock { display: grid; gap: 0.75rem; max-width: 44rem; }
+      .winch, .log { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .winch h2, .log h2 { margin: 0; font-size: 1.15rem; }
+      .winch p, .log p { margin: 0; }
+      .reading { min-height: 4.4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HoistLogController from "./hoist_log_controller.js"
+      import WinchController from "./winch_controller.js"
+
+      const application = Application.start()
+      application.register("hoist-log", HoistLogController)
+      application.register("winch", WinchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#outlets">Outlets</a> /
+        <span>01 · Port Townsend hoist log</span>
+      </nav>
+      <h1>Port Townsend hoist log</h1>
+      <p class="lede">
+        Point Hudson haul-out. The Quincy drum and the Discovery drum
+        sit on the dock. Each log names its winch with a selector.
+        Easing the drum calls the winch, then reads the strain it returns.
+      </p>
+    </header>
+
+    <main>
+      <div class="dock">
+        <article id="quincy-winch" class="winch" data-controller="winch" data-winch-strain-value="4">
+          <h2 data-winch-target="label">Quincy drum</h2>
+          <p>Four turns on the brake, waiting on the log.</p>
+        </article>
+
+        <article id="discovery-winch" class="winch" data-controller="winch" data-winch-strain-value="2">
+          <h2 data-winch-target="label">Discovery drum</h2>
+          <p>Two turns, the boat is already in the slings.</p>
+        </article>
+
+        <article
+          class="scenario log"
+          data-controller="hoist-log"
+          data-hoist-log-winch-outlet="#quincy-winch"
+        >
+          <h2>Quincy log</h2>
+          <div class="actions">
+            <button type="button" data-action="hoist-log#easeWinch">Ease the Quincy drum</button>
+          </div>
+          <p class="reading" data-hoist-log-target="reading" aria-live="polite"></p>
+        </article>
+
+        <article
+          class="scenario log"
+          data-controller="hoist-log"
+          data-hoist-log-winch-outlet="#discovery-winch"
+        >
+          <h2>Discovery log</h2>
+          <div class="actions">
+            <button type="button" data-action="hoist-log#easeWinch">Ease the Discovery drum</button>
+          </div>
+          <p class="reading" data-hoist-log-target="reading" aria-live="polite"></p>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="hoist_log_controller.js"><code>hoist_log_controller.js</code></a> — declares the winch outlet and calls it</li>
+          <li><a href="winch_controller.js"><code>winch_controller.js</code></a> — strain value, label target, and ease()</li>
+          <li>This page's source — each log's selector is one drum's id</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
