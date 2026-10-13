@@ -2845,6 +2845,391 @@ DOM. Stimulus is what will invoke those actions for a
 
 **Seen in:** [Edmonds ramp pitfalls](features/13-dispatching-events/13-edmonds-ramp-pitfalls/).
 
+## Application setup and registration
+
+### `Application.start()` with no element watches the document element
+
+**What happens.** `Application.start()` is `new Application(document.documentElement)`.
+A controller on a `<meta>` in `<head>` connects. `document.body`
+does not contain that meta, so `Application.start(document.body)`
+does not. `getControllerForElementAndIdentifier` on the body
+application is `null`.
+
+`Application.start(element)` watches that element. The element
+contains itself, so a controller on the root connects, and
+`application.element` is that root. The same identifier outside
+the root never gets a controller.
+
+**Why it matters.** The Bush Point office clock lives in the
+head and reports root `HTML`. A body-rooted application misses
+it. The range board's own element is the root, and the shore
+lamp stays dark.
+
+**What to do.** Pass no element when the whole document,
+including `<head>`, should connect. Pass the element you mean
+to fence in. Don't expect a body root to see the head.
+
+**Seen in:** [Bush Point range board](features/14-application-setup/01-bush-point-range-board/).
+
+### `start()` yields before it scans, so a same-turn `register` runs `afterLoad` first
+
+**What happens.** `Application.start()` awaits `domReady()`
+before the router scans, even when the document is already
+parsed. That await is a microtask. `register` in the same
+turn runs `afterLoad` while no controllers are connected.
+`connect` follows, in document order. Two early registrations
+both finish `afterLoad` before either `connect`.
+
+`this` inside `afterLoad` is the constructor you passed. The
+first argument is the identifier you registered.
+
+**Why it matters.** The Kalama tape reads the belt and scale
+load lines before either connect. Cape Flattery's load tape
+is written before the cabinets open. Setting `application.debug`
+in that same turn is early enough to record `initialize` and
+`connect`. See
+[Debug logging uses the logger only while `debug` is true](#debug-logging-uses-the-logger-only-while-debug-is-true).
+
+**What to do.** Don't look up connected controllers inside an
+`afterLoad` that ran in the start turn. They are not connected
+yet. Put that work in `connect`, or register after the router
+is running.
+
+**Seen in:** [Kalama elevator tape](features/14-application-setup/05-kalama-elevator-tape/),
+[Cape Flattery lens cabinet](features/14-application-setup/02-cape-flattery-lens-cabinet/),
+[Cattle Point fog logger](features/14-application-setup/09-cattle-point-fog-logger/).
+
+### A late `register` connects existing elements, then `afterLoad`
+
+**What happens.** Once the router is running, scopes for every
+`data-controller` token are already recorded, module or not.
+`register` connects those elements, then calls `afterLoad`.
+Both finish before `register` returns.
+`getControllerForElementAndIdentifier` sees them immediately.
+
+**Why it matters.** The Destruction Island horn is in the
+markup before anyone registers it. The click connects it, and
+the tape reads "horn connect." before "afterLoad start." The
+Grays Harbor night gate, registered again from a button, does
+the same.
+
+**What to do.** If `afterLoad` assumes `connect` has not run,
+it is wrong for a late registration. Read the controller
+after `register` returns, or from `connect`.
+
+**Seen in:** [Destruction Island foghorn](features/14-application-setup/03-destruction-island-foghorn/),
+[Grays Harbor retort shift](features/14-application-setup/04-grays-harbor-retort-shift/).
+
+### Markup added inside `afterLoad` connects on the next mutation
+
+**What happens.** Appending an element during `afterLoad` does
+not connect it before the hook returns. Stimulus hears the
+append through a `MutationObserver`, which runs as a microtask
+after `register` returns.
+`getControllerForElementAndIdentifier` is null until then.
+
+An element that was already in the document is different. It
+connects during `register`. See
+[A late `register` connects existing elements, then `afterLoad`](#a-late-register-connects-existing-elements-then-afterload).
+
+**Why it matters.** The Destruction Island spare is missing
+when `register` returns and present after the mutation. The
+Kalama oats bin writes "seeded connect." after "annex
+afterLoad end."
+
+**What to do.** Don't expect a node you just created in
+`afterLoad` to have a controller yet. Wait a microtask, or
+have that controller's `connect` do the work.
+
+**Seen in:** [Destruction Island foghorn](features/14-application-setup/03-destruction-island-foghorn/),
+[Kalama elevator tape](features/14-application-setup/05-kalama-elevator-tape/).
+
+### `shouldLoad` is a truthiness check, and it is not a call
+
+**What happens.** `load` reads `constructor.shouldLoad`. It
+does not call it. `false` skips the module, so `connect` and
+`afterLoad` never run. The default getter returns `true`.
+
+A `static shouldLoad() { return false }` method is a function.
+A function is truthy, so the controller loads. A getter that
+returns the string `"false"` is truthy too. A static field
+`shouldLoad = false` skips. A subclass that does not define
+`shouldLoad` inherits the parent's getter.
+
+The value is read at `register` time. Changing a flag later
+does nothing until you register again.
+
+Registering again with `shouldLoad === false` does not unload
+the module that is already running. `load` never reaches
+`unloadIdentifier` when the check fails.
+
+**Why it matters.** On the Grays Harbor floor the method
+retort and the string retort come online. The field retort
+and the cook floor, which inherits the night gate, stay cold.
+Calling the day shift and registering the night gate again
+connects it. At Ediz Hook, registering a dark watch over the
+day watch leaves the day watch up.
+
+**What to do.** Use `static get shouldLoad()` or a static
+field. Don't use a method. To take a controller off the page,
+call `unload`. A false `shouldLoad` on a later `register`
+will not do it.
+
+**Seen in:** [Grays Harbor retort shift](features/14-application-setup/04-grays-harbor-retort-shift/),
+[Ediz Hook pitfalls](features/14-application-setup/13-ediz-hook-pitfalls/).
+
+### An array passed to `load` or `unload` drops the rest of the arguments
+
+**What happens.** `load` and `unload` use the first argument
+when it is an array, and ignore everything after it.
+`load(first, second)` loads both. `load([first], second)`
+loads `first` only. `unload(["scale-house"], "buyer-board")`
+unloads the scale and leaves the buyer.
+
+A definition whose `shouldLoad` is false is skipped. The
+other entries in that array still load.
+
+`load([[definition]])` throws `TypeError`. The inner array
+is treated as a definition, and reading `.shouldLoad` on
+its missing `controllerConstructor` fails. Nothing in that
+call is loaded.
+
+**Why it matters.** The Bay Center extra slip stays
+disconnected when it is passed after an array, then connects
+when it is a real argument. Nesting the list throws and does
+not change the roster.
+
+**What to do.** Pass a list of definitions, or pass one
+array, not both. Don't nest arrays. Filter `shouldLoad`
+yourself if you need to know who was skipped.
+
+**Seen in:** [Bay Center ticket load](features/14-application-setup/06-bay-center-ticket-load/).
+
+### `stop()` does not disconnect, and a second `Application.start()` is a second application
+
+**What happens.** `stop()` removes action listeners and stops
+the mutation observer. It does not call `disconnect`. A hail
+while stopped does nothing. Controllers that were connected
+stay connected.
+
+`await application.start()` on that same instance refreshes
+the observer. Elements removed while it was stopped
+disconnect. Elements added while it was stopped connect. An
+element that never left is not connected again.
+
+Calling `start()` on an instance that is already started is
+a no-op. The observer's `started` flag skips the refresh.
+
+`Application.start(element)` always constructs a new
+application. Two of them on the same element, both
+registering the same identifier, are two controllers. One
+click runs the action twice. Assigning the second one to
+`window.Stimulus` does not stop the first.
+
+`unload(identifier)` does disconnect. The element stays.
+`getControllerForElementAndIdentifier` is `null`. A later
+`register` of that identifier builds a new instance, so
+`initialize` runs again.
+
+**Why it matters.** The Nahcotta deck stays at one connection
+across stop and start. The hold that was removed while
+stopped disconnects on the way back, and the skiff connects
+then. At Ediz Hook a second `Application.start` makes the
+hail count jump by two, and starting the same application
+again leaves the count at 1. Registering the bell again
+disconnects instance 1 and connects instance 2.
+
+**What to do.** Call `unload` or remove the element when you
+need `disconnect`. Don't call `Application.start()` to
+restart the application you already have. Call `start()` on
+that instance after `stop()`, and remember it will not tear
+the remaining controllers down.
+
+**Seen in:** [Nahcotta barge watch](features/14-application-setup/07-nahcotta-barge-watch/),
+[Ediz Hook pitfalls](features/14-application-setup/13-ediz-hook-pitfalls/),
+[Colman Dock shed](features/14-application-setup/10-colman-dock-shed/).
+
+### The instance is `instanceof` your class, and it is not your constructor
+
+**What happens.** `register` blesses a subclass so targets
+and values can be installed on that module. The connected
+object is `instanceof` the constructor you passed.
+`instance.constructor ===` that constructor is false.
+
+`getControllerForElementAndIdentifier(element, identifier)`
+returns the instance on that element for that identifier, or
+`null`. A nested element with the same identifier is a
+different instance. The other identifier on the same element
+is a different controller. An element outside the application
+root is `null`.
+
+One class can be registered under two identifiers. `this.identifier`
+is the one on the element. `afterLoad` runs once per
+`register`.
+
+**Why it matters.** Cape Flattery's working cabinet and spare
+are one class and two modules. The crossed lookup is null.
+Point No Point's outer bell is not the inner bell, and the
+shore bell, outside the book, is null.
+
+**What to do.** Use `instanceof` when you need the class.
+Don't compare `constructor`. Pass both the element and the
+identifier. A parent element will not answer for a child.
+
+**Seen in:** [Cape Flattery lens cabinet](features/14-application-setup/02-cape-flattery-lens-cabinet/),
+[Point No Point bell book](features/14-application-setup/08-point-no-point-bell-book/).
+
+### Debug logging uses the logger only while `debug` is true
+
+**What happens.** `application.debug` starts false.
+`logDebugActivity` returns without calling the logger.
+
+The logger methods are `groupCollapsed(title)`,
+`log("details:", detail)`, and `groupEnd()`. The title is
+`identifier #method`. Controller detail includes
+`identifier`. The `application #starting` and
+`application #start` lines do not.
+
+Because `start()` yields before the scan, setting `debug`
+and `logger` in the same turn records `application
+#starting`, then `initialize`, `connect`, and
+`application #start`. `?debug=0` leaves it false. The
+controller still connects. Nothing is logged.
+
+An action is logged after the method returns. If
+`groupCollapsed` throws, the method has already run.
+`handleError` then calls `logger.error`. The first argument
+is the format string `%s\n\n%o\n\n%o`. The message is the
+second argument, `Error invoking action "…"`.
+
+**Why it matters.** Cattle Point's tape shows the four
+lifecycle titles, then goes quiet when debug is silenced,
+while the horn reading still updates. Breaking the logger
+still leaves "Horn broke the tape." on the desk.
+
+**What to do.** Set `debug` before the start microtask if
+you need the first connect in the log. Implement
+`groupCollapsed`, `log`, `groupEnd`, `error`, and `warn`.
+Read the message from the second argument of `error`. Don't
+assume a throw from the logger means the action method
+didn't run.
+
+**Seen in:** [Cattle Point fog logger](features/14-application-setup/09-cattle-point-fog-logger/).
+
+### A renamed target attribute does not feed target callbacks
+
+**What happens.** Target getters use
+`schema.targetAttributeForScope`. Target connected
+callbacks do not. The observer always watches
+``data-${identifier}-target``, whatever the schema says.
+
+`keyMappings` is an own-property map. A filter that is not
+in it throws `Error: contains unknown key filter: …` from
+the keydown listener. That throw is not passed to
+`handleError`. Actions later in that same listener do not
+run. An action earlier in the attribute already ran.
+Spreading `defaultSchema.keyMappings` keeps `enter`.
+Adding `horn: "F8"` matches `event.key` `"F8"`.
+
+A schema that only replaces `controllerAttribute` leaves
+`actionAttribute` as `data-action`.
+
+**Why it matters.** Slip Point's wick token fires the
+callback. The reading target, on the renamed attribute,
+does not, and the getter still finds it. The practice
+board's F8 still sounds, and Enter throws. The Colman Dock
+shed changes only the controller attribute, so its button
+stays on `data-action` and flashes once.
+
+**What to do.** Spread `defaultSchema` and replace the
+fields you mean. Spread `keyMappings` before you add a key.
+If you rename target attributes, don't wait for
+`[name]TargetConnected` on the new name. Listen to the
+hardcoded `data-identifier-target` attribute, or do the
+work in `connect`.
+
+**Seen in:** [Slip Point light schema](features/14-application-setup/11-slip-point-light-schema/),
+[Colman Dock shed](features/14-application-setup/10-colman-dock-shed/).
+
+### `window.Stimulus` is a convention, and the import is async
+
+**What happens.** Stimulus does not assign `window.Stimulus`.
+A classic script runs during parse, before deferred modules,
+so the property is missing.
+
+The module assigns `window.Stimulus`, then `await`s
+`import()` of the controller files. That top-level await
+does not hold the document open. `DOMContentLoaded` and the
+window `load` event both run while the module is suspended.
+The handle is already there. `application.controllers` is
+still empty, because `register` has not run. When the
+imports resolve, `register` connects the elements that were
+already in the document. On the Anacortes page that count
+is 2, and it happens after `load`.
+
+An import-map specifier `controllers/pilot_order_controller`
+is the identifier `pilot-order`. `import(specifier)` is
+async. Scopes exist before the module is registered, so one
+`register` connects every element already wearing that
+identifier. Two elements inserted together can both pass a
+"not registered yet" check before either import resolves.
+A pending set lets the second one wait.
+
+**Why it matters.** The Anacortes early window does not see
+Stimulus. The ready window and the load window see the
+handle with 0 controllers. The settled line, written after
+the await, reads "Imports finished. Controllers 2."
+`late-slip` is not imported until the slips exist. Both
+slips connect once, and the tape records one registration.
+
+**What to do.** Assign `window.Stimulus` yourself if other
+scripts need it. Do not read `application.controllers` from
+`DOMContentLoaded` or from `load` when registration sits
+behind a top-level `await`. Read the list after that
+await, from the module. Guard lazy `import()` with a
+pending set, not only with `application.router.modules`.
+
+**Seen in:** [Anacortes pilot importmap](features/14-application-setup/12-anacortes-pilot-importmap/).
+
+### Identifiers are not validated
+
+**What happens.** `register` accepts any string. The
+attribute value must match that string character for
+character. `Bell-Case` does not connect an element marked
+`bell-case`.
+
+A `"` in the identifier makes
+``[data-${identifier}-target]`` an illegal selector.
+`querySelectorAll` throws while the controller is
+connecting. `initialize` has already run. `connect` does
+not finish. The context is already in
+`application.controllers`. The throw aborts the rest of
+that scan, so a later element never connects. The failure
+is an unhandled rejection from `start()`, not
+`handleError`.
+
+A repeated token in `data-controller` connects once.
+Removing one copy leaves that instance. Clearing the
+attribute disconnects it.
+
+Registering an identifier that already has a module
+unloads it first, even when the constructor is the same
+class. See
+[`stop()` does not disconnect, and a second `Application.start()` is a second application](#stop-does-not-disconnect-and-a-second-applicationstart-is-a-second-application).
+
+**Why it matters.** The Ediz Hook case lamp stays dark
+until the identifier is `bell-case`. The quoted slip
+initializes, does not connect, and the after slip stays
+waiting. The tide bell with two tokens is one bell.
+
+**What to do.** Use lowercase letters, digits, and hyphens,
+and start with a letter. Don't put `"`, spaces, or other
+selector metacharacters in an identifier. Don't repeat a
+token and expect a second instance. Catch a rejected
+`start()` if you register names you did not check.
+
+**Seen in:** [Ediz Hook pitfalls](features/14-application-setup/13-ediz-hook-pitfalls/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports

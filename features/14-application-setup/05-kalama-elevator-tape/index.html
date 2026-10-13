@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  Application setup and registration · 05 · Kalama elevator tape
+
+  Teaches:
+  - register() in the same turn as Application.start()
+    runs afterLoad before any connect.
+  - register() after the router is running connects the
+    existing element, then afterLoad.
+  - Markup added in afterLoad connects after the hook
+    returns, when the mutation observer runs. this in
+    afterLoad is the constructor. The identifier argument
+    is the registered name.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Kalama elevator tape · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BeltController from "./belt_controller.js"
+      import ScaleController from "./scale_controller.js"
+      import AnnexController from "./annex_controller.js"
+
+      const application = Application.start(document.getElementById("elevator"))
+      application.register("belt", BeltController)
+      application.register("scale", ScaleController)
+
+      document.getElementById("open-annex").addEventListener("click", () => {
+        application.register("annex", AnnexController)
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>05 · Kalama elevator tape</span>
+      </nav>
+      <h1>Kalama elevator tape</h1>
+      <p class="lede">
+        The grain elevator at Kalama. The belt and the scale are
+        registered while the application is still starting. The
+        annex waits until the clerk opens it, and afterLoad
+        seeds an oats bin that connects immediately.
+      </p>
+    </header>
+
+    <main>
+      <div id="elevator" class="board">
+        <p id="elevator-tape" class="card reading">Elevator tape is empty.</p>
+
+        <article class="card" data-controller="belt">
+          <h2>Belt</h2>
+          <p>The river belt is on the floor.</p>
+        </article>
+        <article class="card" data-controller="scale">
+          <h2>Scale</h2>
+          <p>The hopper scale is on the floor.</p>
+        </article>
+
+        <div id="annex-floor" class="card">
+          <h2>Annex</h2>
+          <article id="annex" data-controller="annex">
+            <p id="annex-reading" data-annex-target="reading">Annex is mounted and not connected.</p>
+          </article>
+          <div class="actions">
+            <button type="button" id="open-annex">Open the annex</button>
+          </div>
+        </div>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="belt_controller.js"><code>belt_controller.js</code></a> — early afterLoad</li>
+          <li><a href="scale_controller.js"><code>scale_controller.js</code></a> — the second early registration</li>
+          <li><a href="annex_controller.js"><code>annex_controller.js</code></a> — late afterLoad that seeds a bin</li>
+          <li><a href="tape.js"><code>tape.js</code></a> — the shared tape</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

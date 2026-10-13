@@ -1,0 +1,148 @@
+<!doctype html>
+<!--
+  Application setup and registration · 09 · Cattle Point fog logger
+
+  Teaches:
+  - application.debug is false until you set it.
+    Setting it in the same turn as Application.start()
+    is in time for initialize and connect, because
+    start() awaits before it scans.
+  - The logger receives groupCollapsed(identifier #name),
+    log("details:", detail), and groupEnd().
+  - debug false does not call the logger.
+  - A logger that throws from groupCollapsed throws
+    after the action method has run. handleError then
+    calls logger.error. The first argument is a format
+    string. The message is the second argument.
+  - ?debug=0 leaves the tape quiet.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cattle Point fog logger · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FogDeskController from "./fog_desk_controller.js"
+
+      const tape = document.getElementById("debug-tape")
+
+      function writeLine(line) {
+        if (tape.dataset.live !== "yes") {
+          tape.textContent = ""
+          tape.dataset.live = "yes"
+        }
+        tape.textContent = tape.textContent ? `${tape.textContent}\n${line}` : line
+      }
+
+      const pageLogger = {
+        log(message, detail) {
+          if (message === "details:" && detail && detail.identifier) {
+            writeLine(`detail ${detail.identifier}`)
+          }
+        },
+        warn() {},
+        error(_format, message) {
+          writeLine(`reported ${message}`)
+        },
+        groupCollapsed(title) {
+          writeLine(title)
+        },
+        groupEnd() {}
+      }
+
+      const breakingLogger = {
+        log(message, detail) {
+          pageLogger.log(message, detail)
+        },
+        warn() {},
+        error(_format, message) {
+          writeLine(`reported ${message}`)
+        },
+        groupCollapsed(title) {
+          writeLine(title)
+          if (String(title).endsWith("#breakHorn")) {
+            throw new Error("logger collapsed")
+          }
+        },
+        groupEnd() {}
+      }
+
+      const application = Application.start(document.getElementById("fog-station"))
+      application.logger = pageLogger
+      application.debug = new URLSearchParams(location.search).get("debug") !== "0"
+      application.register("fog-desk", FogDeskController)
+
+      document.getElementById("silence-tape").addEventListener("click", () => {
+        application.debug = false
+        document.getElementById("silence-note").textContent = "Tape silenced."
+      })
+
+      document.getElementById("break-logger").addEventListener("click", () => {
+        application.logger = breakingLogger
+        application.debug = true
+        document.getElementById("break-note").textContent = "Logger will throw."
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>09 · Cattle Point fog logger</span>
+      </nav>
+      <h1>Cattle Point fog logger</h1>
+      <p class="lede">
+        The fog desk at Cattle Point, San Juan Island, keeps its
+        own logger instead of the browser console. Debug is on
+        unless the page is opened with <code>?debug=0</code>.
+      </p>
+    </header>
+
+    <main>
+      <div id="fog-station" class="board">
+        <pre id="debug-tape" class="card reading">Tape is quiet.</pre>
+        <p id="silence-note" class="card">Tape is recording.</p>
+        <p id="break-note" class="card">Logger is intact.</p>
+
+        <article class="card" data-controller="fog-desk">
+          <h2>Fog desk</h2>
+          <p id="desk-reading" class="reading" data-fog-desk-target="reading">Fog desk is waiting.</p>
+          <div class="actions">
+            <button type="button" id="sound-horn" data-action="fog-desk#sound">Sound the horn</button>
+            <button type="button" id="silence-tape">Silence the tape</button>
+            <button type="button" id="break-logger">Arm the breaking logger</button>
+            <button type="button" id="break-horn" data-action="fog-desk#breakHorn">Break the horn</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fog_desk_controller.js"><code>fog_desk_controller.js</code></a> — connect, sound, and breakHorn</li>
+          <li>This page's source — <code>application.debug</code> and the logger</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<!--
+  Application setup and registration · 12 · Anacortes pilot importmap
+
+  Teaches:
+  - window.Stimulus is a convention. The library does not
+    set it. A classic script that runs during parse does
+    not see it yet.
+  - The module assigns window.Stimulus, then awaits the
+    controller imports. DOMContentLoaded and the load
+    event both run during that await. The handle is
+    visible and the controller list is still empty.
+    register runs when the imports resolve, after load.
+  - Controller files are import-map specifiers. The scan
+    turns controllers/pilot_order_controller into the
+    identifier pilot-order and dynamic-imports it.
+  - Identifiers already in the document are loaded at
+    boot. An identifier that appears later is loaded then.
+  - A pending set keeps two new elements from registering
+    the same module twice.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Anacortes pilot importmap · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .slips { display: grid; gap: 0.75rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js",
+          "controllers/station_log_controller": "./station_log_controller.js",
+          "controllers/pilot_order_controller": "./pilot_order_controller.js",
+          "controllers/late_slip_controller": "./late_slip_controller.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import { lazyLoadControllers } from "./station_loader.js"
+
+      const application = Application.start()
+      window.Stimulus = application
+
+      const tape = document.getElementById("registration-tape")
+      await lazyLoadControllers(application, document.getElementById("pilot-station"), (identifier) => {
+        const prior = tape.dataset.started === "yes" ? tape.textContent : ""
+        tape.dataset.started = "yes"
+        tape.textContent = prior ? `${prior} ${identifier} registered.` : `${identifier} registered.`
+      })
+
+      document.getElementById("settled-window").textContent =
+        `Imports finished. Controllers ${application.controllers.length}.`
+
+      document.getElementById("post-slips").addEventListener("click", () => {
+        const floor = document.getElementById("slip-floor")
+        for (const berth of ["north", "south"]) {
+          const slip = document.createElement("article")
+          slip.className = "card"
+          slip.dataset.controller = "late-slip"
+          slip.dataset.berth = berth
+          slip.innerHTML = `
+            <h2>${berth === "north" ? "North" : "South"} slip</h2>
+            <p class="reading" data-late-slip-target="reading">Slip is waiting.</p>
+          `
+          floor.append(slip)
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <script>
+      window.__stationSawStimulusEarly = !!window.Stimulus
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("early-window").textContent = window.__stationSawStimulusEarly
+          ? "Stimulus was already on the window."
+          : "Stimulus is not on the window yet."
+        const station = window.Stimulus
+        document.getElementById("ready-window").textContent = station
+          ? `Station window sees ${station.element.tagName}. Controllers ${station.controllers.length}.`
+          : "Still missing."
+      })
+      window.addEventListener("load", () => {
+        const station = window.Stimulus
+        document.getElementById("load-window").textContent = station
+          ? `Load event sees ${station.element.tagName}. Controllers ${station.controllers.length}.`
+          : "Still missing at load."
+      })
+    </script>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>12 · Anacortes pilot importmap</span>
+      </nav>
+      <h1>Anacortes pilot importmap</h1>
+      <p class="lede">
+        The pilot station at Anacortes has no build step. The
+        import map names the controller files. They are
+        registered when an element asks for them, and
+        <code>window.Stimulus</code> is the station's handle.
+      </p>
+    </header>
+
+    <main>
+      <div id="pilot-station" class="board">
+        <p id="early-window" class="card reading">Early window has not been read.</p>
+        <p id="ready-window" class="card reading">Ready window has not been read.</p>
+        <p id="load-window" class="card reading">Load window has not been read.</p>
+        <p id="settled-window" class="card reading">Imports have not finished.</p>
+        <p id="registration-tape" class="card reading">Registration tape is empty.</p>
+
+        <article class="card" data-controller="station-log">
+          <h2>Station log</h2>
+          <p id="log-reading" class="reading" data-station-log-target="reading">Station log is waiting.</p>
+        </article>
+        <article class="card" data-controller="pilot-order">
+          <h2>Pilot order</h2>
+          <p id="order-reading" class="reading" data-pilot-order-target="reading">Pilot order is waiting.</p>
+        </article>
+
+        <section class="card">
+          <h2>Late slips</h2>
+          <div class="actions">
+            <button type="button" id="post-slips">Post two late slips</button>
+          </div>
+          <div id="slip-floor" class="slips"></div>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="station_loader.js"><code>station_loader.js</code></a> — import map scan and the pending set</li>
+          <li><a href="station_log_controller.js"><code>station_log_controller.js</code></a> — loaded because it is already on the page</li>
+          <li><a href="pilot_order_controller.js"><code>pilot_order_controller.js</code></a> — loaded the same way</li>
+          <li><a href="late_slip_controller.js"><code>late_slip_controller.js</code></a> — loaded when the slips are posted</li>
+          <li>This page's source — <code>window.Stimulus</code> and the import map</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

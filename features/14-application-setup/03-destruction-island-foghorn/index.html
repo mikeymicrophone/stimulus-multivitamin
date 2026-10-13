@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  Application setup and registration · 03 · Destruction Island foghorn
+
+  Teaches:
+  - A controller registered after the router has started
+    connects elements already in the document.
+  - That connect runs before afterLoad, and both finish
+    before register() returns.
+  - An element created inside afterLoad is not connected
+    when register() returns. The mutation observer
+    connects it afterwards.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Destruction Island foghorn · Application setup and registration · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .reading { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HornLogController from "./horn_log_controller.js"
+      import FogHornController from "./fog_horn_controller.js"
+
+      const application = Application.start(document.getElementById("horn-floor"))
+      application.register("horn-log", HornLogController)
+
+      document.getElementById("bring-online").addEventListener("click", () => {
+        document.getElementById("horn-tape").textContent = ""
+        application.register("fog-horn", FogHornController)
+        const horn = application.getControllerForElementAndIdentifier(
+          document.getElementById("main-horn"),
+          "fog-horn"
+        )
+        const spareNow = application.getControllerForElementAndIdentifier(
+          document.getElementById("spare-horn"),
+          "fog-horn"
+        )
+        document.getElementById("register-note").textContent =
+          `Register returned. Main ${horn ? "present" : "missing"}. Spare ${spareNow ? "present" : "missing"}.`
+        queueMicrotask(() => {
+          const spareLater = application.getControllerForElementAndIdentifier(
+            document.getElementById("spare-horn"),
+            "fog-horn"
+          )
+          document.getElementById("spare-note").textContent =
+            `After the mutation. Spare ${spareLater ? "present" : "missing"}.`
+        })
+      })
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#application-setup">Application setup and registration</a> /
+        <span>03 · Destruction Island foghorn</span>
+      </nav>
+      <h1>Destruction Island foghorn</h1>
+      <p class="lede">
+        The horn on Destruction Island is already bolted to the
+        rock. The keeper registers it after the log is open. The
+        spare is built during afterLoad and connects before that
+        hook returns.
+      </p>
+    </header>
+
+    <main>
+      <div id="horn-floor" class="board">
+        <section class="card" data-controller="horn-log">
+          <h2>Horn log</h2>
+          <p id="log-reading" class="reading" data-horn-log-target="reading">Horn log is shut.</p>
+        </section>
+
+        <p id="horn-tape" class="card reading">Tape is empty.</p>
+        <p id="register-note" class="card reading">Horn is not registered.</p>
+        <p id="spare-note" class="card reading">Spare has not been checked.</p>
+
+        <article id="main-horn" class="card" data-controller="fog-horn">
+          <h2>Main horn</h2>
+          <p id="horn-reading" class="reading" data-fog-horn-target="reading">Horn is mounted and not connected.</p>
+          <div class="actions">
+            <button type="button" id="bring-online">Bring the horn online</button>
+            <button type="button" id="sound-horn" data-action="fog-horn#sound">Sound the horn</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="horn_log_controller.js"><code>horn_log_controller.js</code></a> — registered with the application</li>
+          <li><a href="fog_horn_controller.js"><code>fog_horn_controller.js</code></a> — registered from the button, and builds the spare in afterLoad</li>
+          <li>This page's source — the click calls <code>register</code> after start has resumed</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
