@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+  Values · 10 · Cooperage hoop log
+
+  Teaches:
+  - hoopCount, woodName, and flagged start on the barrel. The reading
+    shows the values and the raw attributes.
+  - Setting hoopCount to 0 writes "0". The attribute stays, and
+    hasHoopCountValue stays true. Setting it to undefined removes the
+    attribute. The value falls back to 0 and hasHoopCountValue is false.
+  - undefined on the wood name removes that attribute. null writes the
+    characters null, and the getter returns the string "null".
+  - flagged = false writes "false". It does not remove the attribute.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cooperage hoop log · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .barrel { max-width: 44rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.55rem; }
+      .barrel h2 { margin: 0; font-size: 1.15rem; }
+      .barrel p { margin: 0; }
+      .reading { min-height: 4.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HoopLogController from "./hoop_log_controller.js"
+
+      const application = Application.start()
+      application.register("hoop-log", HoopLogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>10 · Cooperage hoop log</span>
+      </nav>
+      <h1>Cooperage hoop log</h1>
+      <p class="lede">
+        A red-oak barrel at the Port Townsend cooperage, six hoops,
+        flagged for the harbor chandlery. The log can zero the count,
+        clear a line, or write a blank that is not really blank.
+      </p>
+    </header>
+
+    <main>
+      <section
+        class="scenario barrel"
+        data-controller="hoop-log"
+        data-hoop-log-hoop-count-value="6"
+        data-hoop-log-wood-name-value="red oak"
+        data-hoop-log-flagged-value="true"
+      >
+        <h2>Red oak barrel</h2>
+        <p>Six hoops, flagged for the Mary Jane's chandlery order.</p>
+        <div class="actions">
+          <button type="button" data-action="hoop-log#setHoopsToZero">Set the hoop count to zero</button>
+          <button type="button" data-action="hoop-log#clearHoopCount">Clear the hoop count</button>
+          <button type="button" data-action="hoop-log#clearWoodName">Clear the wood name</button>
+          <button type="button" data-action="hoop-log#writeNullWood">Write a null wood name</button>
+          <button type="button" data-action="hoop-log#lowerFlag">Lower the flag</button>
+        </div>
+        <p class="reading" data-hoop-log-target="reading" aria-live="polite"></p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="hoop_log_controller.js"><code>hoop_log_controller.js</code></a> — zero, undefined, null, and false written back to the barrel</li>
+          <li>This page's source — six hoops of red oak, flagged</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

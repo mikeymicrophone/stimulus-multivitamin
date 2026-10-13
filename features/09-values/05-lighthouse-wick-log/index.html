@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Values · 05 · Lighthouse wick log
+
+  Teaches:
+  - lamp is an Object. wick_height stays snake_case. There is no
+    wickHeight key.
+  - Trimming the wick assigns a new object. The attribute becomes
+    compact JSON.
+  - Cape Flattery has no lamp attribute. The value is {} and
+    hasLampValue is false.
+  - The spare at Cape Disappointment is a JSON array. Reading
+    spareLampValue throws a TypeError. The button catches it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lighthouse wick log · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .stations { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+      .station { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .station h2 { margin: 0; font-size: 1.15rem; }
+      .station p { margin: 0; }
+      .reading, .spare { min-height: 2.6rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WickLogController from "./wick_log_controller.js"
+
+      const application = Application.start()
+      application.register("wick-log", WickLogController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>05 · Lighthouse wick log</span>
+      </nav>
+      <h1>Lighthouse wick log</h1>
+      <p class="lede">
+        First watch at Cape Disappointment. The lamp log is one object:
+        wick height and colza oil. Cape Flattery has not filed tonight.
+        The spare tin was written down as a list.
+      </p>
+    </header>
+
+    <main>
+      <div class="stations">
+        <section
+          class="scenario station"
+          data-controller="wick-log"
+          data-wick-log-lamp-value='{"wick_height":"12mm","oil":"colza"}'
+          data-wick-log-spare-lamp-value='["8mm wick","trimming scissors"]'
+        >
+          <h2 data-wick-log-target="stationName">Cape Disappointment</h2>
+          <p>Colza in the font. The spare tin was inventoried as a list.</p>
+          <div class="actions">
+            <button type="button" data-action="wick-log#trimWick">Trim the wick to 8mm</button>
+            <button type="button" data-action="wick-log#readSpare">Read the spare tin</button>
+          </div>
+          <p class="reading" data-wick-log-target="reading" aria-live="polite"></p>
+          <p class="spare" data-wick-log-target="spareReading" aria-live="polite">Spare tin not read yet.</p>
+        </section>
+
+        <section class="scenario station" data-controller="wick-log">
+          <h2 data-wick-log-target="stationName">Cape Flattery</h2>
+          <p>No lamp entry has come in on the wire.</p>
+          <div class="actions">
+            <button type="button" data-action="wick-log#trimWick">Trim the wick to 8mm</button>
+            <button type="button" data-action="wick-log#readSpare">Read the spare tin</button>
+          </div>
+          <p class="reading" data-wick-log-target="reading" aria-live="polite"></p>
+          <p class="spare" data-wick-log-target="spareReading" aria-live="polite">Spare tin not read yet.</p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="wick_log_controller.js"><code>wick_log_controller.js</code></a> — object values, the spare list, and writing the lamp back</li>
+          <li>This page's source — one lamp object, one missing log, and a spare stored as an array</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

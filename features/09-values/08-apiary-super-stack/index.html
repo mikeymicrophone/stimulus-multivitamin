@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Values · 08 · Apiary super stack
+
+  Teaches:
+  - Langstroth and Warre share one default array, ["brood", "honey"].
+    Neither has a frames attribute. hasFramesValue is true because the
+    definition is { type, default }.
+  - Dropping pollen pushes into that shared array. The attribute stays
+    absent. Reading the Warre afterward lists pollen too.
+  - Writing the Langstroth stack assigns a copy and writes JSON on
+    that hive only. The Warre still reads the shared default.
+  - The package hive uses a bare Array. A push disappears on the next
+    read. hasFramesValue is false.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Apiary super stack · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .hives { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .hive { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .hive h2 { margin: 0; font-size: 1.15rem; }
+      .hive p { margin: 0; }
+      .reading { min-height: 4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HiveStackController from "./hive_stack_controller.js"
+      import EmptySuperController from "./empty_super_controller.js"
+
+      const application = Application.start()
+      application.register("hive-stack", HiveStackController)
+      application.register("empty-super", EmptySuperController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>08 · Apiary super stack</span>
+      </nav>
+      <h1>Apiary super stack</h1>
+      <p class="lede">
+        Two hives at the Skagit Valley apiary opened on the same default
+        stack, brood under honey. The package hive in the shed has no
+        frames listed at all.
+      </p>
+    </header>
+
+    <main>
+      <div class="hives">
+        <section class="scenario hive" data-controller="hive-stack">
+          <h2 data-hive-stack-target="hiveName">Langstroth</h2>
+          <p>No stack has been written on the lid.</p>
+          <div class="actions">
+            <button type="button" data-action="hive-stack#dropPollenFrame">Drop a pollen frame</button>
+            <button type="button" data-action="hive-stack#writeStack">Write the stack on the lid</button>
+            <button type="button" data-action="hive-stack#readStack">Read the stack</button>
+          </div>
+          <p class="reading" data-hive-stack-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario hive" data-controller="hive-stack">
+          <h2 data-hive-stack-target="hiveName">Warre</h2>
+          <p>No stack has been written on this lid either.</p>
+          <div class="actions">
+            <button type="button" data-action="hive-stack#readStack">Read the stack</button>
+            <button type="button" data-action="hive-stack#writeStack">Write the stack on the lid</button>
+          </div>
+          <p class="reading" data-hive-stack-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario hive" data-controller="empty-super">
+          <h2 data-empty-super-target="hiveName">Package hive</h2>
+          <p>The package card has no frame list.</p>
+          <div class="actions">
+            <button type="button" data-action="empty-super#dropPollenFrame">Drop a pollen frame</button>
+          </div>
+          <p class="reading" data-empty-super-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="hive_stack_controller.js"><code>hive_stack_controller.js</code></a> — the shared default array, the push, and the write</li>
+          <li><a href="empty_super_controller.js"><code>empty_super_controller.js</code></a> — a bare array, a new one on every read</li>
+          <li>This page's source — two hives on the default, and one package with none</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

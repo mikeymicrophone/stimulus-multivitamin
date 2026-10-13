@@ -1273,6 +1273,265 @@ Do not rely on `handleError` for these callbacks.
 
 **Seen in:** [Letterpress job dockets](features/08-target-callbacks/10-letterpress-job-dockets/).
 
+## Values
+
+### `has[Name]Value` stays true when the definition is an object or a literal
+
+**What happens.** The reference says `has[Name]Value` is true when the
+data attribute is present and false when it is absent. That is true for
+a bare type (`breed: String`, `temperature: Number`, `flagged: Boolean`).
+It is not true for the `{ type, default }` form, for `{ type: Number }`
+with no `default` key, or for a literal (`breed: "Jersey"`,
+`flagged: false`, `spareDegrees: 0`). Those definitions make
+`has[Name]Value` true even when the attribute was never written. The
+getter still returns the default: `"Jersey"`, `86`, `0`, `false`, or
+`["mesophilic"]`.
+
+**Why it matters.** A card that uses the object form cannot tell "the
+cook left this blank" from "the cook wrote the default." A spare
+temperature declared as `{ type: Number }` looks present (`has` is
+true) and reads `0`, the same number a bare `Number` reads when `has`
+is false. A flag defaulted to `false` with `flagged: false` also
+reports `hasFlaggedValue` true.
+
+**What to do.** Use a bare type when `has[Name]Value` has to mean "the
+attribute is in the markup." Use `{ type, default }` or a literal when
+a missing attribute should still count as set. Read
+`element.hasAttribute` when you need the attribute itself.
+
+**Seen in:** [Creamery vat card](features/09-values/06-creamery-vat-card/),
+[Pilot boat mess slate](features/09-values/13-pilot-boat-mess-slate/)
+(the relief boat's name and bowl count).
+
+### An empty Boolean attribute is true
+
+**What happens.** The reader is
+`!(value == "0" || String(value).toLowerCase() == "false")`. `"0"`,
+`"false"`, `"FALSE"`, and `"False"` are false. An empty attribute,
+including `data-signal-horn-sounding-value` with no value, is `""`,
+and that is true. `"00"`, `"false "` (trailing space), `" 0"`,
+`"no"`, `"off"`, and `"1"` are true. A missing attribute is the
+default `false`, and for a bare `Boolean` the `has` property is false.
+The reference formula does not lowercase. Stimulus 3.2.2 does, which
+is why `"FALSE"` is false. That case is already noted under
+[Params are `JSON.parse`; values and `dataset` are not](#params-are-jsonparse-values-and-dataset-are-not).
+
+**Why it matters.** A blank cell on a fog slip is not "they said no."
+It is "the horn is sounding," and `hasSoundingValue` is true because
+the attribute is present. `"00"` is not `"0"`. A trailing space keeps
+`"false"` from matching.
+
+**What to do.** Treat only `"0"` and `"false"` in any letter case as
+false. Don't leave the attribute empty if you mean false. Assign
+`false` to write the attribute `"false"`.
+
+**Seen in:** [Fog signal board](features/09-values/03-fog-signal-board/),
+[Pilot boat mess slate](features/09-values/13-pilot-boat-mess-slate/)
+(the relief galley's blank cell).
+
+### A Number value keeps the attribute text until you assign
+
+**What happens.** The reader strips underscores, then calls `Number()`.
+`"1_000"` is `1000`. `"08"` is `8`. `" 14.5 "` is `14.5`. `"2e1"` is
+`20`. `"1,200"` and `"12dwt"` are `NaN`. An empty attribute is `0`
+with `hasPennyweightsValue` true. A missing attribute is `0` with
+`has` false, for a bare `Number`. `9007199254740993` becomes
+`9007199254740992`. None of those reads rewrite the attribute. The
+writer is `` `${value}` ``, so assigning the parsed number stores a
+plain decimal: Kingston's `"08"` becomes `"9"` after one more bushel,
+and a certificate assigned back to itself loses the digit in the
+attribute too.
+
+**Why it matters.** The slip on the wall and the number in the
+controller disagree until something assigns. A comma that a clerk
+thinks is a thousands separator is `NaN`, and `has` is still true, so
+a guard that only checks `has` will add to `NaN`. A blank weight and
+a missing weight are both `0` and only `has` tells them apart.
+
+**What to do.** Keep identifiers and leading zeros in a `String`
+value. Assign only when you mean to normalize the attribute. Check
+`Number.isNaN` before doing arithmetic. For the same precision loss
+on action params, see
+[Action params turn all-digit strings into numbers](#action-params-turn-all-digit-strings-into-numbers).
+
+**Seen in:** [Cider press tally](features/09-values/02-cider-press-tally/),
+[Assay office slips](features/09-values/07-assay-office-slips/),
+[Pilot boat mess slate](features/09-values/13-pilot-boat-mess-slate/).
+
+### Array and Object values reject the other shape
+
+**What happens.** Both types `JSON.parse` the attribute. An `Array`
+then requires `Array.isArray`. An `Object` rejects `null`, arrays, and
+anything whose `typeof` is not `"object"`. The failure is a
+`TypeError` whose message names the attribute text and a type:
+`"object"`, `"array"`, `"number"`, or, for `null`, `"undefined"`.
+Invalid JSON, including `eagle,shield` and `{fine:900}`, throws
+`SyntaxError` from `JSON.parse` instead. Neither throw happens at
+connect. It happens when the getter runs. Keys inside an object are
+not camelized: `wick_height` stays `wick_height`. Each read parses
+again, so `this.lampValue === this.lampValue` is false when the
+attribute is present, and `push` on the returned array is gone by the
+next read.
+
+**Why it matters.** A spare tin written as a list looks like data and
+throws the first time the watch reads it. A menu written as
+`chowder, pilot bread` connects fine and throws on the button. A
+`push` that is not followed by an assignment never reaches the
+attribute.
+
+**What to do.** Store arrays as JSON arrays and objects as JSON
+objects. Catch the read if the attribute came from a person. Assign a
+new array or object to persist a change. Don't mutate the value you
+just read.
+
+**Seen in:** [Seed vault tray](features/09-values/04-seed-vault-tray/),
+[Lighthouse wick log](features/09-values/05-lighthouse-wick-log/),
+[Assay office slips](features/09-values/07-assay-office-slips/),
+[Pilot boat mess slate](features/09-values/13-pilot-boat-mess-slate/).
+
+### A custom Array or Object default is one shared value
+
+**What happens.** `{ type: Array, default: ["brood", "honey"] }`
+returns that same array every time the attribute is missing, on every
+instance. `push` mutates it. The attribute stays absent.
+`hasFramesValue` is true because of the object form, as in
+[`has[Name]Value` stays true when the definition is an object or a literal](#hasnamevalue-stays-true-when-the-definition-is-an-object-or-a-literal).
+A bare `frames: Array` is different: the built-in default is a new
+`[]` on every read, so a `push` disappears, and `hasFramesValue` is
+false. Assigning `this.framesValue = this.framesValue.slice()` writes
+JSON on that element only. The other hive, still missing its
+attribute, keeps reading the mutated default.
+
+**Why it matters.** Dropping a frame on the Langstroth changes the
+Warre's next read. Writing one lid down does not give the other hive
+its own list.
+
+**What to do.** Don't mutate a default. Assign a new array or object.
+If each controller needs its own starting list, put the JSON on the
+element, or copy the default before you change it
+(`this.framesValue = this.framesValue.concat(["pollen"])`).
+
+**Seen in:** [Apiary super stack](features/09-values/08-apiary-super-stack/).
+
+### Value attributes are the exact kebab-case name
+
+**What happens.** Stimulus looks up
+`data-${identifier}-${dasherize(name)}-value`. `meshSize` is
+`data-bolt-ticket-mesh-size-value`. HTML lowercases attribute names,
+so `data-bolt-ticket-meshSize-value` is stored as
+`data-bolt-ticket-meshsize-value` and does not match. Underscores are
+not camelized either. `data-bolt-ticket-mesh_size-value` is a
+different attribute. Action parameters do camelize `-` and `_`. Value
+lookup does not scan the element's attributes and camelize them. A
+miss reads as the type default, and for a bare `String`
+`hasMeshSizeValue` is false.
+
+**Why it matters.** A ticket written in the controller's camelCase, or
+with underscores, still shows "4 in" in the markup and the controller
+reads `""`.
+
+**What to do.** Write value attributes in kebab-case. The same
+lowercasing rule for params is
+[HTML lowercases param attribute names](#html-lowercases-param-attribute-names).
+The value failure is an exact-name miss, not a failed camelize.
+
+**Seen in:** [Sail loft bolt ticket](features/09-values/09-sail-loft-bolt-ticket/),
+[Maple sugar shack](features/09-values/01-maple-sugar-shack/).
+
+**Why this section.** Lowercasing is the HTML parser. Stimulus is what
+requires the hyphenated name and will not accept the underscore form
+that params accept.
+
+### Only `undefined` removes a value attribute
+
+**What happens.** The setter deletes the attribute when the new value
+is `undefined`. Every other assignment writes.
+`hoopCountValue = 0` writes `"0"` and `hasHoopCountValue` stays true.
+`flaggedValue = false` writes `"false"`. `woodNameValue = null` writes
+the characters `null`, and the getter returns the string `"null"`.
+After a real delete, a bare `Number` reads `0` with `has` false, and a
+bare `String` reads `""` with `has` false.
+
+**Why it matters.** Zeroing a hoop count looks like clearing it and
+leaves `"0"` on the barrel. A "blank" wood name of `null` becomes the
+word null. The next read cannot tell that from a cooper who stamped
+those letters.
+
+**What to do.** Assign `undefined` to remove the attribute. Assign
+`0`, `false`, or `""` only when that value should stay on the element.
+
+**Seen in:** [Cooperage hoop log](features/09-values/10-cooperage-hoop-log/).
+
+### Inherited values use the subclass identifier
+
+**What happens.** `static values` is collected from the class and its
+ancestors. `RidgeLog` declares `gustKnots` and inherits `stationName`
+and `launched`, so `stationNameValue` exists. The attribute is
+`data-ridge-log-station-name-value`, the instance's identifier, not
+`data-kite-log-station-name-value`. A station name stamped with the
+parent identifier sits on the element and is not the value. Assigning
+`launchedValue` writes `data-ridge-log-launched-value`.
+
+**Why it matters.** A card copied from the base log looks wired. The
+reading uses Cape Flattery, the subclass attribute, and leaves the
+valley line unread.
+
+**What to do.** Stamp inherited values with the identifier of the
+controller that is actually on the element. The same rule for targets
+is
+[Inherited target names use the subclass identifier](#inherited-target-names-use-the-subclass-identifier).
+
+**Seen in:** [Ridge kite log](features/09-values/11-ridge-kite-log/).
+
+### A shorter identifier can share a longer identifier's value attribute
+
+**What happens.** The attribute name is
+`data-${identifier}-${dasherize(valueName)}-value`. For `gauge` and
+`houseZeroFeet` that is `data-gauge-house-zero-feet-value`. For
+`gauge-house` and `zeroFeet` it is the same string. Both controllers,
+on one element, read and write one attribute. Setting the gauge zero
+to `5` makes the house zero `5` on the next read, in the same turn.
+`poolFeet` does not collide: the gauge's pool is
+`data-gauge-pool-feet-value` and the house's pool is
+`data-gauge-house-pool-feet-value`. This is not the param prefix
+regex. Each controller asks for an attribute it declared. The names
+happen to compose to one string. Targets do not do this, because a
+target attribute is `data-${identifier}-target` and does not include
+the token in the attribute name. See
+[Target attributes are not prefix-matched](#target-attributes-are-not-prefix-matched).
+
+**Why it matters.** Two controllers that were meant to keep separate
+zeros share one, with no error. Raising the gauge moves the house.
+
+**What to do.** Don't let one identifier be a hyphen-prefix of another
+when a value name on the shorter one can spell the rest
+(`gauge` / `gauge-house`, `houseZeroFeet` / `zeroFeet`). Name the
+shorter controller so it does not begin the longer one.
+
+**Seen in:** [Lock gauge house](features/09-values/12-lock-gauge-house/).
+
+### A mismatched default throws when the controller is registered
+
+**What happens.** `{ type: Number, default: "12" }` throws while the
+controller is blessed, inside `application.register()`, before
+`initialize()`. The message is `The specified default value for the
+Stimulus Value "temperature" must match the defined type "number".
+The provided default value of "12" is of type "string".` The
+identifier is not in that message. The throw is not an action and
+does not go through `handleError` unless the caller catches it.
+Controllers already registered stay registered. The mismatched class
+is not.
+
+**Why it matters.** A vat card filed from a button can fail the whole
+module if the `register()` call is not caught. The wording names the
+value and not which controller it was.
+
+**What to do.** Match the default's type to `type`. Catch around a
+`register()` that might load a card you did not write. Read the value
+token out of the message; don't expect the identifier there.
+
+**Seen in:** [Creamery vat card](features/09-values/06-creamery-vat-card/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports

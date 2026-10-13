@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Values · 02 · Cider press tally
+
+  Teaches:
+  - bushels and gallons are Number values. Kingston's slip is written
+    "08". The getter returns 8. The attribute stays "08" until an
+    assignment rewrites it.
+  - Kingston has no gallons attribute. The value is 0 and
+    hasGallonsValue is false. Lyme has 18 gallons and hasGallonsValue
+    is true.
+  - Pressing another bushel assigns bushelsValue. Kingston's attribute
+    becomes "9", not "09".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cider press tally · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .presses { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+      .press { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.55rem; }
+      .press h2 { margin: 0; font-size: 1.15rem; }
+      .press p { margin: 0; }
+      .reading { min-height: 3.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PressTallyController from "./press_tally_controller.js"
+
+      const application = Application.start()
+      application.register("press-tally", PressTallyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>02 · Cider press tally</span>
+      </nav>
+      <h1>Cider press tally</h1>
+      <p class="lede">
+        October pressing at the Lyme town orchard. Kingston's slip still
+        has a leading zero. Lyme has already drawn eighteen gallons.
+      </p>
+    </header>
+
+    <main>
+      <div class="presses">
+        <section class="scenario press" data-controller="press-tally" data-press-tally-bushels-value="08">
+          <h2>Kingston press</h2>
+          <p>The morning slip was written 08. No gallons have been drawn.</p>
+          <div class="actions">
+            <button type="button" data-action="press-tally#pressAnotherBushel">Press another bushel</button>
+            <button type="button" data-action="press-tally#drawGallon">Draw a gallon</button>
+          </div>
+          <p class="reading" data-press-tally-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section
+          class="scenario press"
+          data-controller="press-tally"
+          data-press-tally-bushels-value="24"
+          data-press-tally-gallons-value="18"
+        >
+          <h2>Lyme press</h2>
+          <p>Twenty-four bushels in, eighteen gallons in the carboys.</p>
+          <div class="actions">
+            <button type="button" data-action="press-tally#pressAnotherBushel">Press another bushel</button>
+            <button type="button" data-action="press-tally#drawGallon">Draw a gallon</button>
+          </div>
+          <p class="reading" data-press-tally-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="press_tally_controller.js"><code>press_tally_controller.js</code></a> — number values, the leading zero, and writing the tally back</li>
+          <li>This page's source — Kingston's 08 slip and Lyme's gallons</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

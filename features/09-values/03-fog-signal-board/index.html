@@ -1,0 +1,133 @@
+<!doctype html>
+<!--
+  Values · 03 · Fog signal board
+
+  Teaches:
+  - sounding and manned are Boolean values. "false", "FALSE", and "0"
+    are false. "" , "00", "no", and "false " are true.
+  - Smith Island has no sounding attribute. The value is false and
+    hasSoundingValue is false. An empty attribute is present, so has
+    is true and the value is true.
+  - Silence assigns false and writes the attribute "false". Sound
+    writes "true".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Fog signal board · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.7rem; max-width: 46rem; }
+      .horn { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.75rem 0.9rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .horn h2 { margin: 0; font-size: 1.05rem; }
+      .horn p { margin: 0; }
+      .slip { color: var(--muted-ink, #5f6670); }
+      .reading { min-height: 2.8rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SignalHornController from "./signal_horn_controller.js"
+
+      const application = Application.start()
+      application.register("signal-horn", SignalHornController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>03 · Fog signal board</span>
+      </nav>
+      <h1>Fog signal board</h1>
+      <p class="lede">
+        Morning fog off the Strait. Each station phoned its horn status
+        in a different hand: FALSE, a zero, a blank slip, a trailing
+        space.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-sounding-value="false" data-signal-horn-manned-value="true">
+          <h2 data-signal-horn-target="hornName">Point Wilson</h2>
+          <p class="slip">Slip says false, and the watch is manned.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-sounding-value="0" data-signal-horn-manned-value="00">
+          <h2 data-signal-horn-target="hornName">Ediz Hook</h2>
+          <p class="slip">Sounding was logged as 0. The manned column says 00.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-sounding-value="FALSE" data-signal-horn-manned-value="no">
+          <h2 data-signal-horn-target="hornName">Marrowstone</h2>
+          <p class="slip">The keeper wrote FALSE, and "no" in the manned column.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-sounding-value="" data-signal-horn-manned-value="false">
+          <h2 data-signal-horn-target="hornName">Dungeness</h2>
+          <p class="slip">The sounding cell was left blank. Manned says false.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-manned-value="1">
+          <h2 data-signal-horn-target="hornName">Smith Island</h2>
+          <p class="slip">No sounding was phoned in. The watch marked manned as 1.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario horn" data-controller="signal-horn" data-signal-horn-sounding-value="false " data-signal-horn-manned-value="off">
+          <h2 data-signal-horn-target="hornName">Protection Island</h2>
+          <p class="slip">The sounding slip has a trailing space. Manned says off.</p>
+          <div class="actions">
+            <button type="button" data-action="signal-horn#soundHorn">Sound the horn</button>
+            <button type="button" data-action="signal-horn#silenceHorn">Silence the horn</button>
+          </div>
+          <p class="reading" data-signal-horn-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="signal_horn_controller.js"><code>signal_horn_controller.js</code></a> — boolean casting, hasSoundingValue, and writing true or false</li>
+          <li>This page's source — six stations, six ways of writing a yes or a no</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

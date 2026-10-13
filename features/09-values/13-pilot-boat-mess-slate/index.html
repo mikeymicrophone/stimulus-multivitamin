@@ -1,0 +1,128 @@
+<!doctype html>
+<!--
+  Values · 13 · Pilot boat mess slate
+
+  Teaches:
+  - The slate declares String, Number, Boolean, Array, and Object
+    values, including { type, default } for the boat name and the
+    bowl count.
+  - Mary Jane's batch code "08" reads as 8. The lot code "08" stays
+    the string "08". Rewriting the batch writes the attribute "8".
+  - The relief boat never got a name, so boatNameValue is the default
+    "Mary Jane" and hasBoatNameValue is true with no attribute. Its
+    galley attribute is empty, so galleyOpen is true.
+  - tideNote keeps height_ft. There is no heightFt key.
+  - The radio slip is not JSON. Taking the order throws SyntaxError.
+    Nothing reads it until the button.
+  - No [name]ValueChanged method is defined. The reading is painted
+    from the action, after the setter has written the attribute.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pilot boat mess slate · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .galleys { display: grid; gap: 1rem; }
+      .galley { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .galley h2 { margin: 0; font-size: 1.15rem; }
+      .galley p { margin: 0; }
+      .reading { min-height: 5.5rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import MessSlateController from "./mess_slate_controller.js"
+      import RadioOrderController from "./radio_order_controller.js"
+
+      const application = Application.start()
+      application.register("mess-slate", MessSlateController)
+      application.register("radio-order", RadioOrderController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>13 · Pilot boat mess slate</span>
+      </nav>
+      <h1>Pilot boat mess slate</h1>
+      <p class="lede">
+        Middle watch in the galley of the pilot boat Mary Jane, and a
+        relief boat whose name was never chalked. The tide is on the
+        slate. A radio order came in as a comma list.
+      </p>
+    </header>
+
+    <main>
+      <div class="galleys">
+        <section
+          class="scenario galley"
+          data-controller="mess-slate"
+          data-mess-slate-watch-name-value="Middle"
+          data-mess-slate-boat-name-value="Mary Jane"
+          data-mess-slate-batch-code-value="08"
+          data-mess-slate-lot-code-value="08"
+          data-mess-slate-galley-open-value="false"
+          data-mess-slate-menu-value='["pilot bread","pea soup"]'
+          data-mess-slate-tide-note-value='{"height_ft":6.2,"direction":"flood"}'
+        >
+          <h2>Mary Jane</h2>
+          <p>Pilot bread and pea soup. The galley was logged shut. Batch 08 is the bread tin; lot 08 is the same tin written as a code.</p>
+          <div class="actions">
+            <button type="button" data-action="mess-slate#addChowder">Add chowder</button>
+            <button type="button" data-action="mess-slate#serveAnotherBowl">Serve another bowl</button>
+            <button type="button" data-action="mess-slate#closeGalley">Close the galley</button>
+            <button type="button" data-action="mess-slate#rewriteBatch">Rewrite the batch code</button>
+          </div>
+          <p class="reading" data-mess-slate-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section
+          class="scenario galley"
+          data-controller="mess-slate"
+          data-mess-slate-watch-name-value="Relief"
+          data-mess-slate-batch-code-value="08"
+          data-mess-slate-lot-code-value="08"
+          data-mess-slate-galley-open-value=""
+          data-mess-slate-menu-value='["hard tack"]'
+        >
+          <h2>Relief boat</h2>
+          <p>The boat name was left off the slate. The galley cell is blank. Hard tack is the only line.</p>
+          <div class="actions">
+            <button type="button" data-action="mess-slate#addChowder">Add chowder</button>
+            <button type="button" data-action="mess-slate#closeGalley">Close the galley</button>
+          </div>
+          <p class="reading" data-mess-slate-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario galley" data-controller="radio-order" data-radio-order-menu-value="chowder, pilot bread">
+          <h2>Radio order</h2>
+          <p>The watch wrote the order as a comma list, not as JSON.</p>
+          <p><button type="button" data-action="radio-order#takeOrder">Take the radio order</button></p>
+          <p class="reading" data-radio-order-target="reading" aria-live="polite">Radio order not taken.</p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="mess_slate_controller.js"><code>mess_slate_controller.js</code></a> — every value type on the galley slate</li>
+          <li><a href="radio_order_controller.js"><code>radio_order_controller.js</code></a> — the comma list that is not JSON</li>
+          <li>This page's source — Mary Jane, the unnamed relief boat, and the radio slip</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

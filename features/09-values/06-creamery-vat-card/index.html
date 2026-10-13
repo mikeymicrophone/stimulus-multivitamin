@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  Values · 06 · Creamery vat card
+
+  Teaches:
+  - The morning vat uses { type, default }. Missing attributes still
+    return Jersey, 86, ["mesophilic"], and false. has[Name]Value is
+    true for each of them.
+  - spareDegrees is { type: Number } with no default key. The value is
+    0 and hasSpareDegreesValue is still true.
+  - The plain vat uses bare String, Number, Array, and Boolean. The
+    same missing attributes leave has[Name]Value false.
+  - The shorthand vat writes the defaults as literals, including
+    flagged: false. hasFlaggedValue is true with no attribute.
+  - Filing a card whose Number default is the string "12" throws when
+    that controller is registered. The message names "temperature"
+    and not the identifier.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Creamery vat card · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .vats { display: grid; gap: 1rem; }
+      .vat { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .vat h2 { margin: 0; font-size: 1.15rem; }
+      .vat p { margin: 0; }
+      .reading, .mismatch { min-height: 3.5rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import VatCardController from "./vat_card_controller.js"
+      import PlainVatController from "./plain_vat_controller.js"
+      import ShorthandVatController from "./shorthand_vat_controller.js"
+
+      const application = Application.start()
+      application.register("vat-card", VatCardController)
+      application.register("plain-vat", PlainVatController)
+      application.register("shorthand-vat", ShorthandVatController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>06 · Creamery vat card</span>
+      </nav>
+      <h1>Creamery vat card</h1>
+      <p class="lede">
+        Morning make at the Tillamook creamery. Three cards for the
+        same Jersey vat: one with defaults written out, one with bare
+        types, and one that names the defaults directly. None of them
+        has been filled in.
+      </p>
+    </header>
+
+    <main>
+      <div class="vats">
+        <section class="scenario vat" data-controller="vat-card">
+          <h2>Morning vat</h2>
+          <p>Defaults live in the controller: Jersey, 86 degrees, a mesophilic culture, and an unflagged card. Spare degrees name a type and no default.</p>
+          <div class="actions">
+            <button type="button" data-action="vat-card#warmToEightyEight">Warm the vat to 88</button>
+            <button type="button" data-action="vat-card#addThermophilic">Add thermophilic</button>
+            <button type="button" data-action="vat-card#fileMismatchedCard">File the mismatched card</button>
+          </div>
+          <p class="reading" data-vat-card-target="reading" aria-live="polite"></p>
+          <p class="mismatch" data-vat-card-target="mismatch" aria-live="polite">No mismatched card filed.</p>
+        </section>
+
+        <section class="scenario vat" data-controller="plain-vat">
+          <h2>Plain vat</h2>
+          <p>The same blanks, declared as String, Number, Array, and Boolean with no defaults.</p>
+          <p class="reading" data-plain-vat-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario vat" data-controller="shorthand-vat">
+          <h2>Shorthand vat</h2>
+          <p>The defaults are the values themselves, including a flag left false.</p>
+          <p class="reading" data-shorthand-vat-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="vat_card_controller.js"><code>vat_card_controller.js</code></a> — the { type, default } form, and a type with no default</li>
+          <li><a href="plain_vat_controller.js"><code>plain_vat_controller.js</code></a> — the same names as bare types</li>
+          <li><a href="shorthand_vat_controller.js"><code>shorthand_vat_controller.js</code></a> — literal defaults, including false</li>
+          <li><a href="mismatched_vat_controller.js"><code>mismatched_vat_controller.js</code></a> — a Number whose default is the string "12"</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

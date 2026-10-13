@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  Values · 09 · Sail loft bolt ticket
+
+  Teaches:
+  - meshSize and clothName match data-bolt-ticket-mesh-size-value and
+    data-bolt-ticket-cloth-name-value.
+  - The camelCase attributes in the markup are stored lowercased, as
+    meshsize and clothname. They do not match. The values are "" and
+    hasMeshSizeValue is false.
+  - Underscores are not camelized. mesh_size is a different attribute
+    and is ignored. Action parameters do camelize underscores.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Sail loft bolt ticket · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .bolts { display: grid; gap: 0.8rem; max-width: 44rem; }
+      .bolt { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem 0.9rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .bolt h2 { margin: 0; font-size: 1.1rem; }
+      .bolt p { margin: 0; }
+      .reading { min-height: 3rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BoltTicketController from "./bolt_ticket_controller.js"
+
+      const application = Application.start()
+      application.register("bolt-ticket", BoltTicketController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>09 · Sail loft bolt ticket</span>
+      </nav>
+      <h1>Sail loft bolt ticket</h1>
+      <p class="lede">
+        Three bolts of Oceanus cloth on the Port Townsend loft table.
+        One ticket is kebab-case. One was copied with camelCase. One
+        used underscores.
+      </p>
+    </header>
+
+    <main>
+      <div class="bolts">
+        <section
+          class="scenario bolt"
+          data-controller="bolt-ticket"
+          data-bolt-ticket-mesh-size-value="4 in"
+          data-bolt-ticket-cloth-name-value="Oceanus"
+        >
+          <h2 data-bolt-ticket-target="boltName">Kebab bolt</h2>
+          <p>Mesh and cloth are written with hyphens.</p>
+          <p class="reading" data-bolt-ticket-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section
+          class="scenario bolt"
+          data-controller="bolt-ticket"
+          data-bolt-ticket-meshSize-value="4 in"
+          data-bolt-ticket-clothName-value="Oceanus"
+        >
+          <h2 data-bolt-ticket-target="boltName">Camel bolt</h2>
+          <p>The ticket was written the way the controller spells the names.</p>
+          <p class="reading" data-bolt-ticket-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section
+          class="scenario bolt"
+          data-controller="bolt-ticket"
+          data-bolt-ticket-mesh_size-value="4 in"
+          data-bolt-ticket-cloth_name-value="Oceanus"
+        >
+          <h2 data-bolt-ticket-target="boltName">Underscore bolt</h2>
+          <p>The ticket uses underscores between the words.</p>
+          <p class="reading" data-bolt-ticket-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bolt_ticket_controller.js"><code>bolt_ticket_controller.js</code></a> — the kebab-case names, and the two tickets that miss</li>
+          <li>This page's source — three bolts, three spellings of the same cloth</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

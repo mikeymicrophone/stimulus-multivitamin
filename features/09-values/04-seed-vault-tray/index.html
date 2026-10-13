@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Values · 04 · Seed vault tray
+
+  Teaches:
+  - accessions is an Array. The north tray's attribute is a JSON list.
+    A missing attribute reads as [] and hasAccessionsValue is false.
+  - Pushing NSGC-4410 onto the getter's array leaves the attribute
+    unchanged. The next read is the original list.
+  - Assigning a new array writes JSON back to
+    data-vault-tray-accessions-value.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Seed vault tray · Values · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .trays { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+      .tray { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .tray h2 { margin: 0; font-size: 1.15rem; }
+      .tray p { margin: 0; }
+      .reading { min-height: 4rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import VaultTrayController from "./vault_tray_controller.js"
+
+      const application = Application.start()
+      application.register("vault-tray", VaultTrayController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#values">Values</a> /
+        <span>04 · Seed vault tray</span>
+      </nav>
+      <h1>Seed vault tray</h1>
+      <p class="lede">
+        The Fort Collins vault is logging two trays of cereal
+        accessions. The north tray already lists NSGC-1834 and
+        NSGC-2201. The south tray was pulled empty.
+      </p>
+    </header>
+
+    <main>
+      <div class="trays">
+        <section
+          class="scenario tray"
+          data-controller="vault-tray"
+          data-vault-tray-accessions-value='["NSGC-1834","NSGC-2201"]'
+        >
+          <h2 data-vault-tray-target="trayName">North tray</h2>
+          <p>Emmer and einkorn, already in the drawer.</p>
+          <div class="actions">
+            <button type="button" data-action="vault-tray#pushWithoutRecording">Push NSGC-4410 without recording</button>
+            <button type="button" data-action="vault-tray#recordAccession">Record NSGC-4410</button>
+          </div>
+          <p class="reading" data-vault-tray-target="reading" aria-live="polite"></p>
+        </section>
+
+        <section class="scenario tray" data-controller="vault-tray">
+          <h2 data-vault-tray-target="trayName">South tray</h2>
+          <p>The drawer card has no accession list yet.</p>
+          <div class="actions">
+            <button type="button" data-action="vault-tray#pushWithoutRecording">Push NSGC-4410 without recording</button>
+            <button type="button" data-action="vault-tray#recordAccession">Record NSGC-4410</button>
+          </div>
+          <p class="reading" data-vault-tray-target="reading" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="vault_tray_controller.js"><code>vault_tray_controller.js</code></a> — array values, a push that does not stick, and an assignment that writes JSON</li>
+          <li>This page's source — one tray with a JSON list, one tray with none</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
