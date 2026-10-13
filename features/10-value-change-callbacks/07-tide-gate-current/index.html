@@ -1,0 +1,99 @@
+<!doctype html>
+<!--
+  Value change callbacks · 07 · Dosewallips tide gate
+
+  Teaches:
+  - Dosewallips lists current before stage. The first current callback
+    sees the chalked "north". Starting the ebb sets the current inside
+    the stage callback. The getter is already "south" before that
+    callback returns. The current callback is the next line.
+  - Duckabush lists stage before current, and the stage is already ebb.
+    The stage callback writes south before the current callback. The
+    chalked "north" is not in the log. Previous current is "".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Dosewallips tide gate · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .gates { display: grid; gap: 0.75rem; }
+      .gate { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .gate h2 { margin: 0; font-size: 1.1rem; }
+      .gate p { margin: 0; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideGateController from "./tide_gate_controller.js"
+
+      const application = Application.start()
+      application.register("tide-gate", TideGateController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>07 · Dosewallips tide gate</span>
+      </nav>
+      <h1>Dosewallips tide gate</h1>
+      <p class="lede">
+        Two gates on the Hood Canal. Dosewallips is still slack, current
+        north. Duckabush is already on the ebb, but the card still says
+        the current is north.
+      </p>
+    </header>
+
+    <main>
+      <div class="gates">
+        <article
+          class="scenario gate"
+          data-controller="tide-gate"
+          data-tide-gate-place-value="Dosewallips"
+          data-tide-gate-current-value="north"
+          data-tide-gate-stage-value="slack"
+        >
+          <h2>Dosewallips</h2>
+          <p>Slack water, current still north. The current is written on the card ahead of the stage.</p>
+          <div class="actions">
+            <button type="button" data-action="tide-gate#startEbb">Start the ebb</button>
+          </div>
+          <ol class="log" data-tide-gate-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario gate"
+          data-controller="tide-gate"
+          data-tide-gate-place-value="Duckabush"
+          data-tide-gate-stage-value="ebb"
+          data-tide-gate-current-value="north"
+        >
+          <h2>Duckabush</h2>
+          <p>The card was chalked north. The stage is already ebb, and the stage is written ahead of the current.</p>
+          <ol class="log" data-tide-gate-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_gate_controller.js"><code>tide_gate_controller.js</code></a> — the stage callback writes the current</li>
+          <li>This page's source — current-before-stage, and stage-before-current</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

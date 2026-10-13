@@ -88,16 +88,22 @@ if it is per-instance.
 ### Value-changed callbacks re-fire on every reconnect
 
 **What happens.** Moving an element, or removing it and putting the same
-node back, runs `[name]ValueChanged()` again with the same value. The
-callback is not only for writes.
+node back, runs `[name]ValueChanged()` again for every value whose
+attribute is absent. The callback is not only for writes. A value that
+still has its attribute does not run again, unless the text changed
+while the controller was disconnected. The precise rule is
+[Present values do not re-fire on reconnect](#present-values-do-not-re-fire-on-reconnect).
 
 **Why it matters.** A callback that starts a clock, opens a socket, or
-increments a counter will do that on every drag-reorder or filter toggle.
+increments a counter for a defaulted value will do that on every
+drag-reorder or filter toggle. A callback for a value written on the
+element will not.
 
 **What to do.** Make the callback idempotent: starting something that is
 already running is a no-op.
 
-**Seen in:** [Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/).
+**Seen in:** [Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/),
+[Bell buoy ledger](features/10-value-change-callbacks/02-bell-buoy-ledger/).
 
 ### A move is `disconnect()` then `connect()` on the same instance, and `isConnected` is true inside `disconnect()`
 
@@ -1531,6 +1537,243 @@ value and not which controller it was.
 token out of the message; don't expect the identifier there.
 
 **Seen in:** [Creamery vat card](features/09-values/06-creamery-vat-card/).
+
+## Value change callbacks
+
+### The first previousValue is the default when the attribute is present
+
+**What happens.** `[name]ValueChanged(value, previousValue)` runs once
+for every declared value while the controller is connecting, after
+`initialize()` and before target callbacks and `connect()`. When the
+attribute is absent, `previousValue` is `undefined` and `value` is the
+default, including `0`, `false`, `""`, `[]`, and `{}`. When the
+attribute is present, `previousValue` is that same default, parsed, and
+not `undefined`. A staff chalked `0` is `(0, 0)`. A boolean chalked
+`false` is `(false, false)`. A string chalked `"City"` is
+`("City", "")`. An array attribute's previous value is a new `[]`, and
+an object attribute's previous value is a new `{}`. Adding the
+attribute later, after that first call, reports the default as
+`previousValue` again, not `undefined`.
+
+**Why it matters.** `previousValue === undefined` does not mean "this
+is the first paint" once the attribute is on the element. A guard of
+`value === previousValue` skips the first paint of a zero, of `false`,
+and of a blank string that was actually written down. Koitlah's chalked
+zero and Tongue Point's missing height are both 0 feet, and only the
+missing one has `previousValue === undefined`.
+
+**What to do.** Paint from the callback either way. Treat `undefined`
+as "the attribute was absent for this call," and treat an equal
+previous value as "the attribute is present and parses as the default."
+Read the attribute when you need to tell a chalked zero from a missing
+one.
+
+**Seen in:** [Tide staff reading](features/10-value-change-callbacks/01-tide-staff-reading/),
+[Bell buoy ledger](features/10-value-change-callbacks/02-bell-buoy-ledger/),
+[Wharf office chalk](features/10-value-change-callbacks/03-wharf-office-chalk/).
+
+### An empty previous value skips the reader, and removing an empty attribute does not fire
+
+**What happens.** The observer parses `previousValue` only when the raw
+previous string is truthy. `""` is not, so it is handed to the callback
+as the string `""` and not as the typed reading. Changing a blank
+boolean, which reads as true, reports `previousValue` `""`, not `true`.
+A blank number reports `""`, not `0`. Removing an attribute whose text
+is `""` does not run the callback at all. Removing `"0"` does run it,
+with `(0, 0)`, and the attribute is gone. Removing `"false"` or `"white"`
+runs it with the type default as the new value. Assigning `undefined`
+and `removeAttribute` are that same path.
+
+**Why it matters.** A blank lit cell is sounding, because an empty
+boolean attribute is true. Erasing that cell makes the getter false and
+leaves the board saying the lamp is lit. A chalked zero that is cleared
+looks, in the arguments, like a callback that changed nothing.
+
+**What to do.** Don't use an empty attribute as a way to clear a value.
+Assign `undefined`, or remove an attribute that has text, and paint
+from the callback. After a removal, read the getter or the attribute
+before trusting a board that was painted earlier. For the boolean
+reading itself, see
+[An empty Boolean attribute is true](#an-empty-boolean-attribute-is-true).
+
+**Seen in:** [New Dungeness range](features/10-value-change-callbacks/06-range-light-board/).
+
+**Why this section.** The empty string is the attribute. Skipping the
+callback, and skipping the reader, is Stimulus.
+
+### Present values do not re-fire on reconnect
+
+**What happens.** Disconnecting and connecting the same element runs
+`[name]ValueChanged` again only for values whose attribute is absent.
+Each of those calls is `(default, undefined)` again. A value that still
+has its attribute, including an attribute whose text is `""`, does not
+run. If the attribute text changes while the controller is disconnected,
+the next connect does run, and `previousValue` is the default rather
+than `undefined`. `initialize()` does not run again.
+
+**Why it matters.** Laying a pier up, or dragging a row, reconnects the
+controller. A callback that counts connects will count the buoys that
+never had the attribute, and will not count the ones that did. The
+lifecycle note
+[Value-changed callbacks re-fire on every reconnect](#value-changed-callbacks-re-fire-on-every-reconnect)
+is this rule. A present `onAir` value does not run again on a move.
+
+**What to do.** Put a value you need to replay on every connect on the
+element only when you mean it to stay quiet. Make a defaulted callback
+idempotent if the element will move.
+
+**Seen in:** [Bell buoy ledger](features/10-value-change-callbacks/02-bell-buoy-ledger/).
+
+### Present values run in attribute order, then absent ones
+
+**What happens.** During the first pass, callbacks for attributes that
+exist run in the element's attribute order, synchronously, before
+callbacks for absent values. Absent values then run in `static values`
+order, inherited names before the subclass. That whole pass is before
+`[name]TargetConnected` and before `connect()`, which is the order in
+[Callback order is initialize, value-changed, target-connected, then connect](#callback-order-is-initialize-value-changed-target-connected-then-connect).
+Targets are already readable in the value callback. A value assigned
+from a callback before that value's own first visit replaces what the
+first callback sees. The chalked text is never an argument.
+`previousValue` is still the default. A value assigned after it has
+been recorded, including an assignment inside `connect()`, waits for a
+later turn. Other controllers in the same scan can connect before that
+callback runs. See
+[A value's changed callback runs after the method that set the value has returned](#a-values-changed-callback-runs-after-the-method-that-set-the-value-has-returned).
+
+**Why it matters.** Duckabush is already on the ebb, and the card still
+says the current is north, but north is written after the stage. The
+stage callback sets south first, and the current callback never sees
+north. A needle count written ahead of the mesh in the tag logs ahead
+of the mesh, whatever order `static values` uses. A mesh target is
+readable there, even though `meshTargetConnected` has not run.
+
+**What to do.** Do not depend on `static values` order for attributes
+that are in the tag. Put a derived value's attribute before the value
+that overwrites it if the chalked text has to be seen once. Read
+targets from the value callback when they are already in the document.
+Expect a write inside `connect()` to land after `connect()` returns.
+
+**Seen in:** [Cap Sante net loft](features/10-value-change-callbacks/04-net-loft-mending/),
+[Dosewallips tide gate](features/10-value-change-callbacks/07-tide-gate-current/).
+
+### The callback array or object is a new parse
+
+**What happens.** Array and object callbacks receive the result of
+parsing the attribute, and the previous value is parsed again when it
+is passed through. The two are never the same reference, even when both
+are empty. Mutating the array or object the callback received does not
+write the attribute and does not schedule another callback. Mutating
+the array the getter just returned does not either. Assigning a new
+array or object does. Assigning an object that `JSON.stringify`s to the
+same text as the attribute does not, because the attribute string did
+not change. Assigning a number over its own text can: the attribute
+`08` reads as `8`, and assigning `8` writes `"8"`, so the callback runs
+with `(8, 8)`.
+
+**Why it matters.** Dropping cultch on the returned tray list updates
+neither the card nor the board. Filing the same depth and bay looks
+like a save and does not run. Rewriting lot `08` does run, with both
+arguments equal, and the attribute loses the zero. The push that never
+reaches the attribute is
+[Array and Object values reject the other shape](#array-and-object-values-reject-the-other-shape).
+
+**What to do.** Assign a new array or object when the change should be
+seen. Compare array and object values by their text, not with `===`.
+Do not treat equal numbers as "the callback will not run" if the
+attribute text can still change.
+
+**Seen in:** [Totten Inlet nursery](features/10-value-change-callbacks/05-oyster-nursery-card/),
+[Admiralty Inlet board](features/10-value-change-callbacks/13-admiralty-inlet-board/).
+
+### A throw from a value callback skips the rest of the connect scan
+
+**What happens.** Defining `[name]ValueChanged` makes the observer parse
+the attribute before the method runs. Invalid JSON throws `SyntaxError`
+with `JSON.parse`'s message and no Stimulus prefix. JSON of the wrong
+shape throws `TypeError` prefixed `Stimulus Value "identifier.nameValue"`,
+using the value's method name (`readingValue`, not `reading`). The
+method body does not run. `handleError` is not called. On the way in,
+the throw skips the rest of that controller's value callbacks, its
+target callbacks, and `connect()`, and it skips every controller later
+in the same scan. The observer has already started listening. A later
+change still runs. A throw from that later change skips the rest of
+that mutation batch only. It does not stop the observer. That is not
+the target-callback pause in
+[The target observer is paused while the callback runs](#the-target-observer-is-paused-while-the-callback-runs).
+
+**Why it matters.** A hatchery fax of `chowder, pilot bread` connects
+nothing after it, including a tally that has nothing wrong with it.
+The nursery ahead of the fax is fine. Filing `["bay"]` into an object
+value throws the prefixed type error, and filing a real reading
+afterward still paints.
+
+**What to do.** Keep untrusted JSON off a value that has a changed
+callback, or catch at the edge that writes the attribute. Put a card
+that might throw last if a failure must not silence the rest of the
+page. Don't look for these errors in `handleError`.
+
+**Seen in:** [Totten Inlet nursery](features/10-value-change-callbacks/05-oyster-nursery-card/).
+
+### A value callback can schedule another
+
+**What happens.** The value observer is not paused while the callback
+runs. Assigning a different value schedules another callback for a
+later turn. The getter is already the new value before the first
+callback returns. A pair that each write a new number keeps going, one
+callback at a time, until the values stop changing. Nothing in Stimulus
+cuts that off. Assigning the same string does not schedule another
+callback. On the first pass, a write to a value that has not been
+visited yet is the case in
+[Present values run in attribute order, then absent ones](#present-values-run-in-attribute-order-then-absent-ones):
+that value's first callback sees the write, and there is not a second
+one.
+
+**Why it matters.** Slip Point and Waadah Island, each setting the
+other a second longer, will not settle. A stage that sets the current
+only when the getter differs settles. A guard of
+`value === previousValue` does not stop a chase between two different
+numbers, and it also skips the first paint when they are equal.
+
+**What to do.** Assign the derived value only when the getter is not
+already that value. Cap a coupling you do not trust. Debounce work
+that should survive a burst of callbacks, as the Lime Kiln plot does,
+instead of doing it on every strike.
+
+**Seen in:** [Dosewallips tide gate](features/10-value-change-callbacks/07-tide-gate-current/),
+[Coupled fog bells](features/10-value-change-callbacks/08-coupled-fog-bells/),
+[Lime Kiln hydrophone](features/10-value-change-callbacks/09-lime-kiln-hydrophone/),
+[Admiralty Inlet board](features/10-value-change-callbacks/13-admiralty-inlet-board/).
+
+### Restore persisted state in initialize(), before the callback writes it
+
+**What happens.** The first callbacks run before `connect()`, and they
+see the attributes as they are after `initialize()`. A callback that
+writes the query string or `localStorage` will write the markup if
+`initialize()` did not replace it. `connect()` is too late to read the
+saved value: the key or the URL already holds the markup. Setting the
+values in `initialize()` writes the attributes before the observer
+starts, so there is one callback, for the restored value, and
+`previousValue` is the default because the attribute is present. There
+is no callback for the markup that was replaced.
+
+**Why it matters.** A ferry board opened on Kingston with draft 14
+will record draft 12, the markup, if the query is read in `connect()`.
+A keeper's slate opened on Point No Point will store New Dungeness, the
+markup, and then "restore" that. Forgetting a slate has the same shape
+in reverse: the callbacks that run after `undefined` will write the
+defaults back unless they are told not to.
+
+**What to do.** Read the query and `localStorage` in `initialize()`,
+and write them from the callbacks. Skip the write when the URL or the
+key already matches. When the user clears the store, stop the callbacks
+from writing the defaults back. Use `pushState` for a user change and
+`replaceState` for the opening write, so the first paint does not add
+a history entry.
+
+**Seen in:** [Ferry sailing filters](features/10-value-change-callbacks/11-ferry-sailing-filters/),
+[Keeper watch slate](features/10-value-change-callbacks/12-keeper-watch-slate/),
+[Admiralty Inlet board](features/10-value-change-callbacks/13-admiralty-inlet-board/).
 
 ## Running the examples
 

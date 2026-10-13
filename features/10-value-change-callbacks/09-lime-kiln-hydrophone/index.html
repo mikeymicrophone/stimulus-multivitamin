@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+  Value change callbacks · 09 · Lime Kiln hydrophone
+
+  Teaches:
+  - The bearing readout is written in bearingValueChanged, so it
+    tracks every change.
+  - The band plot is debounced. A swing that assigns the bearing
+    three times plots once.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Lime Kiln hydrophone · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .watch { max-width: 40rem; border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .watch h2 { margin: 0; font-size: 1.15rem; }
+      .watch p { margin: 0; }
+      .bearing { font-weight: 600; min-height: 1.5rem; }
+      .plot { min-height: 1.5rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HydrophoneController from "./hydrophone_controller.js"
+
+      const application = Application.start()
+      application.register("hydrophone", HydrophoneController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>09 · Lime Kiln hydrophone</span>
+      </nav>
+      <h1>Lime Kiln hydrophone</h1>
+      <p class="lede">
+        The hydrophone off Lime Kiln Point, San Juan Island. The bearing
+        is cheap to show. Plotting the four bands is the expensive part,
+        so it waits until the head stops moving.
+      </p>
+    </header>
+
+    <main>
+      <article class="scenario watch" data-controller="hydrophone" data-hydrophone-bearing-value="40">
+        <h2>Lime Kiln, bearing 40</h2>
+        <p>Swing steps the head 15 degrees, three times, in one motion.</p>
+        <p class="bearing" data-hydrophone-target="bearing" aria-live="polite"></p>
+        <p class="plot" data-hydrophone-target="plot" aria-live="polite">No plot yet.</p>
+        <div class="actions">
+          <button type="button" data-action="hydrophone#swing">Swing the head</button>
+        </div>
+      </article>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="hydrophone_controller.js"><code>hydrophone_controller.js</code></a> — immediate bearing, debounced bands</li>
+          <li>This page's source — the Lime Kiln watch</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

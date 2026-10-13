@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Value change callbacks · 02 · Bell buoy ledger
+
+  Teaches:
+  - A buoy chalked false gets (false, false) on the first callback.
+  - A buoy with no attribute gets (false, undefined).
+  - A buoy chalked true, and a buoy whose attribute is empty, both
+    get previous false. The empty one is ringing.
+  - Protection Island's guard sees false === false and does not paint.
+  - Laying the pier up reconnects every buoy. Only Smith Island, the
+    one with no attribute, logs a second callback.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Bell buoy ledger · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .ledger { display: grid; gap: 0.8rem; }
+      .pier { display: grid; gap: 0.7rem; min-height: 2rem; }
+      .buoy { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .buoy h2 { margin: 0; font-size: 1.1rem; }
+      .buoy p { margin: 0; }
+      .reading { min-height: 1.5rem; font-weight: 600; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .pier-label { margin: 0; color: var(--muted-ink, #5f6670); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BuoyLedgerController from "./buoy_ledger_controller.js"
+      import BellBuoyController from "./bell_buoy_controller.js"
+
+      const application = Application.start()
+      application.register("buoy-ledger", BuoyLedgerController)
+      application.register("bell-buoy", BellBuoyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>02 · Bell buoy ledger</span>
+      </nav>
+      <h1>Bell buoy ledger</h1>
+      <p class="lede">
+        The aids-to-navigation tender wrote each buoy's bell a different
+        way: false, nothing at all, true, a blank cell, and a slate that
+        refuses to paint when the two arguments match.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario ledger" data-controller="buoy-ledger">
+        <p><button type="button" data-action="buoy-ledger#layUp">Lay the buoys up</button></p>
+        <h2 class="pier-label">Working pier</h2>
+        <div class="pier" data-buoy-ledger-target="working">
+          <article class="buoy" data-controller="bell-buoy" data-bell-buoy-place-value="Partridge Point" data-bell-buoy-sounding-value="false">
+            <h2>Partridge Point</h2>
+            <p>The tender wrote false.</p>
+            <p class="reading" data-bell-buoy-target="reading" aria-live="polite"></p>
+            <ol class="log" data-bell-buoy-target="log"></ol>
+          </article>
+
+          <article class="buoy" data-controller="bell-buoy" data-bell-buoy-place-value="Smith Island">
+            <h2>Smith Island</h2>
+            <p>No sounding was written on the card.</p>
+            <p class="reading" data-bell-buoy-target="reading" aria-live="polite"></p>
+            <ol class="log" data-bell-buoy-target="log"></ol>
+          </article>
+
+          <article class="buoy" data-controller="bell-buoy" data-bell-buoy-place-value="Marrowstone" data-bell-buoy-sounding-value="true">
+            <h2>Marrowstone</h2>
+            <p>The tender wrote true.</p>
+            <p class="reading" data-bell-buoy-target="reading" aria-live="polite"></p>
+            <ol class="log" data-bell-buoy-target="log"></ol>
+          </article>
+
+          <article class="buoy" data-controller="bell-buoy" data-bell-buoy-place-value="Dungeness" data-bell-buoy-sounding-value="">
+            <h2>Dungeness</h2>
+            <p>The sounding cell was left blank.</p>
+            <p class="reading" data-bell-buoy-target="reading" aria-live="polite"></p>
+            <ol class="log" data-bell-buoy-target="log"></ol>
+          </article>
+
+          <article class="buoy" data-controller="bell-buoy" data-bell-buoy-place-value="Protection Island" data-bell-buoy-sounding-value="false" data-bell-buoy-guard-value="true">
+            <h2>Protection Island</h2>
+            <p>This slate will not paint when the new value and the previous value match.</p>
+            <p class="reading" data-bell-buoy-target="reading" aria-live="polite">Paint skipped.</p>
+            <ol class="log" data-bell-buoy-target="log"></ol>
+          </article>
+        </div>
+
+        <h2 class="pier-label">Lay-up pier</h2>
+        <div class="pier" data-buoy-ledger-target="laidUp"></div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bell_buoy_controller.js"><code>bell_buoy_controller.js</code></a> — previous value, the guard, and the second call after a move</li>
+          <li><a href="buoy_ledger_controller.js"><code>buoy_ledger_controller.js</code></a> — shifts the cards onto the lay-up pier</li>
+          <li>This page's source — five buoys, five ways of writing the bell</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

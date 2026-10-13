@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  Value change callbacks · 05 · Totten Inlet nursery
+
+  Teaches:
+  - Variety, salinity, circulating, trays, reading, and lot each run
+    a changed callback. Trays and reading are a new array and a new
+    object, so they are not the same reference as previous.
+  - Pushing cultch, and scribbling the bay, do not run a callback.
+  - Assigning a new list or a new reading does. Assigning the same
+    JSON does not. Rewriting lot 08 runs with (8, 8).
+  - The hatchery fax is not JSON. The callback body never runs.
+    The seed tally after it never connects. handleError stays quiet.
+  - Filing ["bay"] into the reading throws a TypeError that names
+    nursery-card.readingValue. A later assign still paints.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Totten Inlet nursery · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .yard { display: grid; gap: 0.8rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.9rem 1rem; background: #fffdf8; display: grid; gap: 0.5rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .card p { margin: 0; }
+      .summary { min-height: 1.5rem; font-weight: 600; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .fault { white-space: pre-wrap; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import NurseryCardController from "./nursery_card_controller.js"
+      import HatcheryFaxController from "./hatchery_fax_controller.js"
+      import SeedTallyController from "./seed_tally_controller.js"
+
+      const application = Application.start()
+      application.handleError = (error, message) => {
+        document.querySelector("[data-handled]").textContent = `${message} ${error.message}`
+      }
+      window.addEventListener("unhandledrejection", (event) => {
+        const fault = event.reason
+        document.querySelector("[data-fault]").textContent = `${fault.name}: ${fault.message}`
+      })
+      application.register("nursery-card", NurseryCardController)
+      application.register("hatchery-fax", HatcheryFaxController)
+      application.register("seed-tally", SeedTallyController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>05 · Totten Inlet nursery</span>
+      </nav>
+      <h1>Totten Inlet nursery</h1>
+      <p class="lede">
+        Pacific oyster seed at the Totten Inlet nursery. The trays and
+        the depth note are JSON. A fax from the hatchery is a comma list,
+        and the seed tally sits after that fax on the page.
+      </p>
+    </header>
+
+    <main class="yard">
+      <article
+        class="scenario card"
+        data-controller="nursery-card"
+        data-nursery-card-variety-value="Pacific"
+        data-nursery-card-salinity-value="28"
+        data-nursery-card-circulating-value="true"
+        data-nursery-card-trays-value='["seed","spat"]'
+        data-nursery-card-reading-value='{"depth_cm":12,"bay":"A"}'
+        data-nursery-card-lot-value="08"
+      >
+        <h2>Flupsy line 3</h2>
+        <p>Lot 08 is the afternoon set. The depth note keeps depth_cm.</p>
+        <p class="summary" data-nursery-card-target="summary" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" data-action="nursery-card#dropCultch">Drop cultch on the returned list</button>
+          <button type="button" data-action="nursery-card#writeTrays">Write cultch onto the card</button>
+          <button type="button" data-action="nursery-card#scribbleBay">Scribble the bay</button>
+          <button type="button" data-action="nursery-card#fileSameReading">File the same reading</button>
+          <button type="button" data-action="nursery-card#fileBay">File bay B</button>
+          <button type="button" data-action="nursery-card#rewriteLot">Rewrite the lot</button>
+          <button type="button" data-action="nursery-card#fileListAsReading">File a list as the reading</button>
+        </div>
+        <ol class="log" data-nursery-card-target="log"></ol>
+      </article>
+
+      <article class="scenario card" data-controller="hatchery-fax" data-hatchery-fax-menu-value="chowder, pilot bread">
+        <h2>Hatchery fax</h2>
+        <p>The hatchery wrote the shipment as a comma list, not as JSON.</p>
+        <p data-hatchery-fax-target="status">The fax has not connected.</p>
+      </article>
+
+      <article class="scenario card" data-controller="seed-tally">
+        <h2>Seed tally</h2>
+        <p>This card is after the fax in the document.</p>
+        <p data-seed-tally-target="status">The tally has not opened.</p>
+      </article>
+
+      <section class="card">
+        <h2>Faults</h2>
+        <p class="fault" data-fault>No fault yet.</p>
+        <p class="fault" data-handled>Nothing was passed to handleError.</p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="nursery_card_controller.js"><code>nursery_card_controller.js</code></a> — one callback for each value type</li>
+          <li><a href="hatchery_fax_controller.js"><code>hatchery_fax_controller.js</code></a> — the comma list that throws before the callback</li>
+          <li><a href="seed_tally_controller.js"><code>seed_tally_controller.js</code></a> — the card that never connects</li>
+          <li>This page's source — the flupsy, the fax, and the tally</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -31,10 +31,12 @@ studio.
 
 **Stimulus behavior worth knowing**
 
-- Value-changed callbacks run again on every reconnect, not only when the
-  value changes. Each move during a drag calls `onAirValueChanged()` again
-  with the same value, so it has to be idempotent. Here it starts or stops
-  a clock, and both are no-ops when there's nothing to do.
+- `onAir` is present on the track, so a move does not run
+  `onAirValueChanged()` again. The clock keeps running because
+  `disconnect()` sees the element is still connected and returns before
+  it stops the clock. A value with no attribute does run again on every
+  reconnect; that case is the
+  [bell buoy ledger](../../10-value-change-callbacks/02-bell-buoy-ledger/).
 - Value-changed callbacks run before `connect()`. `onAirValueChanged(true)`
   needs the running order to read the start time, but `connect()` hasn't
   run yet. So the track looks the running order up on first use, in a

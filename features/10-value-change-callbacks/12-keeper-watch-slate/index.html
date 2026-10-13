@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Value change callbacks · 12 · Keeper watch slate
+
+  Teaches:
+  - The early slate reads localStorage in initialize(), so the first
+    callbacks store the saved watch.
+  - The late slate's callbacks store the markup first. connect() reads
+    that and reports New Dungeness, not the Point No Point watch that
+    was saved before the page opened.
+  - Forgetting removes the key and the attributes, and the callbacks
+    do not write the defaults back.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Keeper watch slate · Value change callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .slates { display: grid; gap: 0.75rem; }
+      .slate { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .slate h2 { margin: 0; font-size: 1.1rem; }
+      .slate p { margin: 0; }
+      .summary { font-weight: 600; min-height: 1.5rem; }
+      .log { margin: 0; padding-left: 1.2rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import WatchSlateController from "./watch_slate_controller.js"
+      import LateSlateController from "./late_slate_controller.js"
+
+      const application = Application.start()
+      application.register("watch-slate", WatchSlateController)
+      application.register("late-slate", LateSlateController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#value-change-callbacks">Value change callbacks</a> /
+        <span>12 · Keeper watch slate</span>
+      </nav>
+      <h1>Keeper watch slate</h1>
+      <p class="lede">
+        Two slates for the Point No Point and New Dungeness watches.
+        One reads its saved watch before the callbacks run. The other
+        reads it in connect(), after the callbacks have stored the markup.
+      </p>
+    </header>
+
+    <main>
+      <div class="slates">
+        <article
+          class="scenario slate"
+          data-controller="watch-slate"
+          data-watch-slate-station-value="New Dungeness"
+          data-watch-slate-sound-on-value="true"
+          data-watch-slate-bearing-value="90"
+        >
+          <h2>Early slate</h2>
+          <p>The markup says New Dungeness, sound on, bearing 90. A saved watch replaces that in initialize().</p>
+          <p class="summary" data-watch-slate-target="summary" aria-live="polite"></p>
+          <div class="actions">
+            <button type="button" data-action="watch-slate#aimSouth">Aim the bearing south</button>
+            <button type="button" data-action="watch-slate#soundBell">Sound the bell</button>
+            <button type="button" data-action="watch-slate#forgetWatch">Forget the watch</button>
+          </div>
+          <ol class="log" data-watch-slate-target="log"></ol>
+        </article>
+
+        <article
+          class="scenario slate"
+          data-controller="late-slate"
+          data-late-slate-station-value="New Dungeness"
+          data-late-slate-sound-on-value="true"
+          data-late-slate-bearing-value="90"
+        >
+          <h2>Late slate</h2>
+          <p>The same markup. This one stores from the callbacks and reads the key in connect().</p>
+          <p class="summary" data-late-slate-target="summary" aria-live="polite"></p>
+          <ol class="log" data-late-slate-target="log"></ol>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="watch_slate_controller.js"><code>watch_slate_controller.js</code></a> — saved in initialize(), stored from the callbacks</li>
+          <li><a href="late_slate_controller.js"><code>late_slate_controller.js</code></a> — stored from the callbacks, read in connect()</li>
+          <li>This page's source — the two slates</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
