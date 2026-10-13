@@ -59,6 +59,7 @@ export default class extends Controller {
     const direction = Object.prototype.hasOwnProperty.call(tide, "direction") ? tide.direction : "absent"
     const camelHeight = Object.prototype.hasOwnProperty.call(tide, "heightFt") ? "present" : "absent"
     const menu = this.menuValue
+    const menuAttribute = this.element.getAttribute("data-mess-slate-menu-value")
     this.readingTarget.textContent = [
       `Watch ${this.watchNameValue}.`,
       `Boat ${this.boatNameValue}.`,
@@ -73,7 +74,7 @@ export default class extends Controller {
       `Galley open ${this.galleyOpenValue}.`,
       `Galley attribute ${shown(this.element.getAttribute("data-mess-slate-galley-open-value"))}.`,
       `Menu ${menu.length ? menu.join(", ") : "(none)"}.`,
-      `Menu attribute ${shown(this.element.getAttribute("data-mess-slate-menu-value"))}.`,
+      `Menu attribute ${menuAttribute === null ? "absent" : menuAttribute}.`,
       `Tide height_ft ${height}.`,
       `direction ${direction}.`,
       `heightFt ${camelHeight}.`,
