@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  Target callbacks · 05 · Smokehouse racks
+
+  Teaches:
+  - The cold smoke cabinet is a nested smoke-rack. Trout is on the
+    cabinet's tally at open, not on the floor's.
+  - Moving the salmon runs the floor's sideTargetDisconnected and the
+    cabinet's sideTargetConnected. Both chalk totals change. The slip
+    agrees, because the callbacks ran.
+  - The floor does not disconnect. Mackerel stays on the floor.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Smokehouse racks · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .smokehouse { max-width: 40rem; display: grid; gap: 0.7rem; }
+      .rack { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.75rem 0.9rem; background: #fffdf8; display: grid; gap: 0.45rem; }
+      .cabinet { margin-left: 1rem; background: #fff; }
+      .side { margin: 0; }
+      .tally { min-height: 1.4em; margin: 0; font-weight: 600; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import SmokeRackController from "./smoke_rack_controller.js"
+
+      const application = Application.start()
+      application.register("smoke-rack", SmokeRackController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>05 · Smokehouse racks</span>
+      </nav>
+      <h1>Smokehouse racks</h1>
+      <p class="lede">
+        The floor rack is holding salmon and mackerel. The cold smoke
+        cabinet, nested on the same kind of rack, already has the trout.
+        Salmon moves into the cold smoke when the door is open.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario smokehouse rack" data-controller="smoke-rack" data-rack-name="Floor">
+        <h2>Floor rack</h2>
+        <p class="tally" data-smoke-rack-target="tally" aria-live="polite"></p>
+        <p class="side" data-smoke-rack-target="side" data-side-name="Salmon" data-pounds="12">Salmon · 12 lb</p>
+        <p class="side" data-smoke-rack-target="side" data-side-name="Mackerel" data-pounds="4">Mackerel · 4 lb</p>
+        <p>
+          <button type="button" data-action="smoke-rack#moveSalmon">Move the salmon into the cold smoke</button>
+        </p>
+        <section class="rack cabinet" data-controller="smoke-rack" data-rack-name="Cold smoke">
+          <h3>Cold smoke</h3>
+          <p class="tally" data-smoke-rack-target="tally" aria-live="polite"></p>
+          <div data-cabinet-list>
+            <p class="side" data-smoke-rack-target="side" data-side-name="Trout" data-pounds="9">Trout · 9 lb</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="smoke_rack_controller.js"><code>smoke_rack_controller.js</code></a> — adds and subtracts pounds from the side callbacks</li>
+          <li>This page's source — the floor rack and the nested cold smoke cabinet</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

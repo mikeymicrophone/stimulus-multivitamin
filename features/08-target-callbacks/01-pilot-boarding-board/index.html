@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+  Target callbacks · 01 · Pilot boarding board
+
+  Teaches:
+  - Ship targets already on the board run shipTargetConnected after
+    watchNameValueChanged and before connect(). The same order is
+    documented under lifecycle callbacks.
+  - Take the board down removes the identifier. disconnect() runs
+    while shipTargets is empty. shipTargetDisconnected runs after
+    that and still names each ship. The ships stay on the wall.
+  - The transcript element is saved from transcriptTargetConnected,
+    because the getter cannot see it once the identifier is gone.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pilot boarding board · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .station { max-width: 40rem; display: grid; gap: 0.8rem; }
+      .vessel { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.55rem 0.75rem; background: #fffdf8; margin: 0; }
+      .transcript { white-space: pre-wrap; min-height: 8rem; margin: 0; padding: 0.7rem 0.8rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PilotBoardController from "./pilot_board_controller.js"
+
+      const application = Application.start()
+      application.register("pilot-board", PilotBoardController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>01 · Pilot boarding board</span>
+      </nav>
+      <h1>Pilot boarding board</h1>
+      <p class="lede">
+        Morning watch at the pilot station. North Star and Cape Mercy
+        are already chalked. Taking the board down leaves the ships on
+        the wall and shows which callback ran first.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario station" data-controller="pilot-board" data-pilot-board-watch-name-value="Morning">
+        <h2>Morning boarding</h2>
+        <pre class="transcript" data-pilot-board-target="transcript" aria-live="polite"></pre>
+        <article class="vessel" data-pilot-board-target="ship" data-vessel-name="North Star">
+          <h3>North Star</h3>
+          <p>Pilot ladder starboard. Boarding off the breakwater.</p>
+        </article>
+        <article class="vessel" data-pilot-board-target="ship" data-vessel-name="Cape Mercy">
+          <h3>Cape Mercy</h3>
+          <p>Pilot ladder port. Anchored in the fairway.</p>
+        </article>
+        <p>
+          <button type="button" data-action="pilot-board#takeDown">Take the board down</button>
+        </p>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pilot_board_controller.js"><code>pilot_board_controller.js</code></a> — records the callback order and keeps the transcript element</li>
+          <li>This page's source — two ships already chalked, and the morning watch name</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

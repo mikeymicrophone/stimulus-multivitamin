@@ -1,0 +1,92 @@
+<!doctype html>
+<!--
+  Target callbacks · 10 · Letterpress job dockets
+
+  Teaches:
+  - Wedding programs and the seed catalog are numbered from
+    docketTargetConnected. The serial is written into a paragraph
+    that is not a target.
+  - Chasing the form inserts Chapel cards, and that callback inserts
+    Ghost form before it returns. Ghost form is in the tray and stays
+    Unnumbered. The press does not keep inserting dockets.
+  - Deferring an overrun queues one extra docket. That one is numbered,
+    because the insert happens after the callback has returned.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Letterpress job dockets · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .press { max-width: 40rem; display: grid; gap: 0.75rem; }
+      .tray { display: grid; gap: 0.45rem; }
+      .docket { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.55rem 0.75rem; background: #fffdf8; }
+      .docket h3 { margin: 0 0 0.2rem; font-size: 1.05rem; }
+      .docket p { margin: 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .tray-note { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import JobDocketController from "./job_docket_controller.js"
+
+      const application = Application.start()
+      application.register("job-docket", JobDocketController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>10 · Letterpress job dockets</span>
+      </nav>
+      <h1>Letterpress job dockets</h1>
+      <p class="lede">
+        The job tray numbers each docket when it lands. Writing the
+        serial is safe. Inserting another docket from that same moment
+        is how a ghost form ends up in the tray with no number.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario press" data-controller="job-docket">
+        <h2>Job tray</h2>
+        <p class="tray-note" data-job-docket-target="trayNote" aria-live="polite">The tray is numbering dockets as they land.</p>
+        <div class="tray" data-job-docket-target="tray">
+          <article class="docket" data-job-docket-target="docket" data-job-name="Wedding programs">
+            <h3>Wedding programs</h3>
+            <p data-serial>Unnumbered</p>
+          </article>
+          <article class="docket" data-job-docket-target="docket" data-job-name="Seed catalog">
+            <h3>Seed catalog</h3>
+            <p data-serial>Unnumbered</p>
+          </article>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="job-docket#addBroadside">Add the poetry broadside</button>
+          <button type="button" data-action="job-docket#chaseForm">Chase the form</button>
+          <button type="button" data-action="job-docket#deferOverrun">Defer one overrun</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="job_docket_controller.js"><code>job_docket_controller.js</code></a> — stamps serials, and shows an insert the callback never sees</li>
+          <li>This page's source — wedding programs and the seed catalog already in the tray</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

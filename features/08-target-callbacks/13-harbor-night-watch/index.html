@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  Target callbacks · 13 · Harbor night watch
+
+  Teaches:
+  - Mary Jane and Cormorant run vesselTargetConnected before connect().
+    The opening transcript keeps that order. Traffic cloned from the
+    sheet does not open the watch again.
+  - Marking Mary Jane overdue adds a second token. Only the overdue
+    callback runs, and it clips on a blinker. Souls do not change.
+  - Anchoring Cormorant moves her into a nested night-watch. Fairway
+    souls drop and anchorage souls rise. Taking the watch down runs
+    disconnect() with an empty vessel getter, then names each fairway
+    vessel that was still a target, and turns the blinker off.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Harbor night watch · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .watch { max-width: 46rem; display: grid; gap: 0.75rem; }
+      .anchorage { margin-left: 1rem; border: 1px dashed var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.8rem; background: #fff; display: grid; gap: 0.4rem; }
+      .vessel { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.5rem 0.7rem; background: #fffdf8; margin: 0 0 0.4rem; }
+      .vessel h3 { margin: 0; font-size: 1.05rem; }
+      .vessel p { margin: 0.15rem 0 0; }
+      .fairway-list { display: grid; }
+      .tally, .notice, .ticks { min-height: 1.4em; margin: 0; }
+      .tally { font-weight: 600; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .transcript { white-space: pre-wrap; min-height: 8rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+      [data-blinker] { cursor: pointer; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import NightWatchController from "./night_watch_controller.js"
+
+      const application = Application.start()
+      application.register("night-watch", NightWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>13 · Harbor night watch</span>
+      </nav>
+      <h1>Harbor night watch</h1>
+      <p class="lede">
+        Middle watch off the fairway. Mary Jane and Cormorant are
+        already alongside. Ivy Rose and Kittiwake are still on the
+        traffic sheet. The anchorage is its own watch inside this one.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario watch" data-controller="night-watch" data-watch-place="Fairway" data-night-watch-watch-name-value="Middle">
+        <h2>Fairway</h2>
+        <pre class="transcript" data-night-watch-target="transcript" aria-live="polite"></pre>
+        <p class="notice" data-night-watch-target="notice">No traffic logged yet. Ivy Rose and Kittiwake are still on the sheet.</p>
+        <p class="tally" data-night-watch-target="tally" aria-live="polite"></p>
+        <p class="ticks" data-watch-ticks></p>
+        <div class="fairway-list" data-fairway-list>
+          <article class="vessel" data-night-watch-target="vessel" data-vessel-name="Mary Jane" data-souls="4">
+            <h3>Mary Jane</h3>
+            <p>4 souls, alongside.</p>
+            <p data-blinker>No blinker</p>
+          </article>
+          <article class="vessel" data-night-watch-target="vessel" data-vessel-name="Cormorant" data-souls="2">
+            <h3>Cormorant</h3>
+            <p>2 souls, alongside.</p>
+            <p data-blinker>No blinker</p>
+          </article>
+        </div>
+        <section class="anchorage" data-controller="night-watch" data-watch-place="Anchorage">
+          <h3>Anchorage</h3>
+          <p class="tally" data-night-watch-target="tally" aria-live="polite"></p>
+          <p class="ticks" data-watch-ticks></p>
+          <div data-anchorage-list></div>
+        </section>
+        <template data-traffic-sheet>
+          <article class="vessel" data-night-watch-target="vessel" data-vessel-name="Ivy Rose" data-souls="3">
+            <h3>Ivy Rose</h3>
+            <p>3 souls, from the traffic sheet.</p>
+            <p data-blinker>No blinker</p>
+          </article>
+          <article class="vessel" data-night-watch-target="vessel" data-vessel-name="Kittiwake" data-souls="5">
+            <h3>Kittiwake</h3>
+            <p>5 souls, from the traffic sheet.</p>
+            <p data-blinker>No blinker</p>
+          </article>
+        </template>
+        <div class="actions">
+          <button type="button" data-action="night-watch#logTraffic">Log the night traffic</button>
+          <button type="button" data-action="night-watch#markMaryJane">Mark Mary Jane overdue</button>
+          <button type="button" data-action="night-watch#anchorCormorant">Anchor Cormorant</button>
+          <button type="button" data-action="night-watch#takeDown">Take the watch down</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="night_watch_controller.js"><code>night_watch_controller.js</code></a> — souls, overdue blinkers, the anchorage move, and taking the watch down</li>
+          <li><a href="blinker_widget.js"><code>blinker_widget.js</code></a> — the lamp clipped onto an overdue vessel</li>
+          <li>This page's source — two vessels alongside, two still on the traffic sheet, and the nested anchorage</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

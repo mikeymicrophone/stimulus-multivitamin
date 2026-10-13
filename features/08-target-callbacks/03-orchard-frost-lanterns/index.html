@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  Target callbacks · 03 · Orchard frost lanterns
+
+  Teaches:
+  - Northern Spy is a lantern target in the markup, so it joins the
+    circuit from lanternTargetConnected.
+  - Wiring Gravenstein or Ashmead's Kernel sets the target attribute
+    on the row that is already there. The tree name stays.
+  - Unwiring removes that attribute and runs lanternTargetDisconnected.
+    The watch does not open a second time.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Orchard frost lanterns · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .orchard { max-width: 42rem; display: grid; gap: 0.75rem; }
+      .rows { display: grid; gap: 0.5rem; }
+      .lantern { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.6rem 0.75rem; background: #fffdf8; display: grid; gap: 0.35rem; }
+      .lantern h3 { margin: 0; font-size: 1.05rem; }
+      .lantern p { margin: 0; }
+      .row-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .circuit-list, .openings { min-height: 1.4em; margin: 0; font-weight: 600; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FrostWatchController from "./frost_watch_controller.js"
+
+      const application = Application.start()
+      application.register("frost-watch", FrostWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>03 · Orchard frost lanterns</span>
+      </nav>
+      <h1>Orchard frost lanterns</h1>
+      <p class="lede">
+        Three rows at the cider orchard, one kerosene lantern each.
+        Northern Spy is already clipped to the frost circuit. The other
+        two hang in the trees until someone wires them.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario orchard" data-controller="frost-watch">
+        <h2>Lower block, clear night</h2>
+        <p class="openings" data-frost-watch-target="openings" aria-live="polite"></p>
+        <p class="circuit-list" data-frost-watch-target="circuitList" aria-live="polite"></p>
+        <div class="rows">
+          <article class="lantern" data-lantern-name="Gravenstein">
+            <h3>Gravenstein</h3>
+            <p>The lantern is still in the Gravenstein row.</p>
+            <div class="row-actions">
+              <button type="button" data-action="frost-watch#wire">Wire the Gravenstein lantern</button>
+              <button type="button" data-action="frost-watch#unwire">Unwire the Gravenstein lantern</button>
+            </div>
+          </article>
+          <article class="lantern" data-lantern-name="Ashmead's Kernel">
+            <h3>Ashmead's Kernel</h3>
+            <p>The lantern is still in the Ashmead's Kernel row.</p>
+            <div class="row-actions">
+              <button type="button" data-action="frost-watch#wire">Wire the Ashmead's Kernel lantern</button>
+              <button type="button" data-action="frost-watch#unwire">Unwire the Ashmead's Kernel lantern</button>
+            </div>
+          </article>
+          <article class="lantern" data-lantern-name="Northern Spy" data-frost-watch-target="lantern">
+            <h3>Northern Spy</h3>
+            <p>The lantern is still in the Northern Spy row.</p>
+            <div class="row-actions">
+              <button type="button" data-action="frost-watch#wire">Wire the Northern Spy lantern</button>
+              <button type="button" data-action="frost-watch#unwire">Unwire the Northern Spy lantern</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="frost_watch_controller.js"><code>frost_watch_controller.js</code></a> — counts the circuit from the lantern callbacks</li>
+          <li>This page's source — three rows, one of them already a lantern target</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

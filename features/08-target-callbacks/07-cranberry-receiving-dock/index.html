@@ -1,0 +1,92 @@
+<!doctype html>
+<!--
+  Target callbacks · 07 · Cranberry receiving dock
+
+  Teaches:
+  - Scarlet Knight is a berry target at open. The standard-box
+    blueprint is a template, so Crimson Queen is not a berry yet.
+  - Tipping a tote appends a fragment. A late truck uses
+    insertAdjacentHTML. Reprinting the slip uses innerHTML. Stamping
+    a standard box clones the template. Each action writes a notice
+    after the nodes are in the getter and before the ledger stamps.
+  - Reprinting disconnects the old berries first. A berry that was
+    inside the morning tote still has that tote as its parent. A berry
+    that was a direct child does not. Both have left the document.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Cranberry receiving dock · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .dock { max-width: 44rem; display: grid; gap: 0.7rem; }
+      .slip { display: grid; gap: 0.35rem; min-height: 2rem; }
+      .slip p { margin: 0; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.65rem; background: #fffdf8; }
+      .slip [data-tote-name] { border: 1px dashed var(--rule, #ddd); border-radius: 8px; padding: 0.45rem; display: grid; gap: 0.35rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .notice, .openings { min-height: 1.4em; margin: 0; }
+      .ledger { white-space: pre-wrap; min-height: 8rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ReceivingDockController from "./receiving_dock_controller.js"
+
+      const application = Application.start()
+      application.register("receiving-dock", ReceivingDockController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>07 · Cranberry receiving dock</span>
+      </nav>
+      <h1>Cranberry receiving dock</h1>
+      <p class="lede">
+        Scarlet Knight is already on the slip. A morning tote, a late
+        truck, a reprinted slip, and a standard box from the blueprint
+        all arrive as berries after the action has written its line.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario dock" data-controller="receiving-dock">
+        <h2>Weigh shed</h2>
+        <p class="openings" data-receiving-dock-target="openings" aria-live="polite"></p>
+        <p class="notice" data-receiving-dock-target="notice" aria-live="polite">No intake yet. Crimson Queen is still in the blueprint.</p>
+        <div class="slip" data-receiving-dock-target="slip">
+          <p data-receiving-dock-target="berry" data-variety="Scarlet Knight" data-packed="loose">Scarlet Knight · loose</p>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="receiving-dock#tipTote">Tip the morning tote</button>
+          <button type="button" data-action="receiving-dock#lateTruck">Log the late truck</button>
+          <button type="button" data-action="receiving-dock#reprintSlip">Reprint the slip</button>
+          <button type="button" data-action="receiving-dock#stampStandardBox">Stamp a standard box</button>
+        </div>
+        <template data-receiving-dock-target="boxBlueprint">
+          <p data-receiving-dock-target="berry" data-variety="Crimson Queen" data-packed="standard box">Crimson Queen · standard box</p>
+        </template>
+        <pre class="ledger" data-receiving-dock-target="ledger" aria-live="polite"></pre>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="receiving_dock_controller.js"><code>receiving_dock_controller.js</code></a> — four ways onto the slip, and a note for each berry callback</li>
+          <li>This page's source — Scarlet Knight on the slip, and Crimson Queen in the blueprint</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

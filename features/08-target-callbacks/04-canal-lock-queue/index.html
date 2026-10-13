@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  Target callbacks · 04 · Canal lock queue
+
+  Teaches:
+  - Moving the sand barge earlier disconnects and reconnects that boat.
+    The lock's connect count stays 1. The disconnected callback already
+    sees the boat inside this lock.
+  - Laying by the grain barge disconnects it and does not connect it
+    here again. It has left this lock and is still on the page.
+  - Shifting the whole lock runs disconnect(), then each boat
+    disconnected, then each boat connected, then connect() again.
+    initialize stays a single line. Each boat's passage count goes up.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Canal lock queue · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .canal { display: grid; gap: 1rem; }
+      .pier { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.8rem; background: #fffdf8; display: grid; gap: 0.6rem; }
+      .chamber { display: grid; gap: 0.55rem; }
+      .boat { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1rem; align-items: center; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.45rem 0.7rem; background: #fff; }
+      .boat h3 { margin: 0; font-size: 1rem; }
+      .passage { margin: 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .lock-log { white-space: pre-wrap; min-height: 6rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+      .lay-by { min-height: 2.5rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import LockQueueController from "./lock_queue_controller.js"
+
+      const application = Application.start()
+      application.register("lock-queue", LockQueueController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>04 · Canal lock queue</span>
+      </nav>
+      <h1>Canal lock queue</h1>
+      <p class="lede">
+        Three boats in the upper chamber. Reordering one, laying one by,
+        and shifting the whole lock to the lower pier are three different
+        kinds of move.
+      </p>
+    </header>
+
+    <main>
+      <div class="scenario canal" data-canal>
+        <div class="pier" data-upper-pier>
+          <h2>Upper pier</h2>
+          <section class="chamber" data-controller="lock-queue">
+            <div class="boat" data-lock-queue-target="boat" data-boat-name="Grain barge">
+              <h3>Grain barge</h3>
+              <p class="passage" data-passage-count>Passages through a callback: 0</p>
+              <button type="button" data-action="lock-queue#moveEarlier">Move the grain barge earlier</button>
+            </div>
+            <div class="boat" data-lock-queue-target="boat" data-boat-name="Sand barge">
+              <h3>Sand barge</h3>
+              <p class="passage" data-passage-count>Passages through a callback: 0</p>
+              <button type="button" data-action="lock-queue#moveEarlier">Move the sand barge earlier</button>
+            </div>
+            <div class="boat" data-lock-queue-target="boat" data-boat-name="Empty butty">
+              <h3>Empty butty</h3>
+              <p class="passage" data-passage-count>Passages through a callback: 0</p>
+              <button type="button" data-action="lock-queue#moveEarlier">Move the empty butty earlier</button>
+            </div>
+            <div class="actions">
+              <button type="button" data-action="lock-queue#layByGrain">Lay by the grain barge</button>
+              <button type="button" data-action="lock-queue#shiftLock">Shift the lock to the lower pier</button>
+            </div>
+            <pre class="lock-log" data-lock-log aria-live="polite"></pre>
+          </section>
+          <div class="lay-by" data-lay-by>
+            <h3>Lay-by</h3>
+          </div>
+        </div>
+        <div class="pier" data-lower-pier>
+          <h2>Lower pier</h2>
+        </div>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="lock_queue_controller.js"><code>lock_queue_controller.js</code></a> — notes every boat callback and each lock connection</li>
+          <li>This page's source — the chamber, the lay-by, and the lower pier</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

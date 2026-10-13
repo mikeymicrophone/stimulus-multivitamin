@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  Target callbacks · 11 · Municipal compost scale
+
+  Teaches:
+  - Parks crew and Market crew each add their tons and a reweigh
+    listener from truckTargetConnected.
+  - Voiding Parks crew removes the truck. The tons drop by 2 and the
+    listener is gone. Ghost reweighs stay 0.
+  - Replacing the slip disconnects both remaining callbacks' trucks
+    before School kitchens connects. The chalk ends at 3 tons and one
+    listener, and that listener can reweigh.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Municipal compost scale · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .shed { max-width: 40rem; display: grid; gap: 0.75rem; }
+      .scale { display: grid; gap: 0.5rem; }
+      .truck { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.55rem 0.75rem; background: #fffdf8; display: grid; gap: 0.3rem; }
+      .truck h3 { margin: 0; font-size: 1.05rem; }
+      .truck p { margin: 0; }
+      .tally, .last-reweigh { min-height: 1.4em; margin: 0; }
+      .tally { font-weight: 600; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .tape { white-space: pre-wrap; min-height: 6rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import CompostScaleController from "./compost_scale_controller.js"
+
+      const application = Application.start()
+      application.register("compost-scale", CompostScaleController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>11 · Municipal compost scale</span>
+      </nav>
+      <h1>Municipal compost scale</h1>
+      <p class="lede">
+        Parks crew and Market crew are on this morning's slip. Each
+        truck keeps its own reweigh button. Voiding a crew or replacing
+        the slip has to take the tons and the button with it.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario shed" data-controller="compost-scale">
+        <h2>Transfer shed</h2>
+        <p class="tally" data-compost-scale-target="tally" aria-live="polite"></p>
+        <p class="last-reweigh" data-compost-scale-target="lastReweigh">No reweigh yet.</p>
+        <div class="scale" data-compost-scale-target="scale">
+          <article class="truck" data-compost-scale-target="truck" data-crew-name="Parks crew" data-tons="2">
+            <h3>Parks crew</h3>
+            <p>2 tons of leaf carts.</p>
+            <button type="button" data-reweigh>Reweigh Parks crew</button>
+          </article>
+          <article class="truck" data-compost-scale-target="truck" data-crew-name="Market crew" data-tons="1">
+            <h3>Market crew</h3>
+            <p>1 ton of crate waste.</p>
+            <button type="button" data-reweigh>Reweigh Market crew</button>
+          </article>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="compost-scale#voidParks">Void the parks crew</button>
+          <button type="button" data-action="compost-scale#replaceSlip">Replace the day's slip</button>
+        </div>
+        <pre class="tape" data-compost-scale-target="tape" aria-live="polite"></pre>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="compost_scale_controller.js"><code>compost_scale_controller.js</code></a> — tons and reweigh listeners, attached and removed per truck</li>
+          <li>This page's source — Parks crew and Market crew on the morning slip</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

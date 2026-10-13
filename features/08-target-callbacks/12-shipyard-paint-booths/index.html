@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Target callbacks · 12 · Shipyard paint booths
+
+  Teaches:
+  - Tender, June, and Ellen start as yard hulls. Ellen is sitting in
+    the bay, and the bay is not a controller yet.
+  - Opening the booth makes the bay a paint-booth. Ellen's connected
+    callback runs there. The yard never hears a disconnected callback,
+    so its chalk still includes her 2 gallons. The yard slip does not.
+  - Rolling June in does fire both callbacks. Recount copies the slip
+    back onto the chalk.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Shipyard paint booths · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .yard { max-width: 44rem; display: grid; gap: 0.7rem; }
+      .bay { margin-left: 1rem; border: 1px dashed var(--rule, #ddd); border-radius: 10px; padding: 0.7rem 0.8rem; display: grid; gap: 0.4rem; background: #fff; }
+      .hull { margin: 0; }
+      .chalk-line, .slip-line { min-height: 1.4em; margin: 0; font-weight: 600; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PaintBoothController from "./paint_booth_controller.js"
+
+      const application = Application.start()
+      application.register("paint-booth", PaintBoothController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>12 · Shipyard paint booths</span>
+      </nav>
+      <h1>Shipyard paint booths</h1>
+      <p class="lede">
+        The yard is painting a launch tender, the trawler June, and the
+        skiff Ellen. Ellen is already sitting in the spray booth. The
+        booth is not its own controller until someone opens it.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario yard" data-controller="paint-booth" data-booth-name="Yard">
+        <h2>Yard</h2>
+        <p class="chalk-line" data-paint-booth-target="chalkLine" aria-live="polite"></p>
+        <p class="slip-line" data-paint-booth-target="slipLine">Yard slip: not read yet.</p>
+        <div data-hull-list>
+          <p class="hull" data-paint-booth-target="hull" data-hull-name="Tender" data-gallons="1">Launch tender · 1 gal</p>
+          <p class="hull" data-paint-booth-target="hull" data-hull-name="June" data-gallons="6">Trawler June · 6 gal</p>
+        </div>
+        <div class="bay" data-paint-bay data-booth-name="Spray booth">
+          <h3>Spray booth</h3>
+          <p class="chalk-line" data-paint-booth-target="chalkLine">Spray booth chalk is quiet.</p>
+          <p class="slip-line" data-paint-booth-target="slipLine">Spray booth slip: not read yet.</p>
+          <div data-hull-list>
+            <p class="hull" data-paint-booth-target="hull" data-hull-name="Ellen" data-gallons="2">Skiff Ellen · 2 gal</p>
+          </div>
+          <button type="button" data-action="paint-booth#readSlip">Read the booth slip</button>
+          <button type="button" data-action="paint-booth#recount">Recount the booth</button>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="paint-booth#openBooth">Open the booth</button>
+          <button type="button" data-action="paint-booth#rollJune">Roll June into the booth</button>
+          <button type="button" data-action="paint-booth#readSlip">Read the yard slip</button>
+          <button type="button" data-action="paint-booth#recount">Recount the yard</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="paint_booth_controller.js"><code>paint_booth_controller.js</code></a> — chalk from callbacks, slip from the getter, recount when those disagree</li>
+          <li>This page's source — Ellen already in the bay, June and the tender still in the yard</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  Target callbacks · 02 · Tool library wall
+
+  Teaches:
+  - The brace drill and the drawknife are targets at open, so
+    toolTargetConnected stamps them before connect().
+  - Checking in another tool runs toolTargetConnected again and does
+    not run connect() again. Opens stays 1.
+  - The check-in action writes "Callback has run: no" and leaves that
+    sentence up. The tool's own stamp is what the callback writes.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Tool library wall · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .library { max-width: 40rem; display: grid; gap: 0.75rem; }
+      .wall { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
+      .wall li { display: flex; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.5rem 0.7rem; background: #fffdf8; }
+      .check-in { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+      .check-in label { display: grid; gap: 0.15rem; font-weight: 600; }
+      .openings, .status, .callback-log { min-height: 1.4em; margin: 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ToolWallController from "./tool_wall_controller.js"
+
+      const application = Application.start()
+      application.register("tool-wall", ToolWallController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>02 · Tool library wall</span>
+      </nav>
+      <h1>Tool library wall</h1>
+      <p class="lede">
+        The church-basement tool library opens with a brace drill and a
+        drawknife already on the pegs. Anything checked in after that
+        is stamped by the same callback, without opening the wall again.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario library" data-controller="tool-wall">
+        <h2>Saturday pegboard</h2>
+        <p class="openings" data-tool-wall-target="openings" aria-live="polite"></p>
+        <p class="status" data-tool-wall-target="status" aria-live="polite"></p>
+        <p class="callback-log" data-tool-wall-target="callbackLog"></p>
+        <ul class="wall" data-tool-wall-target="wall">
+          <li data-tool-wall-target="tool" data-tool-name="Brace drill">
+            <span>Brace drill</span>
+            <span data-tool-stamp>waiting for the callback</span>
+          </li>
+          <li data-tool-wall-target="tool" data-tool-name="Drawknife">
+            <span>Drawknife</span>
+            <span data-tool-stamp>waiting for the callback</span>
+          </li>
+        </ul>
+        <div class="check-in">
+          <label>
+            Tool to hang
+            <input type="text" value="Post hole digger" data-tool-wall-target="toolName" autocomplete="off">
+          </label>
+          <button type="button" data-action="tool-wall#checkIn">Check in the tool</button>
+        </div>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tool_wall_controller.js"><code>tool_wall_controller.js</code></a> — stamps tools from the callback, and counts openings from connect</li>
+          <li>This page's source — two tools on the pegs, and the check-in field</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
