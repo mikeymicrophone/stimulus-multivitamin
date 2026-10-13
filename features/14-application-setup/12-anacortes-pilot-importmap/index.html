@@ -5,8 +5,12 @@
   Teaches:
   - window.Stimulus is a convention. The library does not
     set it. A classic script that runs during parse does
-    not see it yet. DOMContentLoaded does, because module
-    scripts finish first.
+    not see it yet.
+  - The module assigns window.Stimulus, then awaits the
+    controller imports. DOMContentLoaded and the load
+    event both run during that await. The handle is
+    visible and the controller list is still empty.
+    register runs when the imports resolve, after load.
   - Controller files are import-map specifiers. The scan
     turns controllers/pilot_order_controller into the
     identifier pilot-order and dynamic-imports it.
@@ -56,6 +60,9 @@
         tape.textContent = prior ? `${prior} ${identifier} registered.` : `${identifier} registered.`
       })
 
+      document.getElementById("settled-window").textContent =
+        `Imports finished. Controllers ${application.controllers.length}.`
+
       document.getElementById("post-slips").addEventListener("click", () => {
         const floor = document.getElementById("slip-floor")
         for (const berth of ["north", "south"]) {
@@ -84,6 +91,12 @@
           ? `Station window sees ${station.element.tagName}. Controllers ${station.controllers.length}.`
           : "Still missing."
       })
+      window.addEventListener("load", () => {
+        const station = window.Stimulus
+        document.getElementById("load-window").textContent = station
+          ? `Load event sees ${station.element.tagName}. Controllers ${station.controllers.length}.`
+          : "Still missing at load."
+      })
     </script>
     <header class="masthead">
       <nav class="breadcrumbs">
@@ -104,6 +117,8 @@
       <div id="pilot-station" class="board">
         <p id="early-window" class="card reading">Early window has not been read.</p>
         <p id="ready-window" class="card reading">Ready window has not been read.</p>
+        <p id="load-window" class="card reading">Load window has not been read.</p>
+        <p id="settled-window" class="card reading">Imports have not finished.</p>
         <p id="registration-tape" class="card reading">Registration tape is empty.</p>
 
         <article class="card" data-controller="station-log">

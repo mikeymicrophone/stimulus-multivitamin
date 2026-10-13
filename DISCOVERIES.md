@@ -3155,8 +3155,17 @@ work in `connect`.
 
 **What happens.** Stimulus does not assign `window.Stimulus`.
 A classic script runs during parse, before deferred modules,
-so the property is missing. `DOMContentLoaded` runs after
-the module, so the assignment is visible.
+so the property is missing.
+
+The module assigns `window.Stimulus`, then `await`s
+`import()` of the controller files. That top-level await
+does not hold the document open. `DOMContentLoaded` and the
+window `load` event both run while the module is suspended.
+The handle is already there. `application.controllers` is
+still empty, because `register` has not run. When the
+imports resolve, `register` connects the elements that were
+already in the document. On the Anacortes page that count
+is 2, and it happens after `load`.
 
 An import-map specifier `controllers/pilot_order_controller`
 is the identifier `pilot-order`. `import(specifier)` is
@@ -3167,15 +3176,18 @@ identifier. Two elements inserted together can both pass a
 A pending set lets the second one wait.
 
 **Why it matters.** The Anacortes early window does not see
-Stimulus. The ready window does, with two controllers.
+Stimulus. The ready window and the load window see the
+handle with 0 controllers. The settled line, written after
+the await, reads "Imports finished. Controllers 2."
 `late-slip` is not imported until the slips exist. Both
 slips connect once, and the tape records one registration.
 
 **What to do.** Assign `window.Stimulus` yourself if other
-scripts need it. Read it from `DOMContentLoaded` or from a
-module, not from a classic script mid-parse. Guard lazy
-`import()` with a pending set, not only with
-`application.router.modules`.
+scripts need it. Do not read `application.controllers` from
+`DOMContentLoaded` or from `load` when registration sits
+behind a top-level `await`. Read the list after that
+await, from the module. Guard lazy `import()` with a
+pending set, not only with `application.router.modules`.
 
 **Seen in:** [Anacortes pilot importmap](features/14-application-setup/12-anacortes-pilot-importmap/).
 

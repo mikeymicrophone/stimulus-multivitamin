@@ -35,7 +35,7 @@ Official reference: <https://stimulus.hotwired.dev/handbook/installing>
 | 09 | `application.debug` and a custom logger. Same-turn timing. `?debug=0`. A logger that throws after the action method |
 | 10 | Two applications whose roots overlap, so one click runs twice. A third schema that only changes `controllerAttribute` |
 | 11 | Renamed controller, action, and target attributes. `keyMappings` added versus replaced. Target callbacks ignore the renamed attribute |
-| 12 | `window.Stimulus` is not set by the library. Import-map specifiers become identifiers. A pending set so two new elements register once |
+| 12 | `window.Stimulus` is not set by the library. `DOMContentLoaded` and `load` run during the top-level `await`, before `register`. Import-map specifiers become identifiers. A pending set so two new elements register once |
 | 13 | Duplicate `register`, `shouldLoad: false` does not unload, two `Application.start()` calls versus `start()` on the same instance, a quoted identifier, case, and a repeated token |
 
 Planned titles are proposals, not commitments. See

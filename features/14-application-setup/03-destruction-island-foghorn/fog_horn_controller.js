@@ -24,7 +24,7 @@ export default class extends Controller {
   }
 
   sound() {
-    this.readingTarget.textContent = `${this.element.id === "spare-horn" ? "Spare" : "Horn"} sounded.`
+    this.readingTarget.textContent = this.element.id === "spare-horn" ? "Spare horn sounded." : "Horn sounded."
   }
 
   static afterLoad(identifier, application) {
