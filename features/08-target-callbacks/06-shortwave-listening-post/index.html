@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  Target callbacks · 06 · Shortwave listening post
+
+  Teaches:
+  - WWV is a station. NDB BN is a station and a beacon. Both callbacks
+    run, beacon after station, because that is the token order.
+  - Marking WWV adds a trailing beacon token and runs only
+    beaconTargetConnected. Clearing NDB BN's trailing beacon runs only
+    beaconTargetDisconnected.
+  - Swapping WWV's chalk changes the first token, so station and beacon
+    both disconnect and both connect again. The counts end where they
+    started for that card.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Shortwave listening post · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .post { max-width: 44rem; display: grid; gap: 0.75rem; }
+      .frequency { border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.6rem 0.75rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .frequency h3 { margin: 0; font-size: 1.05rem; }
+      .frequency-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .counts { min-height: 1.4em; margin: 0; font-weight: 600; }
+      .tape { white-space: pre-wrap; min-height: 8rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ListeningPostController from "./listening_post_controller.js"
+
+      const application = Application.start()
+      application.register("listening-post", ListeningPostController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>06 · Shortwave listening post</span>
+      </nav>
+      <h1>Shortwave listening post</h1>
+      <p class="lede">
+        A kitchen-table listening post. WWV is logged as a station.
+        The marine beacon NDB BN is logged as both a station and a
+        beacon. The chalk on the card is the target attribute.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario post" data-controller="listening-post">
+        <h2>Evening log</h2>
+        <p class="counts" data-listening-post-target="counts" aria-live="polite"></p>
+        <article class="frequency" data-frequency-name="WWV" data-listening-post-target="station">
+          <h3>WWV</h3>
+          <p>Fort Collins time signal, 10 MHz.</p>
+          <div class="frequency-actions">
+            <button type="button" data-action="listening-post#markBeacon">Mark WWV as a beacon</button>
+            <button type="button" data-action="listening-post#swapChalk">Swap the WWV chalk</button>
+          </div>
+        </article>
+        <article class="frequency" data-frequency-name="NDB BN" data-listening-post-target="station beacon">
+          <h3>NDB BN</h3>
+          <p>Marine beacon, copied under the time signal.</p>
+          <div class="frequency-actions">
+            <button type="button" data-action="listening-post#clearTrailingBeacon">Clear the trailing beacon on NDB BN</button>
+            <button type="button" data-action="listening-post#markBeacon">Mark NDB BN as a beacon</button>
+          </div>
+        </article>
+        <pre class="tape" data-listening-post-target="tape" aria-live="polite"></pre>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="listening_post_controller.js"><code>listening_post_controller.js</code></a> — keeps a station list and a beacon list from the two callbacks</li>
+          <li>This page's source — WWV with one token, NDB BN with two</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -29,7 +29,9 @@ gone.
 `connect()` (or from the action that started the work), in instance
 properties.
 
-**Seen in:** [Recipe card collection](features/01-controllers/05-recipe-card-collection/).
+**Seen in:** [Recipe card collection](features/01-controllers/05-recipe-card-collection/),
+[Pilot boarding board](features/08-target-callbacks/01-pilot-boarding-board/),
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
 
 ### Action params turn all-digit strings into numbers
 
@@ -79,7 +81,9 @@ on first use, in a getter, and keep the reference. Tear targets down in
 if it is per-instance.
 
 **Seen in:** [Infinite-scroll product feed](features/02-lifecycle-callbacks/05-infinite-scroll-product-feed/),
-[Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/).
+[Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/),
+[Pilot boarding board](features/08-target-callbacks/01-pilot-boarding-board/),
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
 
 ### Value-changed callbacks re-fire on every reconnect
 
@@ -112,7 +116,8 @@ you also remove the identifier from `data-controller` (that case is
 If the identifier might be removed while the element stays put, also
 check `this.element.matches('[data-controller~="…"]')`.
 
-**Seen in:** [Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/).
+**Seen in:** [Reordered playlist that survives moves](features/02-lifecycle-callbacks/13-reordered-playlist-that-survives-moves/),
+[Canal lock queue](features/08-target-callbacks/04-canal-lock-queue/).
 
 **Why this section.** The element staying in the document is the DOM;
 the surprise is that Stimulus still runs `disconnect()` then `connect()`
@@ -1096,6 +1101,178 @@ Treat `hidden` as a visual state. The plural list is the whole rack.
 query, so a covered lantern is still a piece. The same split is why
 [hidden elements keep their actions](#hidden-elements-keep-their-actions).
 
+## Target callbacks
+
+### After `disconnect()`, each target callback still receives its element
+
+**What happens.** The way-out order is the one in
+[Callback order is initialize, value-changed, target-connected, then connect](#callback-order-is-initialize-value-changed-target-connected-then-connect):
+`disconnect()` first, then each `[name]TargetDisconnected(element)`.
+Removing the identifier empties the getters inside `disconnect()`, as in
+[Targets vanish in `disconnect()` after the identifier is removed](#targets-vanish-in-disconnect-after-the-identifier-is-removed).
+The disconnected callback still runs after that and is given the
+element, which is still in the document and still carries the target
+attribute. Moving the controller element runs that way-out pair and
+then the way-in pair on the same instance: `disconnect()` while the
+getters still work (see
+[A move is `disconnect()` then `connect()` on the same instance](#a-move-is-disconnect-then-connect-on-the-same-instance-and-isconnected-is-true-inside-disconnect)),
+each target disconnected, each target connected, then `connect()`.
+`initialize()` does not run again.
+
+**Why it matters.** A transcript written from `this.transcriptTarget`
+while the board is being taken down has nowhere to go: the getter is
+empty, and the ships are still on the wall. The disconnected callback
+is what can still name them. Shifting a lock to another pier also
+rebuilds anything a boat callback allocated, because those callbacks
+run again around the second `connect()`.
+
+**What to do.** Save, from the connected callback, any element you must
+write after the identifier is gone. Release per-target resources in the
+disconnected callback, using the element argument. Expect a move of the
+controller element to run every target callback twice.
+
+**Seen in:** [Pilot boarding board](features/08-target-callbacks/01-pilot-boarding-board/),
+[Canal lock queue](features/08-target-callbacks/04-canal-lock-queue/),
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
+
+### Moving a target inside its controller fires disconnected, then connected
+
+**What happens.** Reordering a target, or moving it to another parent
+that is still inside the same controller, runs
+`[name]TargetDisconnected` and then `[name]TargetConnected`. The
+controller's own `connect()` and `disconnect()` do not run. During the
+disconnected callback the node is already in its new place,
+`isConnected` is true, and `closest()` still finds this controller.
+Moving the target outside the controller runs only the disconnected
+callback. `closest()` no longer matches, even though the node is still
+in the document. Moving it into a nested controller with the same
+identifier is the outside case for the outer controller and the inside
+case for the inner one: outer disconnected, then inner connected.
+
+**Why it matters.** A passage count incremented in the connected
+callback goes up when a boat changes places in the queue. A widget
+created there is destroyed and built again. Skipping teardown because
+`isConnected` is true also skips the lay-by, because that boat is still
+on the page.
+
+**What to do.** Detach in the disconnected callback and attach in the
+connected callback. Keep durable state on the element when a move
+should not reset it. Decide "still in this controller" with `closest()`,
+not with `isConnected`.
+
+**Seen in:** [Canal lock queue](features/08-target-callbacks/04-canal-lock-queue/),
+[Smokehouse racks](features/08-target-callbacks/05-smokehouse-racks/),
+[Buoy tender charts](features/08-target-callbacks/08-buoy-tender-charts/).
+
+### A target token can change without removing the element
+
+**What happens.** Setting the target attribute on an element that is
+already in the tree runs the connected callback. Removing the
+attribute, or removing one token, runs the disconnected callback for
+the names that left. The element stays put, and the controller does not
+reconnect. Tokens are compared by index. Adding or removing a token at
+the end notifies only that name. The first index that differs is
+unmatched and then rematched, along with every token after it.
+Rewriting `station beacon` as `beacon station` disconnects and
+reconnects both names, even though the card still has both.
+
+**Why it matters.** Wiring a lantern that is already hanging is a new
+target and not a new element. Reordering the chalk on a listening card
+tears down and rebuilds every name from the first token that moved.
+Clearing a beacon that sits in front, by writing the attribute back as
+only `station`, restarts the station too.
+
+**What to do.** Add and remove tokens at the end when the other names
+should stay quiet. Treat a reorder as a restart of every name from the
+first change. Setting the attribute to the value it already has does
+not notify.
+
+**Seen in:** [Orchard frost lanterns](features/08-target-callbacks/03-orchard-frost-lanterns/),
+[Shortwave listening post](features/08-target-callbacks/06-shortwave-listening-post/).
+
+### A nested same-identifier controller does not disconnect outer targets unless the element moves
+
+**What happens.** The getter drops a target as soon as a nested element
+with the same identifier is its closest controller. That re-check is
+[A nested controller with the same identifier is a scope boundary](#a-nested-controller-with-the-same-identifier-is-a-scope-boundary-re-checked-on-every-read).
+The callbacks do not follow it unless the target node itself is added,
+removed, or retokened. Setting `data-controller` on a bay that already
+contains a hull runs the connected callback on the new booth and does
+not run the disconnected callback on the yard. Moving a side into a
+cabinet that is already a controller does run the outer disconnected
+callback and the inner connected callback.
+
+**Why it matters.** A chalk total kept only in callbacks still includes
+the hull, and the booth's own callback includes it too. The gallons are
+counted twice. A slip that reads the getter does not include it.
+
+**What to do.** Move the nodes when you open the nested controller, or
+recount from the getter after you add the identifier. Do not expect the
+outer disconnected callback to notice a scope change that did not touch
+the target.
+
+**Seen in:** [Smokehouse racks](features/08-target-callbacks/05-smokehouse-racks/),
+[Shipyard paint booths](features/08-target-callbacks/12-shipyard-paint-booths/).
+
+### In one mutation the getter already shows the finished tree
+
+**What happens.** Appending a document fragment, assigning `innerHTML`,
+calling `insertAdjacentHTML`, and appending a cloned `<template>` each
+deliver their target callbacks in one mutation-observer turn, after the
+method that changed the DOM has finished writing. The getter is already
+current on the next line, as in
+[Target getters query the DOM when you read them](#target-getters-query-the-dom-when-you-read-them),
+and the callbacks are batched after that write, as in
+[Lifecycle callbacks are batched after the DOM change](#lifecycle-callbacks-are-batched-after-the-dom-change).
+Inside the turn, callbacks run one element at a time. `innerHTML`
+unmatches every removed target before it matches the added ones, in
+tree order. On the first disconnected callback of a reprint, the plural
+getter is already the new list.
+
+**Why it matters.** A weighmaster who clears the chalk and copies the
+board on the first erasure copies the new ticket, and the connected
+callbacks then add it again. A notice written in the action can still
+say the ledger had not stamped the new berries; the ledger stamps them
+after that sentence is already on the page.
+
+**What to do.** Add and subtract the element the callback was given.
+Read the getter when you want the finished list, once, not from inside
+every callback of the same mutation. Nodes in a template stay out of
+that list until the clone is appended; see
+[Nodes inside a `<template>` are not targets](#nodes-inside-a-template-are-not-targets).
+
+**Seen in:** [Cranberry receiving dock](features/08-target-callbacks/07-cranberry-receiving-dock/),
+[Grain elevator ledger](features/08-target-callbacks/09-grain-elevator-ledger/),
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
+
+### The target observer is paused while the callback runs
+
+**What happens.** Stimulus disconnects the mutation observer before
+calling `[name]TargetConnected` or `[name]TargetDisconnected`, and
+starts it again afterward without scanning the tree. A target inserted
+or removed synchronously inside the callback does not get its own
+callback. The node is in the document, and the getter sees it.
+`queueMicrotask` runs after the observer is listening again, so a
+target inserted there does get a callback. A callback that always
+defers another insert does not stop. If the callback throws, the
+observer is never restarted. The error is uncaught:
+`application.handleError` does not see it. Later targets in that batch
+are skipped. If the throw happens while the controller is connecting,
+`connect()` never runs, and targets added afterward are silent.
+
+**Why it matters.** Writing a serial into a docket is safe, because
+that paragraph is not a target. Inserting the next docket from the
+callback looks like it should number that one too, and it does not,
+which is also why the tray does not fill itself. A throw looks like a
+one-time failure and quietly disables every later target callback.
+
+**What to do.** Change text, classes, and non-target nodes from the
+callback. Insert or remove targets from the action, or from a microtask
+you mean to run once. Catch inside the callback if the work can fail.
+Do not rely on `handleError` for these callbacks.
+
+**Seen in:** [Letterpress job dockets](features/08-target-callbacks/10-letterpress-job-dockets/).
+
 ## Running the examples
 
 ### `npx serve` without a trailing slash breaks relative imports
@@ -1150,7 +1327,9 @@ reporting that after a clone that was never appended.
 should show it. Then read `guestTargets`.
 
 **Seen in:** [Rehearsal dinner seating](features/07-targets/06-rehearsal-dinner-seating/),
-[Orchestra seating chart](features/07-targets/13-orchestra-seating-chart/).
+[Orchestra seating chart](features/07-targets/13-orchestra-seating-chart/),
+[Cranberry receiving dock](features/08-target-callbacks/07-cranberry-receiving-dock/),
+[Harbor night watch](features/08-target-callbacks/13-harbor-night-watch/).
 
 **Why this section.** Skipping template contents is the HTML parsing
 rules. Stimulus inherits it by querying the live document.
@@ -1550,3 +1729,27 @@ listening.
 **Why this section.** `addEventListener` ignoring a spent signal is the
 platform; the usual victim is a controller that aborts in `disconnect()`
 and listens again in `connect()`.
+
+### A child of a removed node can still have `parentElement`
+
+**What happens.** Replacing an element's `innerHTML` detaches its
+children. A node that was a direct child has `parentElement === null`.
+A node that was inside one of those children is still parented by that
+child. `isConnected` is false either way. The removed wrapper is a
+document fragment's worth of nodes, not a signal that the inner node
+is still on the page.
+
+**Why it matters.** `berryTargetDisconnected` runs for both shapes.
+Checking `parentElement` to mean "still on the dock" treats a berry in
+the morning tote as still packed somewhere on the slip. The tote is
+only still its parent; the tote itself has left the document.
+
+**What to do.** Use `isConnected` to ask whether the node is in the
+document. Read `parentElement` when you want the detached fragment it
+is still in.
+
+**Seen in:** [Cranberry receiving dock](features/08-target-callbacks/07-cranberry-receiving-dock/).
+
+**Why this section.** `parentElement` surviving on descendants is the
+DOM. The disconnected callback is what hands you the node after the
+slip was replaced.

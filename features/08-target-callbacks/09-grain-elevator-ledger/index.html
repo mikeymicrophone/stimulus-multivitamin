@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  Target callbacks · 09 · Grain elevator ledger
+
+  Teaches:
+  - Each load adds its own bushels in loadTargetConnected and
+    subtracts them in loadTargetDisconnected. The chalk tally is that
+    running sum.
+  - On open, the board already lists both loads while the first
+    callback has only chalked the hard red. Reprinting the ticket
+    does this again: the first erasure already sees rye and malting
+    barley on the board.
+  - Checking in soft white is one new load, so the board and the chalk
+    agree on that line. The reprinted ticket ends at 720 either way
+    the chalk walks it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Grain elevator ledger · Target callbacks · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .elevator { max-width: 44rem; display: grid; gap: 0.7rem; }
+      .pit { display: grid; gap: 0.35rem; }
+      .pit p { margin: 0; border: 1px solid var(--rule, #ddd); border-radius: 8px; padding: 0.4rem 0.65rem; background: #fffdf8; }
+      .tally { min-height: 1.4em; margin: 0; font-weight: 600; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .tape { white-space: pre-wrap; min-height: 10rem; margin: 0; padding: 0.6rem 0.7rem; border-radius: 8px; background: #fff; border: 1px solid var(--rule, #ddd); }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import ElevatorLedgerController from "./elevator_ledger_controller.js"
+
+      const application = Application.start()
+      application.register("elevator-ledger", ElevatorLedgerController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#target-callbacks">Target callbacks</a> /
+        <span>09 · Grain elevator ledger</span>
+      </nav>
+      <h1>Grain elevator ledger</h1>
+      <p class="lede">
+        The weighmaster's chalk adds each load as it is connected and
+        subtracts it when it leaves. The board on the wall is the live
+        list, and during a reprint it is already the new ticket while
+        the chalk is still erasing the old one.
+      </p>
+    </header>
+
+    <main>
+      <section class="scenario elevator" data-controller="elevator-ledger">
+        <h2>Track scale</h2>
+        <p class="tally" data-elevator-ledger-target="tally" aria-live="polite"></p>
+        <div class="pit" data-elevator-ledger-target="pit">
+          <p data-elevator-ledger-target="load" data-grain-name="Hard red winter" data-bushels="800">Hard red winter · 800 bu</p>
+          <p data-elevator-ledger-target="load" data-grain-name="Durum" data-bushels="450">Durum · 450 bu</p>
+        </div>
+        <div class="actions">
+          <button type="button" data-action="elevator-ledger#checkInSoftWhite">Check in the soft white</button>
+          <button type="button" data-action="elevator-ledger#reprintTicket">Reprint the ticket</button>
+        </div>
+        <pre class="tape" data-elevator-ledger-target="tape" aria-live="polite"></pre>
+      </section>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="elevator_ledger_controller.js"><code>elevator_ledger_controller.js</code></a> — chalks bushels from the load it was given, and reads the board for the tape</li>
+          <li>This page's source — hard red winter and durum already on the pit</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
