@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  Error handling · 06 · Sekiu pilot orders
+
+  Teaches:
+  - Three actions on one button run in order. The middle
+    throw is caught. The third action still runs.
+  - A descriptor whose method does not exist throws when
+    the event fires, not when the page is parsed. The
+    report is Error invoking action, and error.message
+    says the method is undefined.
+  - The harbor clock is a separate controller and still
+    advances.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Sekiu pilot orders · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PilotOrderController from "./pilot_order_controller.js"
+      import HarborClockController from "./harbor_clock_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message) => {
+        handled.push(`${message} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+      }
+
+      application.register("pilot-order", PilotOrderController)
+      application.register("harbor-clock", HarborClockController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>06 · Sekiu pilot orders</span>
+      </nav>
+      <h1>Sekiu pilot orders</h1>
+      <p class="lede">
+        Filing an order for the Sekiu jams the winch in the middle
+        action. The deck stamp after it still runs. A horn method
+        that was never written is reported when the button is clicked.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Handled</h2>
+          <p id="handled" class="reading">No handled error.</p>
+        </section>
+
+        <article id="pilot-order" class="card" data-controller="pilot-order">
+          <h2>Pilot order</h2>
+          <p id="order-reading" class="reading" data-pilot-order-target="order">Order is waiting.</p>
+          <p id="deck-reading" class="reading" data-pilot-order-target="deck">Deck is waiting.</p>
+          <div class="actions">
+            <button type="button" id="file-order" data-action="pilot-order#fileOrder pilot-order#jamWinch pilot-order#stampDeck">File the Sekiu order</button>
+            <button type="button" id="sound-missing" data-action="pilot-order#soundMissing">Sound the missing horn</button>
+          </div>
+        </article>
+
+        <article id="harbor-clock" class="card" data-controller="harbor-clock">
+          <h2>Harbor clock</h2>
+          <p id="clock-reading" class="reading" data-harbor-clock-target="reading">Clock is waiting.</p>
+          <div class="actions">
+            <button type="button" id="tick-clock" data-action="harbor-clock#advance">Advance the clock</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pilot_order_controller.js"><code>pilot_order_controller.js</code></a> — file, jam, stamp</li>
+          <li><a href="harbor_clock_controller.js"><code>harbor_clock_controller.js</code></a> — the clock</li>
+          <li>This page's source — the missing horn descriptor</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

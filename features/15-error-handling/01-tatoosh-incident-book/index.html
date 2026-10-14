@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  Error handling · 01 · Tatoosh incident book
+
+  Teaches:
+  - application.handleError(error, message, detail) replaces the
+    default. This page files each report in the watch-office book
+    and does not call the default method.
+  - message is Stimulus's string, Error invoking action
+    "click->tide-staff#postReading". error.message is the sentence
+    the action threw.
+  - detail.identifier is tide-staff. detail.element is the staff
+    article, not the button. detail.controller is the live instance.
+  - Replacing the method skips window.onerror and the error event.
+    The bell watch still rings.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Tatoosh incident book · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import TideStaffController from "./tide_staff_controller.js"
+      import BellWatchController from "./bell_watch_controller.js"
+
+      const application = Application.start()
+      let onerrorCalls = 0
+      let errorEvents = 0
+      const incidents = []
+
+      window.onerror = () => {
+        onerrorCalls += 1
+        document.getElementById("onerror-note").textContent = `Onerror calls ${onerrorCalls}.`
+        return true
+      }
+      window.addEventListener("error", () => {
+        errorEvents += 1
+        document.getElementById("error-note").textContent = `Error events ${errorEvents}.`
+      })
+
+      application.handleError = (error, message, detail) => {
+        const elementId = detail.element && detail.element.id
+        const instance = detail.controller && detail.controller.identifier
+        incidents.push(
+          `${message} | ${detail.identifier} | ${elementId} | ${error.message} | instance ${instance}`
+        )
+        document.getElementById("incident-book").textContent = incidents.join("\n")
+        document.getElementById("incident-count").textContent = `Incidents ${incidents.length}.`
+      }
+
+      application.register("tide-staff", TideStaffController)
+      application.register("bell-watch", BellWatchController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>01 · Tatoosh incident book</span>
+      </nav>
+      <h1>Tatoosh incident book</h1>
+      <p class="lede">
+        The watch office at Tatoosh files Stimulus errors in a book
+        instead of the browser console. A foul tide-staff reading is
+        the incident. The bell watch beside it keeps ringing.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Incident book</h2>
+          <p id="incident-book" class="reading">No incidents filed.</p>
+          <p id="incident-count" class="reading">Incidents 0.</p>
+          <p id="onerror-note" class="reading">Onerror calls 0.</p>
+          <p id="error-note" class="reading">Error events 0.</p>
+        </section>
+
+        <article id="tide-staff" class="card" data-controller="tide-staff">
+          <h2>Tide staff</h2>
+          <p id="staff-reading" class="reading" data-tide-staff-target="reading">Staff is waiting.</p>
+          <div class="actions">
+            <button type="button" id="post-foul" data-action="tide-staff#postReading">Post a foul reading</button>
+          </div>
+        </article>
+
+        <article id="bell-watch" class="card" data-controller="bell-watch">
+          <h2>Bell watch</h2>
+          <p id="bell-reading" class="reading" data-bell-watch-target="reading">Bell is waiting.</p>
+          <div class="actions">
+            <button type="button" id="ring-bell" data-action="bell-watch#ring">Ring the bell</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="tide_staff_controller.js"><code>tide_staff_controller.js</code></a> — the foul reading</li>
+          <li><a href="bell_watch_controller.js"><code>bell_watch_controller.js</code></a> — the bell that keeps ringing</li>
+          <li>This page's source — <code>application.handleError</code> as the incident book</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

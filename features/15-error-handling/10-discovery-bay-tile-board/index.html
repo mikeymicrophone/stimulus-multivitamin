@@ -1,0 +1,127 @@
+<!doctype html>
+<!--
+  Error handling · 10 · Discovery Bay tile board
+
+  Teaches:
+  - handleError can set faultValue on detail.controller.
+    faultValueChanged shows fallback markup and adds the
+    offline class. The other tiles keep working.
+  - An action can catch a failure and set the same value.
+    That path does not call handleError. It dispatches
+    bay-tile:caught for the clerk.
+  - Clearing faultValue removes the class and shows the
+    live reading again.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Discovery Bay tile board · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .tile-offline { background: #f8e6dc; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import BayTileController from "./bay_tile_controller.js"
+      import ClerkController from "./clerk_controller.js"
+
+      const application = Application.start()
+      let handled = 0
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message, detail) => {
+        const tile = detail.controller
+        if (tile && typeof tile.faultValue === "string") {
+          tile.faultValue = error.message
+        }
+        handled += 1
+        const kind = tile && tile.kindValue ? tile.kindValue : detail.identifier
+        document.getElementById("clerk-handled").textContent = `Handled ${kind}. ${message}`
+        document.getElementById("handled-count").textContent = `Handled ${handled}.`
+      }
+
+      application.register("bay-tile", BayTileController)
+      application.register("tile-clerk", ClerkController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>10 · Discovery Bay tile board</span>
+      </nav>
+      <h1>Discovery Bay tile board</h1>
+      <p class="lede">
+        Tide, wind, and barometer tiles on the Discovery Bay shed.
+        A thrown sensor fault and a caught blank reading both end
+        on the offline class. The other tiles stay live.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section id="tile-clerk" class="card" data-controller="tile-clerk" data-action="bay-tile:caught@window->tile-clerk#record">
+          <h2>Shed clerk</h2>
+          <p id="clerk-handled" class="reading">No handled fault.</p>
+          <p id="handled-count" class="reading">Handled 0.</p>
+          <p id="clerk-caught" class="reading" data-tile-clerk-target="caught">No caught fault.</p>
+        </section>
+
+        <div class="tiles">
+          <article id="tide-tile" class="card" data-controller="bay-tile" data-bay-tile-kind-value="Tide" data-bay-tile-reading-value="6.4 ft" data-bay-tile-offline-class="tile-offline">
+            <h2>Tide</h2>
+            <p id="tide-live" class="reading" data-bay-tile-target="live">Tide waiting.</p>
+            <p id="tide-fallback" class="reading" data-bay-tile-target="fallback" hidden>Tide fallback.</p>
+            <div class="actions">
+              <button type="button" id="fault-tide" data-action="bay-tile#failSensor">Trip the tide sensor</button>
+              <button type="button" id="retry-tide" data-action="bay-tile#retry">Retry the tide</button>
+            </div>
+          </article>
+
+          <article id="wind-tile" class="card" data-controller="bay-tile" data-bay-tile-kind-value="Wind" data-bay-tile-reading-value="12 kn" data-bay-tile-offline-class="tile-offline">
+            <h2>Wind</h2>
+            <p id="wind-live" class="reading" data-bay-tile-target="live">Wind waiting.</p>
+            <p id="wind-fallback" class="reading" data-bay-tile-target="fallback" hidden>Wind fallback.</p>
+            <div class="actions">
+              <button type="button" id="step-wind" data-action="bay-tile#stepWind">Step the wind</button>
+            </div>
+          </article>
+
+          <article id="baro-tile" class="card" data-controller="bay-tile" data-bay-tile-kind-value="Barometer" data-bay-tile-reading-value="30.12 in" data-bay-tile-offline-class="tile-offline">
+            <h2>Barometer</h2>
+            <p id="baro-live" class="reading" data-bay-tile-target="live">Barometer waiting.</p>
+            <p id="baro-fallback" class="reading" data-bay-tile-target="fallback" hidden>Barometer fallback.</p>
+            <div class="actions">
+              <button type="button" id="blank-baro" data-action="bay-tile#readBlank">Read a blank sensor</button>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="bay_tile_controller.js"><code>bay_tile_controller.js</code></a> — fault value, offline class, fallback</li>
+          <li><a href="clerk_controller.js"><code>clerk_controller.js</code></a> — the caught-fault note</li>
+          <li>This page's source — <code>handleError</code> writing <code>faultValue</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  Error handling · 02 · Mukilteo fare banner
+
+  Teaches:
+  - handleError can show a traveler-facing banner and a
+    separate clerk note from the same report.
+  - The banner does not include the stack or the action
+    string. The clerk note keeps message, identifier, and
+    error.message.
+  - Dismissing the banner does not clear the clerk note.
+  - The departure clock is a different controller and still
+    advances.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Mukilteo fare banner · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 46rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .banner { margin: 0; padding: 0.6rem 0.75rem; border-radius: 8px; background: #f3d6c4; color: #3d2218; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import FareWindowController from "./fare_window_controller.js"
+      import DepartureClockController from "./departure_clock_controller.js"
+
+      const application = Application.start()
+      const notes = []
+
+      application.handleError = (error, message, detail) => {
+        const banner = document.getElementById("fare-banner")
+        banner.hidden = false
+        banner.textContent = "The fare window hit a snag. The boarding count was not changed."
+        notes.push(`${message} | ${detail.identifier} | ${error.message}`)
+        document.getElementById("clerk-log").textContent = notes.join("\n")
+        document.getElementById("clerk-count").textContent = `Clerk notes ${notes.length}.`
+      }
+
+      document.getElementById("dismiss-banner").addEventListener("click", () => {
+        const banner = document.getElementById("fare-banner")
+        banner.hidden = true
+        banner.textContent = ""
+      })
+
+      application.register("fare-window", FareWindowController)
+      application.register("departure-clock", DepartureClockController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>02 · Mukilteo fare banner</span>
+      </nav>
+      <h1>Mukilteo fare banner</h1>
+      <p class="lede">
+        A void card at the Mukilteo toll booth throws inside the fare
+        window. Travelers see a banner. The clerk's log keeps the
+        Stimulus report. The departure clock still advances.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <p id="fare-banner" class="banner" hidden></p>
+
+        <article id="fare-window" class="card" data-controller="fare-window">
+          <h2>Fare window</h2>
+          <p id="fare-reading" class="reading" data-fare-window-target="reading">Window is waiting.</p>
+          <p id="boarding-tally" class="reading" data-fare-window-target="tally">Boarded 0.</p>
+          <div class="actions">
+            <button type="button" id="charge-void" data-action="fare-window#chargeVoid">Charge the void card</button>
+          </div>
+        </article>
+
+        <section class="card">
+          <h2>Clerk log</h2>
+          <p id="clerk-log" class="reading">No clerk note.</p>
+          <p id="clerk-count" class="reading">Clerk notes 0.</p>
+          <div class="actions">
+            <button type="button" id="dismiss-banner">Dismiss the banner</button>
+          </div>
+        </section>
+
+        <article id="departure-clock" class="card" data-controller="departure-clock">
+          <h2>Departure clock</h2>
+          <p id="clock-reading" class="reading" data-departure-clock-target="reading">Clock is waiting.</p>
+          <div class="actions">
+            <button type="button" id="advance-clock" data-action="departure-clock#advance">Advance the clock</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="fare_window_controller.js"><code>fare_window_controller.js</code></a> — the void card</li>
+          <li><a href="departure_clock_controller.js"><code>departure_clock_controller.js</code></a> — the clock</li>
+          <li>This page's source — the banner and the clerk log</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

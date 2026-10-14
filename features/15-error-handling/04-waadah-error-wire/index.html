@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+  Error handling · 04 · Waadah error wire
+
+  Teaches:
+  - A synchronous action throw calls window.onerror with
+    the Stimulus message, an empty source, and line 0.
+    addEventListener("error") does not run.
+    unhandledrejection does not run.
+  - An async action's rejection is only unhandledrejection.
+    handleError does not see it. See the actions discovery
+    linked from the scenario README.
+  - A listener that is not a Stimulus action is a normal
+    browser error: window.onerror gets a page source and a
+    real line, and the error event runs. handleError does
+    not.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Waadah error wire · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import HornWireController from "./horn_wire_controller.js"
+
+      const application = Application.start()
+      const propertyLines = []
+      const eventLines = []
+      const rejectionLines = []
+      let handled = 0
+
+      const paint = () => {
+        document.getElementById("property-wire").textContent = propertyLines.length ? propertyLines.join("\n") : "No onerror call."
+        document.getElementById("event-wire").textContent = eventLines.length ? eventLines.join("\n") : "No error event."
+        document.getElementById("rejection-wire").textContent = rejectionLines.length ? rejectionLines.join("\n") : "No rejection."
+        document.getElementById("handled-count").textContent = `Handled ${handled}.`
+      }
+
+      window.onerror = (message, source, lineno, colno, error) => {
+        const sourceLabel = source ? "page" : "empty"
+        propertyLines.push(`onerror ${message} | ${sourceLabel} | ${lineno} | ${colno} | ${error && error.message}`)
+        paint()
+        return true
+      }
+      window.addEventListener("error", (event) => {
+        eventLines.push(`event ${event.message}`)
+        paint()
+      })
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason
+        rejectionLines.push(`rejection ${reason instanceof Error ? reason.message : String(reason)}`)
+        paint()
+      })
+
+      const defaultHandleError = application.handleError.bind(application)
+      application.logger = {
+        log() {},
+        warn() {},
+        groupCollapsed() {},
+        groupEnd() {},
+        error() {}
+      }
+      application.handleError = (error, message, detail) => {
+        handled += 1
+        paint()
+        defaultHandleError(error, message, detail)
+      }
+
+      document.getElementById("strike-raw").addEventListener("click", () => {
+        throw new Error("raw bell cracked")
+      })
+
+      application.register("horn-wire", HornWireController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>04 · Waadah error wire</span>
+      </nav>
+      <h1>Waadah error wire</h1>
+      <p class="lede">
+        Three wires at Waadah Island: the <code>window.onerror</code>
+        property, an <code>error</code> listener, and
+        <code>unhandledrejection</code>. A Stimulus throw, an async
+        action, and a raw listener each light a different set.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Wires</h2>
+          <p id="property-wire" class="reading">No onerror call.</p>
+          <p id="event-wire" class="reading">No error event.</p>
+          <p id="rejection-wire" class="reading">No rejection.</p>
+          <p id="handled-count" class="reading">Handled 0.</p>
+        </section>
+
+        <article id="horn-wire" class="card" data-controller="horn-wire">
+          <h2>Horn wire</h2>
+          <p id="horn-reading" class="reading" data-horn-wire-target="reading">Horn is waiting.</p>
+          <div class="actions">
+            <button type="button" id="sound-horn" data-action="horn-wire#sound">Sound the horn</button>
+            <button type="button" id="fetch-tide" data-action="horn-wire#fetchTide">Fetch the tide</button>
+            <button type="button" id="strike-raw">Strike the raw bell</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="horn_wire_controller.js"><code>horn_wire_controller.js</code></a> — the horn and the tide fetch</li>
+          <li>This page's source — the three wires and the raw bell</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

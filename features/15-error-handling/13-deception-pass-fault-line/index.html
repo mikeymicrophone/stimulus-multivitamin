@@ -1,0 +1,258 @@
+<!doctype html>
+<!--
+  Error handling · 13 · Deception Pass fault line
+
+  Teaches:
+  - A throw from handleError leaves the action listener.
+    Later actions on that listener do not run. The error
+    event is the reporter's error. window.onerror is the
+    browser's call, with a page source, not Stimulus's
+    empty-source call.
+  - logger.error throwing inside the default method does
+    the same. Stimulus never reaches its window.onerror
+    call. The slate action has already written.
+  - async initialize() rejects, connect() still runs, and
+    the next controller connects. async disconnect()
+    rejects after the observers have stopped.
+  - :prevent and :stop are omitted from the action string,
+    so both messages match. They are different listeners,
+    so both run. detail.index is 0 and 1.
+  - A thrown string has no message field.
+  - If handleError throws from initialize(), the context
+    is not connected and the next controller in that
+    scan does not connect.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Deception Pass fault line · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 50rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import PassGateController from "./pass_gate_controller.js"
+      import PassBellController from "./pass_bell_controller.js"
+      import AsyncInitController from "./async_init_controller.js"
+      import GateBookController from "./gate_book_controller.js"
+      import LateInitController from "./late_init_controller.js"
+      import LateNextController from "./late_next_controller.js"
+
+      const application = Application.start()
+      const defaultHandleError = application.handleError.bind(application)
+      const handled = []
+      const faults = []
+      const rejections = []
+      const onerrorLines = []
+      let mode = "record"
+      let loggerThrowsOnce = false
+      let stimulusShaped = 0
+      let browserShaped = 0
+
+      const paint = () => {
+        document.getElementById("handled").textContent = handled.length ? handled.join("\n") : "No handled error."
+        document.getElementById("faults").textContent = faults.length ? faults.join("\n") : "No fault."
+        document.getElementById("rejections").textContent = rejections.length ? rejections.join("\n") : "No rejection."
+        document.getElementById("onerror-lines").textContent = onerrorLines.length ? onerrorLines.join("\n") : "No onerror call."
+        document.getElementById("shape-count").textContent = `Stimulus-shaped ${stimulusShaped}. Browser-shaped ${browserShaped}.`
+      }
+
+      application.logger = {
+        log() {},
+        warn() {},
+        groupCollapsed() {},
+        groupEnd() {},
+        error() {
+          if (loggerThrowsOnce) {
+            loggerThrowsOnce = false
+            throw new Error("tape snapped")
+          }
+        }
+      }
+
+      application.handleError = (error, message, detail) => {
+        if (mode === "reporter-throws") {
+          mode = "record"
+          throw new Error("reporter jammed")
+        }
+        if (mode === "init-jam" && message === "Error initializing controller") {
+          mode = "record"
+          throw new Error("init reporter jammed")
+        }
+        if (mode === "use-default-once") {
+          mode = "record"
+          defaultHandleError(error, message, detail)
+          return
+        }
+        const reported = error instanceof Error ? error.message : String(error)
+        const messageField = error instanceof Error ? error.message : "undefined"
+        const index = detail && Object.prototype.hasOwnProperty.call(detail, "index") ? detail.index : "none"
+        handled.push(`${message} | index ${index} | reported ${reported}. message field ${messageField}.`)
+        paint()
+      }
+
+      window.onerror = (message, source, lineno) => {
+        const shaped = source === "" && lineno === 0 && String(message).startsWith("Error ")
+        if (shaped) stimulusShaped += 1
+        else browserShaped += 1
+        onerrorLines.push(`onerror ${message} | ${source ? "page" : "empty"} | ${lineno}`)
+        paint()
+        return true
+      }
+      window.addEventListener("error", (event) => {
+        const text = event.error && event.error.message ? event.error.message : event.message
+        faults.push(text)
+        paint()
+      })
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason
+        rejections.push(reason instanceof Error ? reason.message : String(reason))
+        paint()
+      })
+
+      document.getElementById("arm-reporter").addEventListener("click", () => {
+        mode = "reporter-throws"
+        document.getElementById("arm-note").textContent = "Reporter will throw."
+      })
+      document.getElementById("arm-logger").addEventListener("click", () => {
+        mode = "use-default-once"
+        loggerThrowsOnce = true
+        document.getElementById("logger-note").textContent = "Logger will throw."
+      })
+      document.getElementById("file-late").addEventListener("click", () => {
+        mode = "init-jam"
+        document.getElementById("late-host").innerHTML = `
+          <div id="late-first" data-controller="late-init">
+            <p id="late-first-reading" data-late-init-target="reading">Late init waiting.</p>
+          </div>
+          <div id="late-next" data-controller="late-next">
+            <p id="late-next-reading" data-late-next-target="reading">Late next waiting.</p>
+          </div>
+        `
+      })
+
+      let trimClicks = 0
+      document.getElementById("trim-async").addEventListener("click", () => {
+        trimClicks += 1
+        document.getElementById("trim-clicks").textContent = `Button clicks ${trimClicks}.`
+      })
+
+      application.register("pass-gate", PassGateController)
+      application.register("pass-bell", PassBellController)
+      application.register("async-init", AsyncInitController)
+      application.register("gate-book", GateBookController)
+      application.register("late-init", LateInitController)
+      application.register("late-next", LateNextController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>13 · Deception Pass fault line</span>
+      </nav>
+      <h1>Deception Pass fault line</h1>
+      <p class="lede">
+        The fault line at Deception Pass is what happens when the
+        reporter, the logger, or <code>initialize()</code> throws
+        again, and what an <code>async</code> lifecycle method never
+        tells <code>handleError</code>.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Wires</h2>
+          <p id="handled" class="reading">No handled error.</p>
+          <p id="faults" class="reading">No fault.</p>
+          <p id="rejections" class="reading">No rejection.</p>
+          <p id="onerror-lines" class="reading">No onerror call.</p>
+          <p id="shape-count" class="reading">Stimulus-shaped 0. Browser-shaped 0.</p>
+        </section>
+
+        <article id="pass-gate" class="card" data-controller="pass-gate">
+          <h2>Pass gate</h2>
+          <p id="pass-reading" class="reading" data-pass-gate-target="pass">Pass is waiting.</p>
+          <p id="gate-reading" class="reading" data-pass-gate-target="gate">Gate is waiting.</p>
+          <p id="arm-note" class="reading">Reporter is recording.</p>
+          <div class="actions">
+            <button type="button" id="arm-reporter">Arm the reporter</button>
+            <button type="button" id="run-pass" data-action="pass-gate#markPass pass-gate#jamCable pass-gate#closeGate">Run the pass</button>
+          </div>
+          <p id="slate-reading" class="reading" data-pass-gate-target="slate">Slate is waiting.</p>
+          <p id="watch-reading" class="reading" data-pass-gate-target="watch">Watch is waiting.</p>
+          <p id="logger-note" class="reading">Logger is quiet.</p>
+          <div class="actions">
+            <button type="button" id="arm-logger">Arm the logger</button>
+            <button type="button" id="run-slate" data-action="pass-gate#writeSlate pass-gate#nextWatch">Write the slate</button>
+          </div>
+          <p id="rope-reading" class="reading" data-pass-gate-target="rope">Rope is waiting.</p>
+          <div class="actions">
+            <button type="button" id="part-rope" data-action="pass-gate#partRope">Part the rope</button>
+          </div>
+        </article>
+
+        <article id="pass-bell" class="card" data-controller="pass-bell">
+          <h2>Pass bell</h2>
+          <p id="jam-reading" class="reading" data-pass-bell-target="reading">Jam notes waiting.</p>
+          <div class="actions">
+            <button type="button" id="opt-jam" data-action="click->pass-bell#jam:prevent click->pass-bell#jam:stop">Jam both options</button>
+          </div>
+        </article>
+
+        <article id="async-init" class="card" data-controller="async-init">
+          <h2>Async init</h2>
+          <p id="async-reading" class="reading" data-async-init-target="reading">Async init is waiting.</p>
+          <p id="trim-clicks" class="reading">Button clicks 0.</p>
+          <div class="actions">
+            <button type="button" id="pull-async" data-action="async-init#pull">Pull the async lamp</button>
+            <button type="button" id="trim-async" data-action="async-init#trim">Trim the async lamp</button>
+          </div>
+        </article>
+
+        <article id="gate-book" class="card" data-controller="gate-book">
+          <h2>Gate book</h2>
+          <p id="book-reading" class="reading" data-gate-book-target="reading">Gate book is waiting.</p>
+        </article>
+
+        <section class="card">
+          <h2>Late init</h2>
+          <div class="actions">
+            <button type="button" id="file-late">File the late init</button>
+          </div>
+          <div id="late-host"></div>
+        </section>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="pass_gate_controller.js"><code>pass_gate_controller.js</code></a> — pass, slate, and rope</li>
+          <li><a href="pass_bell_controller.js"><code>pass_bell_controller.js</code></a> — the two option strings</li>
+          <li><a href="async_init_controller.js"><code>async_init_controller.js</code></a> — async initialize and disconnect</li>
+          <li><a href="gate_book_controller.js"><code>gate_book_controller.js</code></a> — the book after that rejection</li>
+          <li><a href="late_init_controller.js"><code>late_init_controller.js</code></a> — initialize() that throws</li>
+          <li><a href="late_next_controller.js"><code>late_next_controller.js</code></a> — skipped when the reporter throws</li>
+          <li>This page's source — the reporter, the logger, and the wires</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

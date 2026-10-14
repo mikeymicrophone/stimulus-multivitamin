@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  Error handling · 08 · Westport retort queue
+
+  Teaches:
+  - async actions reject as unhandledrejection, even when
+    the throw is the first line of the async method.
+    A returned Promise.reject does the same.
+  - handleError sees only the synchronous throw.
+  - async connect() does not abort the scan and does not
+    call handleError. The next controller connects, and
+    the kettle's action still runs.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Westport retort queue · Error handling · Stimulus Multivitamin</title>
+    <link rel="stylesheet" href="../../../assets/multivitamin.css">
+    <style>
+      [hidden] { display: none !important; }
+      .board { display: grid; gap: 0.75rem; max-width: 48rem; }
+      .card { border: 1px solid var(--rule, #ddd); border-radius: 10px; padding: 0.85rem 1rem; background: #fffdf8; display: grid; gap: 0.4rem; }
+      .card h2 { margin: 0; font-size: 1.15rem; }
+      .reading { margin: 0; white-space: pre-wrap; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@hotwired/stimulus": "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { Application } from "@hotwired/stimulus"
+      import RetortChartController from "./retort_chart_controller.js"
+      import KettleWatchController from "./kettle_watch_controller.js"
+      import FloorClockController from "./floor_clock_controller.js"
+
+      const application = Application.start()
+      const handled = []
+      const rejections = []
+      application.logger = { log() {}, warn() {}, groupCollapsed() {}, groupEnd() {}, error() {} }
+      application.handleError = (error, message) => {
+        handled.push(`${message} | ${error.message}`)
+        document.getElementById("handled").textContent = handled.join("\n")
+        document.getElementById("handled-count").textContent = `Handled ${handled.length}.`
+      }
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason
+        rejections.push(reason instanceof Error ? reason.message : String(reason))
+        document.getElementById("rejections").textContent = rejections.join("\n")
+      })
+
+      application.register("retort-chart", RetortChartController)
+      application.register("kettle-watch", KettleWatchController)
+      application.register("floor-clock", FloorClockController)
+    </script>
+  </head>
+  <body>
+    <header class="masthead">
+      <nav class="breadcrumbs">
+        <a href="../../../">Stimulus Multivitamin</a> /
+        <a href="../../../#error-handling">Error handling</a> /
+        <span>08 · Westport retort queue</span>
+      </nav>
+      <h1>Westport retort queue</h1>
+      <p class="lede">
+        The retort chart at Westport saves four ways. Only the
+        synchronous throw reaches <code>handleError</code>. The kettle
+        watch connects with an <code>async</code> method and the floor
+        clock after it still comes up.
+      </p>
+    </header>
+
+    <main>
+      <div class="board">
+        <section class="card">
+          <h2>Reports</h2>
+          <p id="handled" class="reading">No handled error.</p>
+          <p id="handled-count" class="reading">Handled 0.</p>
+          <p id="rejections" class="reading">No rejection.</p>
+        </section>
+
+        <article id="kettle-watch" class="card" data-controller="kettle-watch">
+          <h2>Kettle watch</h2>
+          <p id="kettle-reading" class="reading" data-kettle-watch-target="reading">Kettle watch is waiting.</p>
+          <div class="actions">
+            <button type="button" id="mark-kettle" data-action="kettle-watch#mark">Mark the kettle</button>
+          </div>
+        </article>
+
+        <article id="floor-clock" class="card" data-controller="floor-clock">
+          <h2>Floor clock</h2>
+          <p id="floor-reading" class="reading" data-floor-clock-target="reading">Floor clock is waiting.</p>
+        </article>
+
+        <article id="retort-chart" class="card" data-controller="retort-chart">
+          <h2>Retort chart</h2>
+          <p id="chart-reading" class="reading" data-retort-chart-target="reading">Chart is waiting.</p>
+          <div class="actions">
+            <button type="button" id="save-sync" data-action="retort-chart#saveSync">Save in sync</button>
+            <button type="button" id="save-early" data-action="retort-chart#saveEarly">Save before await</button>
+            <button type="button" id="save-late" data-action="retort-chart#saveLate">Save after await</button>
+            <button type="button" id="save-returned" data-action="retort-chart#saveReturned">Return a refusal</button>
+          </div>
+        </article>
+      </div>
+
+      <section class="source-links">
+        <h2>Read the source</h2>
+        <ul>
+          <li><a href="retort_chart_controller.js"><code>retort_chart_controller.js</code></a> — four saves</li>
+          <li><a href="kettle_watch_controller.js"><code>kettle_watch_controller.js</code></a> — async connect()</li>
+          <li><a href="floor_clock_controller.js"><code>floor_clock_controller.js</code></a> — the clock after it</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
