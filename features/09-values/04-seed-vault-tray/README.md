@@ -14,9 +14,10 @@ has no list yet.
   array that the next read throws away, and the attribute is
   unchanged. A missing attribute's default `[]` is a new array each
   read, so a push there disappears too.
-- Assigning `this.accessionsValue = this.accessionsValue.concat(...)`
+- Assigning `this.accessionsValue = [...new Set(this.accessionsValue).add(...)]`
   writes `JSON.stringify` of the new list back to
-  `data-vault-tray-accessions-value`.
+  `data-vault-tray-accessions-value`. The `Set` keeps a second record of
+  the same accession off the tray.
 
 **Files**
 

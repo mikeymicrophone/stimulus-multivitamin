@@ -13,8 +13,9 @@ coho tote share one controller. Each tote names its own hold class.
 - `this.coldHoldClass` is the token in that attribute.
   `hasColdHoldClass` is true because the attribute is on the
   controller element.
-- Hold adds that token to the tote with `classList.add`. Release
-  removes it. Sockeye's token is `brine-cold`. Coho's token is
+- Hold and release both call `classList.toggle(this.coldHoldClass, force)`.
+  The force flag makes each button idempotent: hold twice and the tote
+  still wears the token once. Sockeye's token is `brine-cold`. Coho's token is
   `brine-warming`. Those strings are not in the controller.
 
 **Files**

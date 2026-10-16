@@ -8,6 +8,7 @@
  * data-ridge-log-launched-value, the subclass identifier.
  */
 import KiteLogController from "./kite_log_controller.js"
+import { report, rawAttribute } from "../../../assets/readout.js"
 
 export default class extends KiteLogController {
   static targets = ["reading"]
@@ -23,21 +24,21 @@ export default class extends KiteLogController {
   }
 
   readLog() {
-    const own = this.element.getAttribute("data-ridge-log-station-name-value")
-    const stray = this.element.getAttribute("data-kite-log-station-name-value")
-    const launchedAttribute = this.element.getAttribute("data-ridge-log-launched-value")
-    const gustAttribute = this.element.getAttribute("data-ridge-log-gust-knots-value")
-    this.readingTarget.textContent = [
+    // rawAttribute builds names from this.identifier, "ridge-log". The
+    // parent's identifier has to be spelled out to show it is ignored.
+    const stray = this.element.getAttribute("data-kite-log-station-name-value") ?? "absent"
+    report(
+      this.readingTarget,
       `Station ${this.stationNameValue || "(unnamed)"}.`,
       `hasStationNameValue ${this.hasStationNameValue}.`,
-      `Own attribute ${own === null ? "absent" : own}.`,
-      `Stray attribute ${stray === null ? "absent" : stray}.`,
+      `Own attribute ${rawAttribute(this, "stationName")}.`,
+      `Stray attribute ${stray}.`,
       `Launched ${this.launchedValue}.`,
       `hasLaunchedValue ${this.hasLaunchedValue}.`,
-      `Launched attribute ${launchedAttribute === null ? "absent" : launchedAttribute}.`,
+      `Launched attribute ${rawAttribute(this, "launched")}.`,
       `Gust ${this.gustKnotsValue}.`,
       `hasGustKnotsValue ${this.hasGustKnotsValue}.`,
-      `Gust attribute ${gustAttribute === null ? "absent" : gustAttribute}.`
-    ].join(" ")
+      `Gust attribute ${rawAttribute(this, "gustKnots")}.`
+    )
   }
 }

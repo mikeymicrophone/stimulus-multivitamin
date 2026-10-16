@@ -7,6 +7,7 @@
  * paint classes.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["low", "fresh"]
@@ -31,19 +32,19 @@ export default class extends Controller {
   }
 
   render(how) {
-    const stray = this.nunTarget.getAttribute("data-paint-rack-low-class")
-    const painted = this.canTargets.map((can) => {
-      const name = can.getAttribute("data-buoy-name")
-      const tokens = [this.lowClass, this.freshClass].filter((token) => can.classList.contains(token))
-      return `${name} ${tokens.length ? tokens.join(" ") : "bare"}`
+    const { lowClass, freshClass } = this
+    const painted = this.canTargets.map(({ dataset: { buoyName }, classList }) => {
+      const tokens = [lowClass, freshClass].filter((token) => classList.contains(token))
+      return `${buoyName} ${listOr(tokens, "bare", " ")}`
     })
-    this.readingTarget.textContent = [
+    report(
+      this.readingTarget,
       `Rack ${how}.`,
-      `lowClass ${this.lowClass}.`,
-      `freshClass ${this.freshClass}.`,
+      `lowClass ${lowClass}.`,
+      `freshClass ${freshClass}.`,
       `hasLowClass ${this.hasLowClass}.`,
-      `Stray on the nun ${stray === null ? "absent" : stray}.`,
+      `Stray on the nun ${this.nunTarget.getAttribute("data-paint-rack-low-class") ?? "absent"}.`,
       `Cans ${painted.join(", ")}.`
-    ].join(" ")
+    )
   }
 }

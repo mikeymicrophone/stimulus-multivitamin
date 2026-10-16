@@ -8,6 +8,7 @@
  * this hive only. The other hive keeps the mutated default.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["hiveName", "reading"]
@@ -25,7 +26,7 @@ export default class extends Controller {
   }
 
   writeStack() {
-    this.framesValue = this.framesValue.slice()
+    this.framesValue = [...this.framesValue]
     this.render("Wrote the stack onto the hive.")
   }
 
@@ -34,13 +35,12 @@ export default class extends Controller {
   }
 
   render(note) {
-    const attribute = this.element.getAttribute("data-hive-stack-frames-value")
-    const hiveName = this.hiveNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${hiveName} frames ${this.framesValue.join(", ")}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.hiveNameTarget)} frames ${this.framesValue.join(", ")}.`,
       `hasFramesValue ${this.hasFramesValue}.`,
-      `Attribute ${attribute === null ? "absent" : attribute}.`,
+      `Attribute ${rawAttribute(this, "frames")}.`,
       note
-    ].join(" ")
+    )
   }
 }

@@ -8,6 +8,7 @@
  * has[Name]Value is false and the getter returns the type default.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["reading"]
@@ -47,14 +48,19 @@ export default class extends Controller {
   }
 
   render() {
-    this.readingTarget.textContent = [
-      fieldLine("Hoops", "hasHoopCountValue", this.hoopCountValue, this.hasHoopCountValue, this.element.getAttribute("data-hoop-log-hoop-count-value")),
-      fieldLine("Wood", "hasWoodNameValue", JSON.stringify(this.woodNameValue), this.hasWoodNameValue, this.element.getAttribute("data-hoop-log-wood-name-value")),
-      fieldLine("Flagged", "hasFlaggedValue", this.flaggedValue, this.hasFlaggedValue, this.element.getAttribute("data-hoop-log-flagged-value"))
-    ].join(" ")
+    report(this.readingTarget, [...this.lines()])
   }
-}
 
-function fieldLine(label, hasName, value, present, attribute) {
-  return `${label} ${value}. ${hasName} ${present}. ${label} attribute ${attribute === null ? "absent" : JSON.stringify(attribute)}.`
+  *lines() {
+    yield* this.#field("Hoops", "hoopCount", this.hoopCountValue)
+    yield* this.#field("Wood", "woodName", JSON.stringify(this.woodNameValue))
+    yield* this.#field("Flagged", "flagged", this.flaggedValue)
+  }
+
+  *#field(label, name, shown) {
+    const hasName = `has${name[0].toUpperCase()}${name.slice(1)}Value`
+    yield `${label} ${shown}.`
+    yield `${hasName} ${this[hasName]}.`
+    yield `${label} attribute ${rawAttribute(this, name, "value", { quoted: true })}.`
+  }
 }

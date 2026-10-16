@@ -14,7 +14,7 @@ shed has no frame list.
 - `push("pollen")` mutates that array and does not write
   `data-hive-stack-frames-value`. The next read of the Warre lists
   pollen too.
-- Assigning `this.framesValue = this.framesValue.slice()` writes JSON
+- Assigning a spread copy, `this.framesValue = [...this.framesValue]`, writes JSON
   on the Langstroth only. The Warre still has no attribute and still
   reads the shared default, pollen included.
 - `frames: Array` on the package hive is a new `[]` every read.

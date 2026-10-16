@@ -7,6 +7,7 @@
  * gauge's pool. Setting the house pool does not change the gauge pool.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["reading"]
@@ -22,17 +23,16 @@ export default class extends Controller {
   setHousePool() {
     this.poolFeetValue = 8
     this.render()
-    this.application.getControllerForElementAndIdentifier(this.element, "gauge").render()
+    this.application.getControllerForElementAndIdentifier(this.element, "gauge")?.render()
   }
 
   render() {
-    const zeroAttribute = this.element.getAttribute("data-gauge-house-zero-feet-value")
-    const poolAttribute = this.element.getAttribute("data-gauge-house-pool-feet-value")
-    this.readingTarget.textContent = [
+    report(
+      this.readingTarget,
       `House zero ${this.zeroFeetValue}.`,
       `House pool ${this.poolFeetValue}.`,
-      `Zero attribute ${zeroAttribute}.`,
-      `House pool attribute ${poolAttribute}.`
-    ].join(" ")
+      `Zero attribute ${this.element.getAttribute("data-gauge-house-zero-feet-value")}.`,
+      `House pool attribute ${this.element.getAttribute("data-gauge-house-pool-feet-value")}.`
+    )
   }
 }

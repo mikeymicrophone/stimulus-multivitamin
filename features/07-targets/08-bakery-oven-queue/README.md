@@ -9,7 +9,7 @@ Painting ciabatta at the front of the rack does not.
 - `loafTargets` is document order: the controller element first if it
   is itself a loaf, then descendants in tree order. These loaves are
   descendants, so the pull order is the order of the nodes.
-- `insertBefore` changes the document. The next `loafTargets` read, in
+- `previousElementSibling?.before(loaf)` changes the document. The next `loafTargets` read, in
   the same turn, follows the new order. The queue does not sort.
 - CSS `order` changes paint order only. After the visual swap, ciabatta
   is painted first and the target order is unchanged.

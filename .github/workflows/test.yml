@@ -1,0 +1,30 @@
+# This repo has no test suite (examples are checked in a browser), so CI does
+# a light check: every JavaScript file must at least parse.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # `node --check` parses a file without running it. The controllers are
+      # ES modules (they use `import`), so each is copied to a .mjs name first
+      # to make Node parse it as a module.
+      - name: Parse every JS file
+        run: |
+          status=0
+          for file in $(git ls-files '*.js'); do
+            cp "$file" /tmp/check.mjs
+            node --check /tmp/check.mjs || { echo "::error file=$file::syntax error"; status=1; }
+          done
+          exit $status

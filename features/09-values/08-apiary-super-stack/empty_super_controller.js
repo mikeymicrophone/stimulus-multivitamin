@@ -6,6 +6,7 @@
  * the next read is empty again. hasFramesValue stays false.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["hiveName", "reading"]
@@ -21,14 +22,12 @@ export default class extends Controller {
   }
 
   render(note) {
-    const attribute = this.element.getAttribute("data-empty-super-frames-value")
-    const hiveName = this.hiveNameTarget.textContent.trim()
-    const frames = this.framesValue
-    this.readingTarget.textContent = [
-      `${hiveName} frames ${frames.length ? frames.join(", ") : "(none)"}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.hiveNameTarget)} frames ${listOr(this.framesValue, "(none)")}.`,
       `hasFramesValue ${this.hasFramesValue}.`,
-      `Attribute ${attribute === null ? "absent" : attribute}.`,
+      `Attribute ${rawAttribute(this, "frames")}.`,
       note
-    ].join(" ")
+    )
   }
 }

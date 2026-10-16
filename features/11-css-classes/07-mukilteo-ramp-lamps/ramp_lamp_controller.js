@@ -8,6 +8,7 @@
  * the value and does not touch classList.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["open", "moving", "closed"]
@@ -21,28 +22,33 @@ export default class extends Controller {
     this.render(state)
   }
 
-  chooseState(event) {
-    this.stateValue = event.currentTarget.value
+  chooseState({ currentTarget: { value } }) {
+    this.stateValue = value
   }
 
   tokenFor(state) {
-    if (state === "open" && this.hasOpenClass) return this.openClass
-    if (state === "moving" && this.hasMovingClass) return this.movingClass
-    if (state === "closed" && this.hasClosedClass) return this.closedClass
-    return ""
+    switch (state) {
+      case "open":
+        return this.hasOpenClass ? this.openClass : ""
+      case "moving":
+        return this.hasMovingClass ? this.movingClass : ""
+      case "closed":
+        return this.hasClosedClass ? this.closedClass : ""
+      default:
+        return ""
+    }
   }
 
   render(state) {
-    const rampName = this.rampNameTarget.textContent.trim()
-    const lampTokens = [this.openClass, this.movingClass, this.closedClass].filter((token) => {
-      return this.lampTarget.classList.contains(token)
-    })
-    this.readingTarget.textContent = [
-      `${rampName} state ${state}.`,
+    const lampTokens = [this.openClass, this.movingClass, this.closedClass]
+      .filter((token) => this.lampTarget.classList.contains(token))
+    report(
+      this.readingTarget,
+      `${textOf(this.rampNameTarget)} state ${state}.`,
       `Lamp class ${lampTokens.join(" ") || "(none)"}.`,
       `openClass ${this.openClass}.`,
       `movingClass ${this.movingClass}.`,
       `closedClass ${this.closedClass}.`
-    ].join(" ")
+    )
   }
 }

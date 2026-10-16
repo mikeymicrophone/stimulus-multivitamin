@@ -7,6 +7,7 @@
  * the token undefined. Spreading the empty list writes nothing.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["jammed"]
@@ -27,14 +28,13 @@ export default class extends Controller {
   }
 
   render(how) {
-    const lineName = this.lineNameTarget.textContent.trim()
-    const token = this.hasJammedClass ? String(this.jammedClass) : "(missing)"
-    this.readingTarget.textContent = [
-      `${lineName} ${how}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.lineNameTarget)} ${how}.`,
       `hasJammedClass ${this.hasJammedClass}.`,
-      `jammedClass ${token}.`,
+      `jammedClass ${this.hasJammedClass ? String(this.jammedClass) : "(missing)"}.`,
       `jammedClasses ${JSON.stringify(this.jammedClasses)}.`,
       `Label class ${JSON.stringify(this.labelTarget.className)}.`
-    ].join(" ")
+    )
   }
 }

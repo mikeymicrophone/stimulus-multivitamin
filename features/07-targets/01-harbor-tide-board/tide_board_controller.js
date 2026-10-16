@@ -10,6 +10,7 @@
  * stays empty and hasSlipTarget stays false. Connect still succeeds.
  */
 import { Controller } from "@hotwired/stimulus"
+import { textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["stationName", "reading", "advisory", "slip", "report"]
@@ -25,19 +26,20 @@ export default class extends Controller {
 
   readMissingSlip() {
     const count = this.slipTargets.length
-    let message = "the slip is on the board"
+    this.reportTarget.textContent = `hasSlipTarget ${this.hasSlipTarget}. slipTargets ${count}. ${this.slipLine}`
+  }
+
+  get slipLine() {
     try {
-      message = this.slipTarget.textContent.trim()
-    } catch (error) {
-      message = error.message
+      return textOf(this.slipTarget)
+    } catch ({ message }) {
+      return message
     }
-    this.reportTarget.textContent = `hasSlipTarget ${this.hasSlipTarget}. slipTargets ${count}. ${message}`
   }
 
   render() {
-    const station = this.stationNameTarget.textContent.trim()
-    const readings = this.readingTargets.map((reading) => reading.textContent.trim()).join(", ")
-    const advisory = this.hasAdvisoryTarget ? this.advisoryTarget.textContent.trim() : "No advisory posted"
-    this.reportTarget.textContent = `${station}: ${readings}. Advisory: ${advisory}.`
+    const readings = Array.from(this.readingTargets, textOf).join(", ")
+    const advisory = this.hasAdvisoryTarget ? textOf(this.advisoryTarget) : "No advisory posted"
+    this.reportTarget.textContent = `${textOf(this.stationNameTarget)}: ${readings}. Advisory: ${advisory}.`
   }
 }

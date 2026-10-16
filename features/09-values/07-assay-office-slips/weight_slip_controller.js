@@ -10,24 +10,18 @@
  * digit in the attribute until something assigns it.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["slipName", "reading"]
   static values = { pennyweights: Number }
 
   connect() {
-    this.render()
-  }
-
-  render() {
-    const attribute = this.element.getAttribute("data-weight-slip-pennyweights-value")
-    const value = this.pennyweightsValue
-    const printed = Number.isNaN(value) ? "NaN" : String(value)
-    const slipName = this.slipNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${slipName} pennyweights ${printed}.`,
-      `Attribute ${attribute === null ? "absent" : JSON.stringify(attribute)}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.slipNameTarget)} pennyweights ${this.pennyweightsValue}.`,
+      `Attribute ${rawAttribute(this, "pennyweights", "value", { quoted: true })}.`,
       `hasPennyweightsValue ${this.hasPennyweightsValue}.`
-    ].join(" ")
+    )
   }
 }

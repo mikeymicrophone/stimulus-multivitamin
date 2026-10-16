@@ -2,12 +2,14 @@
  * wick_log_controller.js — registered as "wick-log"
  *
  * Teaches: lamp is an Object. Keys stay as they were written in JSON;
- * wick_height is not camelized to wickHeight. Assigning lampValue
- * writes compact JSON. A missing lamp is {}. spareLamp holds a JSON
+ * wick_height is not camelized to wickHeight, so destructuring has to
+ * rename it. Assigning lampValue writes compact JSON. A missing lamp
+ * is {}, so destructuring it never throws. spareLamp holds a JSON
  * array, and reading it throws a TypeError because an array is not an
  * object. That read waits for the button, so the page still connects.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["stationName", "reading", "spareReading"]
@@ -21,34 +23,29 @@ export default class extends Controller {
   }
 
   trimWick() {
-    const lamp = this.lampValue
-    this.lampValue = { wick_height: "8mm", oil: lamp.oil || "colza" }
+    const { oil } = this.lampValue
+    this.lampValue = { wick_height: "8mm", oil: oil ?? "colza" }
     this.render()
   }
 
   readSpare() {
     try {
       const spare = this.spareLampValue
-      const attribute = this.element.getAttribute("data-wick-log-spare-lamp-value")
-      this.spareReadingTarget.textContent = `Spare ${JSON.stringify(spare)}. Attribute ${attribute === null ? "absent" : attribute}.`
-    } catch (error) {
-      this.spareReadingTarget.textContent = `${error.name}: ${error.message}`
+      report(this.spareReadingTarget, `Spare ${JSON.stringify(spare)}.`, `Attribute ${rawAttribute(this, "spareLamp")}.`)
+    } catch ({ name, message }) {
+      this.spareReadingTarget.textContent = `${name}: ${message}`
     }
   }
 
   render() {
-    const lamp = this.lampValue
-    const attribute = this.element.getAttribute("data-wick-log-lamp-value")
-    const stationName = this.stationNameTarget.textContent.trim()
-    const height = Object.prototype.hasOwnProperty.call(lamp, "wick_height") ? lamp.wick_height : "(no wick)"
-    const oil = Object.prototype.hasOwnProperty.call(lamp, "oil") ? lamp.oil : "(no oil)"
-    const camelKey = Object.prototype.hasOwnProperty.call(lamp, "wickHeight") ? lamp.wickHeight : "absent"
-    this.readingTarget.textContent = [
-      `${stationName} wick ${height}.`,
+    const { wick_height: wick = "(no wick)", oil = "(no oil)", wickHeight = "absent" } = this.lampValue
+    report(
+      this.readingTarget,
+      `${textOf(this.stationNameTarget)} wick ${wick}.`,
       `Oil ${oil}.`,
-      `wickHeight ${camelKey}.`,
+      `wickHeight ${wickHeight}.`,
       `hasLampValue ${this.hasLampValue}.`,
-      `Attribute ${attribute === null ? "absent" : attribute}.`
-    ].join(" ")
+      `Attribute ${rawAttribute(this, "lamp")}.`
+    )
   }
 }

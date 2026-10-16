@@ -5,9 +5,13 @@
  * the array returned by the getter does not write the attribute, and
  * the next read parses the attribute again. Assigning a new array
  * writes JSON.stringify of it. A missing attribute reads as a fresh []
- * and hasAccessionsValue is false.
+ * and hasAccessionsValue is false. The tray is deduplicated through a
+ * Set before the assignment, because an Array value has no set semantics.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf, listOr } from "../../../assets/readout.js"
+
+const INCOMING_ACCESSION = "NSGC-4410"
 
 export default class extends Controller {
   static targets = ["trayName", "reading"]
@@ -18,27 +22,25 @@ export default class extends Controller {
   }
 
   pushWithoutRecording() {
-    const before = this.element.getAttribute("data-vault-tray-accessions-value")
-    this.accessionsValue.push("NSGC-4410")
-    const after = this.element.getAttribute("data-vault-tray-accessions-value")
-    const changed = before !== after
-    this.render(changed ? "The push changed the attribute." : "The push left the attribute unchanged.")
+    const before = rawAttribute(this, "accessions")
+    this.accessionsValue.push(INCOMING_ACCESSION)
+    const unchanged = rawAttribute(this, "accessions") === before
+    this.render(unchanged ? "The push left the attribute unchanged." : "The push changed the attribute.")
   }
 
   recordAccession() {
-    this.accessionsValue = this.accessionsValue.concat(["NSGC-4410"])
-    this.render("Recorded NSGC-4410.")
+    const drawer = new Set(this.accessionsValue).add(INCOMING_ACCESSION)
+    this.accessionsValue = [...drawer]
+    this.render(`Recorded ${INCOMING_ACCESSION}.`)
   }
 
   render(note) {
-    const attribute = this.element.getAttribute("data-vault-tray-accessions-value")
-    const names = this.accessionsValue
-    const trayName = this.trayNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${trayName} accessions ${names.length ? names.join(", ") : "(none)"}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.trayNameTarget)} accessions ${listOr(this.accessionsValue, "(none)")}.`,
       `hasAccessionsValue ${this.hasAccessionsValue}.`,
-      `Attribute ${attribute === null ? "absent" : attribute}.`,
+      `Attribute ${rawAttribute(this, "accessions")}.`,
       note
-    ].join(" ")
+    )
   }
 }

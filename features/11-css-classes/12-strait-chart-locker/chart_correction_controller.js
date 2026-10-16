@@ -11,6 +11,7 @@
  * Missing attribute for the kebab-case name.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["stale", "fresh"]
@@ -18,41 +19,45 @@ export default class extends Controller {
 
   connect() {
     this.reads = 1
-    const plateName = this.plateNameTarget.textContent.trim()
+    const plateName = textOf(this.plateNameTarget)
     try {
       const token = this.staleClass
       const sameList = this.staleClasses === this.staleClasses
-      this.readingTarget.textContent = [
+      report(
+        this.readingTarget,
         `${plateName} staleClass ${token}.`,
         `Reads ${this.reads}.`,
         `Same list ${sameList}.`,
         `freshClass ${this.freshClass}.`
-      ].join(" ")
-    } catch (error) {
-      this.readingTarget.textContent = [
-        `${plateName} threw ${error.name}: ${error.message}.`,
-        `Kebab attribute ${shown(this.element.getAttribute("data-chart-correction-stale-class"))}.`,
-        `Lowercased attribute ${shown(this.element.getAttribute("data-chart-correction-staleclass"))}.`,
-        `Underscore attribute ${shown(this.element.getAttribute("data-chart-correction-stale_class"))}.`,
+      )
+    } catch ({ name, message }) {
+      const spelled = (suffix) => this.element.getAttribute(`data-chart-correction-${suffix}`) ?? "absent"
+      report(
+        this.readingTarget,
+        `${plateName} threw ${name}: ${message}.`,
+        `Kebab attribute ${spelled("stale-class")}.`,
+        `Lowercased attribute ${spelled("staleclass")}.`,
+        `Underscore attribute ${spelled("stale_class")}.`,
         `freshClass ${this.hasFreshClass ? this.freshClass : "absent"}.`
-      ].join(" ")
+      )
     }
   }
 
   correctPlate() {
-    const plateName = this.plateNameTarget.textContent.trim()
+    const plateName = textOf(this.plateNameTarget)
     const previous = this.staleClass
     const tokens = this.staleClasses
     tokens.push(this.freshClass)
     this.element.setAttribute("data-chart-correction-stale-class", this.freshClass)
     this.element.classList.remove(previous)
     this.element.classList.add(this.staleClass)
-    this.readingTarget.textContent = [
+    report(
+      this.readingTarget,
       `${plateName} staleClass ${this.staleClass}.`,
       `Reads ${this.reads}.`,
       `Pushed list ${JSON.stringify(tokens)}.`,
       `Next classes ${JSON.stringify(this.staleClasses)}.`
-    ].join(" ")
+    )
   }
 
   assignClass() {
@@ -66,8 +71,4 @@ export default class extends Controller {
   readUnguarded() {
     this.readingTarget.textContent = this.staleClass
   }
-}
-
-function shown(value) {
-  return value === null ? "absent" : value
 }
