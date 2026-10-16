@@ -9,6 +9,7 @@
  * write the value or toggle a class. They do not name the CSS.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["quiet", "crowded", "priority", "calling"]
@@ -19,17 +20,12 @@ export default class extends Controller {
   }
 
   crowdedValueChanged(crowded) {
-    this.boardTarget.classList.remove(...this.quietClasses, ...this.crowdedClasses)
-    if (crowded) {
-      this.boardTarget.classList.add(...this.crowdedClasses)
-      for (const vessel of this.vesselTargets) {
-        vessel.classList.add(...this.priorityClasses)
-      }
-    } else {
-      this.boardTarget.classList.add(...this.quietClasses)
-      for (const vessel of this.vesselTargets) {
-        vessel.classList.remove(...this.priorityClasses)
-      }
+    const [wear, shed] = crowded ? [this.crowdedClasses, this.quietClasses] : [this.quietClasses, this.crowdedClasses]
+    this.boardTarget.classList.remove(...shed)
+    this.boardTarget.classList.add(...wear)
+    for (const { classList } of this.vesselTargets) {
+      // toggle takes one token, so the stack is forced token by token.
+      this.priorityClasses.forEach((token) => classList.toggle(token, crowded))
     }
     this.paint()
   }
@@ -46,25 +42,23 @@ export default class extends Controller {
     this.crowdedValue = false
   }
 
-  toggleCalling(event) {
-    const vessel = event.target.closest("[data-traffic-board-target~='vessel']")
-    vessel.classList.toggle(this.callingClass)
-    const name = vessel.getAttribute("data-vessel-name")
-    const calling = vessel.classList.contains(this.callingClass)
-    this.logTarget.textContent = `${name} calling ${calling}.`
+  toggleCalling({ target }) {
+    const vessel = target.closest("[data-traffic-board-target~='vessel']")
+    const calling = vessel.classList.toggle(this.callingClass)
+    this.logTarget.textContent = `${vessel.dataset.vesselName} calling ${calling}.`
   }
 
   paint() {
-    const sectorName = this.sectorNameTarget.textContent.trim()
+    const sectorName = textOf(this.sectorNameTarget)
     const boardTokens = [...this.quietClasses, ...this.crowdedClasses].filter((token) => {
       return this.boardTarget.classList.contains(token)
     })
-    const vessels = this.vesselTargets.map((vessel) => {
-      const name = vessel.getAttribute("data-vessel-name")
-      const priority = this.priorityClasses.every((token) => vessel.classList.contains(token))
-      return `${name} ${priority ? "priority" : "plain"}`
+    const vessels = this.vesselTargets.map(({ dataset, classList }) => {
+      const priority = this.priorityClasses.every((token) => classList.contains(token))
+      return `${dataset.vesselName} ${priority ? "priority" : "plain"}`
     })
-    this.statusTarget.textContent = [
+    report(
+      this.statusTarget,
       `${sectorName} crowded ${this.crowdedValue}.`,
       `Board ${boardTokens.join(" ") || "none"}.`,
       `quietClasses ${JSON.stringify(this.quietClasses)}.`,
@@ -74,6 +68,6 @@ export default class extends Controller {
       `callingClass ${this.callingClass}.`,
       `Watch ${this.watchValue}.`,
       `Vessels ${vessels.join(", ")}.`
-    ].join(" ")
+    )
   }
 }

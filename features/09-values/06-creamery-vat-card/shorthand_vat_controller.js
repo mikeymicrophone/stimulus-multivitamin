@@ -20,6 +20,6 @@ export default class extends Controller {
   }
 
   connect() {
-    this.readingTarget.textContent = describeVat(this, "shorthand-vat")
+    this.readingTarget.textContent = describeVat(this)
   }
 }

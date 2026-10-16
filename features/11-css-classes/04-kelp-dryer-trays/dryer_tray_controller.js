@@ -11,6 +11,7 @@
  * "Error invoking action".
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["scorching", "steady"]
@@ -18,7 +19,7 @@ export default class extends Controller {
   static values = { guard: Boolean }
 
   connect() {
-    const trayName = this.trayNameTarget.textContent.trim()
+    const trayName = textOf(this.trayNameTarget)
     if (!this.guardValue) {
       this.readingTarget.textContent = `${trayName} connect reached the missing class.`
       this.element.classList.add(this.scorchingClass)
@@ -27,27 +28,26 @@ export default class extends Controller {
     const fallback = !this.hasScorchingClass
     if (fallback) this.element.classList.add(this.steadyClass)
 
-    const scorchingToken = this.hasScorchingClass ? this.scorchingClass : "(not read)"
-    this.readingTarget.textContent = [
+    report(
+      this.readingTarget,
       `${trayName} hasScorchingClass ${this.hasScorchingClass}.`,
-      `scorchingClass ${scorchingToken}.`,
+      `scorchingClass ${this.hasScorchingClass ? this.scorchingClass : "(not read)"}.`,
       `scorchingClasses ${JSON.stringify(this.scorchingClasses)}.`,
       `steadyClass ${this.steadyClass}.`,
       `Fallback ${fallback}.`,
-      `On the tray ${this.onTheTray()}.`
-    ].join(" ")
+      `On the tray ${listOr(this.wornTokens, "none", " ")}.`
+    )
   }
 
   readScorching() {
     const token = this.scorchingClass
-    this.readingTarget.textContent = `${this.trayNameTarget.textContent.trim()} scorchingClass ${token}.`
+    this.readingTarget.textContent = `${textOf(this.trayNameTarget)} scorchingClass ${token}.`
   }
 
-  onTheTray() {
-    const tokens = []
-    if (this.hasSteadyClass) tokens.push(this.steadyClass)
-    if (this.hasScorchingClass) tokens.push(this.scorchingClass)
-    const present = tokens.filter((token) => this.element.classList.contains(token))
-    return present.length ? present.join(" ") : "none"
+  // Each singular getter is guarded by its has-property, because an
+  // unguarded read of a missing class throws.
+  get wornTokens() {
+    return [this.hasSteadyClass && this.steadyClass, this.hasScorchingClass && this.scorchingClass]
+      .filter((token) => token && this.element.classList.contains(token))
   }
 }

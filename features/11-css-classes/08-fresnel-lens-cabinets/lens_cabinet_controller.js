@@ -8,6 +8,7 @@
  * Marrowstone each name their own tokens.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["lit", "dark"]
@@ -18,25 +19,27 @@ export default class extends Controller {
   }
 
   putOnWatch() {
-    this.element.classList.remove(...this.darkClasses)
-    this.element.classList.add(...this.litClasses)
-    this.render()
+    this.#wear(this.litClasses, { over: this.darkClasses })
   }
 
   secure() {
-    this.element.classList.remove(...this.litClasses)
-    this.element.classList.add(...this.darkClasses)
+    this.#wear(this.darkClasses, { over: this.litClasses })
+  }
+
+  #wear(stack, { over: previous }) {
+    this.element.classList.remove(...previous)
+    this.element.classList.add(...stack)
     this.render()
   }
 
   render() {
-    const lightName = this.lightNameTarget.textContent.trim()
     const worn = [...this.litClasses, ...this.darkClasses].filter((token) => this.element.classList.contains(token))
-    this.readingTarget.textContent = [
-      `${lightName} litClass ${this.litClass}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.lightNameTarget)} litClass ${this.litClass}.`,
       `litClasses ${JSON.stringify(this.litClasses)}.`,
       `darkClasses ${JSON.stringify(this.darkClasses)}.`,
-      `Wearing ${worn.length ? worn.join(" ") : "none"}.`
-    ].join(" ")
+      `Wearing ${listOr(worn, "none", " ")}.`
+    )
   }
 }

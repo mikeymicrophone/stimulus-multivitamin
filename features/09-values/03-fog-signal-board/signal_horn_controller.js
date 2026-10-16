@@ -8,6 +8,7 @@
  * the attribute "false".
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["hornName", "reading"]
@@ -21,26 +22,33 @@ export default class extends Controller {
   }
 
   soundHorn() {
-    this.soundingValue = true
-    this.render()
+    this.sounding = true
   }
 
   silenceHorn() {
-    this.soundingValue = false
+    this.sounding = false
+  }
+
+  get sounding() {
+    return this.soundingValue
+  }
+
+  set sounding(on) {
+    this.soundingValue = on
     this.render()
   }
 
   render() {
-    const soundingAttribute = this.element.getAttribute("data-signal-horn-sounding-value")
-    const mannedAttribute = this.element.getAttribute("data-signal-horn-manned-value")
-    const hornName = this.hornNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${hornName} sounding ${this.soundingValue}.`,
-      `Sounding attribute ${soundingAttribute === null ? "absent" : JSON.stringify(soundingAttribute)}.`,
+    // Quoted, because "", "00", and "false " are the whole lesson.
+    const quoted = { quoted: true }
+    report(
+      this.readingTarget,
+      `${textOf(this.hornNameTarget)} sounding ${this.soundingValue}.`,
+      `Sounding attribute ${rawAttribute(this, "sounding", "value", quoted)}.`,
       `hasSoundingValue ${this.hasSoundingValue}.`,
       `Manned ${this.mannedValue}.`,
-      `Manned attribute ${mannedAttribute === null ? "absent" : JSON.stringify(mannedAttribute)}.`,
+      `Manned attribute ${rawAttribute(this, "manned", "value", quoted)}.`,
       `hasMannedValue ${this.hasMannedValue}.`
-    ].join(" ")
+    )
   }
 }

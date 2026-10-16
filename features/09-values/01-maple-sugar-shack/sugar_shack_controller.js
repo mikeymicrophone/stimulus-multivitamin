@@ -8,6 +8,7 @@
  * evaporatorNameValue writes the attribute before this method paints.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["lot", "evaporator", "reading", "panName"]
@@ -27,18 +28,23 @@ export default class extends Controller {
     this.render()
   }
 
+  // A blank String value is "", so has*Value is the only way to tell a
+  // missing pan from a pan named nothing.
+  get evaporatorLabel() {
+    return this.hasEvaporatorNameValue ? this.evaporatorNameValue : "(unnamed)"
+  }
+
   render() {
-    const lotAttribute = this.element.getAttribute("data-sugar-shack-lot-code-value")
-    const panAttribute = this.element.getAttribute("data-sugar-shack-evaporator-name-value")
     this.lotTarget.textContent = this.lotCodeValue
-    this.evaporatorTarget.textContent = this.hasEvaporatorNameValue ? this.evaporatorNameValue : "(unnamed)"
-    this.readingTarget.textContent = [
+    this.evaporatorTarget.textContent = this.evaporatorLabel
+    report(
+      this.readingTarget,
       `Lot ${this.lotCodeValue}.`,
       `hasLotCodeValue ${this.hasLotCodeValue}.`,
-      `Lot attribute ${lotAttribute === null ? "absent" : lotAttribute}.`,
-      `Evaporator ${this.hasEvaporatorNameValue ? this.evaporatorNameValue : "(unnamed)"}.`,
+      `Lot attribute ${rawAttribute(this, "lotCode")}.`,
+      `Evaporator ${this.evaporatorLabel}.`,
       `hasEvaporatorNameValue ${this.hasEvaporatorNameValue}.`,
-      `Evaporator attribute ${panAttribute === null ? "absent" : panAttribute}.`
-    ].join(" ")
+      `Evaporator attribute ${rawAttribute(this, "evaporatorName")}.`
+    )
   }
 }

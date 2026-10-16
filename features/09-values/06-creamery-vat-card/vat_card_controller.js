@@ -8,6 +8,7 @@
  * mismatched card throws at register(), before any element connects.
  */
 import { Controller } from "@hotwired/stimulus"
+import { rawAttribute } from "../../../assets/readout.js"
 import MismatchedVatController from "./mismatched_vat_controller.js"
 
 export default class extends Controller {
@@ -44,23 +45,25 @@ export default class extends Controller {
   }
 
   render() {
-    this.readingTarget.textContent = describeVat(this, "vat-card")
+    this.readingTarget.textContent = describeVat(this)
   }
 }
 
-export function describeVat(controller, identifier) {
-  const fields = [
-    ["breed", "Breed", controller.breedValue, controller.hasBreedValue],
-    ["temperature", "Temperature", controller.temperatureValue, controller.hasTemperatureValue],
-    ["spareDegrees", "Spare degrees", controller.spareDegreesValue, controller.hasSpareDegreesValue],
-    ["cultures", "Cultures", controller.culturesValue, controller.hasCulturesValue],
-    ["flagged", "Flagged", controller.flaggedValue, controller.hasFlaggedValue]
-  ]
-  return fields.map(([token, label, value, present]) => {
-    const key = `${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}-value`
-    const attributeName = `data-${identifier}-${key}`
-    const attribute = controller.element.getAttribute(attributeName)
+const VAT_FIELDS = new Map([
+  ["breed", "Breed"],
+  ["temperature", "Temperature"],
+  ["spareDegrees", "Spare degrees"],
+  ["cultures", "Cultures"],
+  ["flagged", "Flagged"]
+])
+
+// Value properties are ordinary getters, so a computed key reads them the
+// same way the dot form does.
+export function describeVat(controller) {
+  return Array.from(VAT_FIELDS, ([name, label]) => {
+    const hasName = `has${name[0].toUpperCase()}${name.slice(1)}Value`
+    const value = controller[`${name}Value`]
     const printed = Array.isArray(value) ? JSON.stringify(value) : value === "" ? '""' : String(value)
-    return `${label} ${printed}. has${token.charAt(0).toUpperCase()}${token.slice(1)}Value ${present}. ${label} attribute ${attribute === null ? "absent" : attribute}.`
+    return `${label} ${printed}. ${hasName} ${controller[hasName]}. ${label} attribute ${rawAttribute(controller, name)}.`
   }).join(" ")
 }

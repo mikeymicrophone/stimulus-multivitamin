@@ -7,6 +7,7 @@
  * is never toggled. Looping each token toggles the whole stack.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["sounding"]
@@ -29,14 +30,13 @@ export default class extends Controller {
   }
 
   render(how) {
-    const hornName = this.hornNameTarget.textContent.trim()
     const worn = this.soundingClasses.filter((token) => this.hornTarget.classList.contains(token))
-    const shown = worn.length ? worn.join(" ") : "(none)"
-    this.readingTarget.textContent = [
-      `${hornName} ${how}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.hornNameTarget)} ${how}.`,
       `soundingClass ${this.soundingClass}.`,
       `soundingClasses ${JSON.stringify(this.soundingClasses)}.`,
-      `Horn class ${shown}.`
-    ].join(" ")
+      `Horn class ${listOr(worn, "(none)", " ")}.`
+    )
   }
 }

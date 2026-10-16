@@ -130,3 +130,22 @@ scenario self-contained:
    relative imports inside the page depend on it.
 5. Serve the repository root (`npx serve .` or `python3 -m http.server`),
    open the scenario, and check the browser console for errors.
+
+## Idioms checklist
+
+Examples teach Stimulus, but they should also show off modern JavaScript.
+Within one feature, sibling controllers should not share a shape. Check that
+the feature as a whole uses several of these:
+
+- [ ] private `#fields` and `#methods`; `get`/`set` accessors (including `get #private()`)
+- [ ] `async`/`await` with `fetch`, timers, or `Promise.all`
+- [ ] optional chaining `?.`, nullish coalescing `??` and `??=`
+- [ ] destructuring, rest/spread, default parameters
+- [ ] `Map`, `Set`, `WeakMap`; `Object.entries`/`fromEntries`; `Array.from`
+- [ ] `static values` with types and defaults, `*ValueChanged` callbacks, `static classes`, `static outlets`
+- [ ] action params, keyboard filters, `:prevent` / `:stop` options
+- [ ] template literals, tagged output, `Intl` formatters
+- [ ] shared readout helpers (`assets/readout.js`) instead of copied render boilerplate
+
+If every controller in a feature has the same `connect()` → `render()` shape,
+rewrite some of them before adding more.

@@ -8,6 +8,7 @@
  * shedLampClass.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["shedLamp", "pile", "amber", "fir"]
@@ -20,28 +21,31 @@ export default class extends Controller {
   paint() {
     this.sharedLampTarget.className = `lamp ${this.shedLampClass}`
     this.pileLampTarget.className = `lamp ${this.pileClass}`
-    this.readingTarget.textContent = [
+    report(
+      this.readingTarget,
       `Wharf shed lamp ${this.shedLampClass}.`,
       `Wharf pile ${this.pileClass}.`,
       `Shared attribute ${this.element.getAttribute("data-wharf-shed-lamp-class")}.`,
       `Pile attribute ${this.element.getAttribute("data-wharf-pile-class")}.`
-    ].join(" ")
+    )
   }
 
   amberSharedLamp() {
     this.element.setAttribute("data-wharf-shed-lamp-class", this.amberClass)
     this.paint()
-    this.shedController().paint()
+    this.shed?.paint()
   }
 
   swapPiles() {
+    const { shed } = this
     this.element.setAttribute("data-wharf-pile-class", this.firClass)
-    this.element.setAttribute("data-wharf-shed-pile-class", this.shedController().spruceClass)
+    this.element.setAttribute("data-wharf-shed-pile-class", shed.spruceClass)
     this.paint()
-    this.shedController().paint()
+    shed.paint()
   }
 
-  shedController() {
+  // null until wharf-shed has connected on the same element.
+  get shed() {
     return this.application.getControllerForElementAndIdentifier(this.element, "wharf-shed")
   }
 }

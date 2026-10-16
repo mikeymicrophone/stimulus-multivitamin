@@ -7,6 +7,7 @@
  * controller is also registered on its own, for the gillnet boat.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["overLimit"]
@@ -22,14 +23,13 @@ export default class extends Controller {
   }
 
   render() {
-    const boatName = this.boatNameTarget.textContent.trim()
-    const worn = this.element.classList.contains(this.overLimitClass)
-    this.readingTarget.textContent = [
-      `${boatName} overLimitClass ${this.overLimitClass}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.boatNameTarget)} overLimitClass ${this.overLimitClass}.`,
       `hasOverLimitClass ${this.hasOverLimitClass}.`,
       `soakedClass in ${"soakedClass" in this}.`,
       `soakedClass ${this.soakedClass}.`,
-      `Over the limit ${worn}.`
-    ].join(" ")
+      `Over the limit ${this.element.classList.contains(this.overLimitClass)}.`
+    )
   }
 }

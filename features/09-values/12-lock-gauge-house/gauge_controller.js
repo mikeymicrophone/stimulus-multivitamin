@@ -9,6 +9,7 @@
  * house's pool.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["reading"]
@@ -24,17 +25,24 @@ export default class extends Controller {
   raiseZero() {
     this.houseZeroFeetValue = 5
     this.render()
-    this.application.getControllerForElementAndIdentifier(this.element, "gauge-house").render()
+    this.house?.render()
+  }
+
+  // null until gauge-house has connected on this element.
+  get house() {
+    return this.application.getControllerForElementAndIdentifier(this.element, "gauge-house")
   }
 
   render() {
-    const zeroAttribute = this.element.getAttribute("data-gauge-house-zero-feet-value")
-    const poolAttribute = this.element.getAttribute("data-gauge-pool-feet-value")
-    this.readingTarget.textContent = [
+    // dataset camelizes the same way Stimulus does, so gauge's
+    // houseZeroFeet and gauge-house's zeroFeet are one dataset key.
+    const { gaugeHouseZeroFeetValue, gaugePoolFeetValue } = this.element.dataset
+    report(
+      this.readingTarget,
       `Gauge zero ${this.houseZeroFeetValue}.`,
       `Gauge pool ${this.poolFeetValue}.`,
-      `Zero attribute ${zeroAttribute}.`,
-      `Pool attribute ${poolAttribute}.`
-    ].join(" ")
+      `Zero attribute ${gaugeHouseZeroFeetValue}.`,
+      `Pool attribute ${gaugePoolFeetValue}.`
+    )
   }
 }

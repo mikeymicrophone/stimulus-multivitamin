@@ -14,6 +14,7 @@
  * written the attribute.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, rawAttribute, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["reading"]
@@ -34,7 +35,7 @@ export default class extends Controller {
   }
 
   addChowder() {
-    this.menuValue = this.menuValue.concat(["chowder"])
+    this.menuValue = [...this.menuValue, "chowder"]
     this.render()
   }
 
@@ -55,34 +56,28 @@ export default class extends Controller {
 
   render() {
     const tide = this.tideNoteValue
-    const height = Object.prototype.hasOwnProperty.call(tide, "height_ft") ? tide.height_ft : "absent"
-    const direction = Object.prototype.hasOwnProperty.call(tide, "direction") ? tide.direction : "absent"
-    const camelHeight = Object.prototype.hasOwnProperty.call(tide, "heightFt") ? "present" : "absent"
-    const menu = this.menuValue
-    const menuAttribute = this.element.getAttribute("data-mess-slate-menu-value")
-    this.readingTarget.textContent = [
+    const { height_ft: height = "absent", direction = "absent" } = tide
+    const quoted = (name) => rawAttribute(this, name, "value", { quoted: true })
+    report(
+      this.readingTarget,
       `Watch ${this.watchNameValue}.`,
       `Boat ${this.boatNameValue}.`,
       `hasBoatNameValue ${this.hasBoatNameValue}.`,
-      `Boat attribute ${shown(this.element.getAttribute("data-mess-slate-boat-name-value"))}.`,
+      `Boat attribute ${quoted("boatName")}.`,
       `Bowls ${this.bowlsValue}.`,
       `hasBowlsValue ${this.hasBowlsValue}.`,
-      `Bowl attribute ${shown(this.element.getAttribute("data-mess-slate-bowls-value"))}.`,
+      `Bowl attribute ${quoted("bowls")}.`,
       `Batch ${this.batchCodeValue}.`,
-      `Batch attribute ${shown(this.element.getAttribute("data-mess-slate-batch-code-value"))}.`,
+      `Batch attribute ${quoted("batchCode")}.`,
       `Lot ${JSON.stringify(this.lotCodeValue)}.`,
       `Galley open ${this.galleyOpenValue}.`,
-      `Galley attribute ${shown(this.element.getAttribute("data-mess-slate-galley-open-value"))}.`,
-      `Menu ${menu.length ? menu.join(", ") : "(none)"}.`,
-      `Menu attribute ${menuAttribute === null ? "absent" : menuAttribute}.`,
+      `Galley attribute ${quoted("galleyOpen")}.`,
+      `Menu ${listOr(this.menuValue, "(none)")}.`,
+      `Menu attribute ${rawAttribute(this, "menu")}.`,
       `Tide height_ft ${height}.`,
       `direction ${direction}.`,
-      `heightFt ${camelHeight}.`,
+      `heightFt ${Object.hasOwn(tide, "heightFt") ? "present" : "absent"}.`,
       `hasAllergenNoteValue ${this.hasAllergenNoteValue}.`
-    ].join(" ")
+    )
   }
-}
-
-function shown(attribute) {
-  return attribute === null ? "absent" : JSON.stringify(attribute)
 }

@@ -8,6 +8,7 @@
  * stay in the markup.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["urgent"]
@@ -33,13 +34,13 @@ export default class extends Controller {
   }
 
   render() {
-    const netName = this.netNameTarget.textContent.trim()
-    const onTheFlag = this.urgentClasses.filter((token) => this.flagTarget.classList.contains(token))
-    const shown = onTheFlag.length ? onTheFlag.join(" ") : "none"
-    this.readingTarget.textContent = [
-      `${netName} urgentClass ${this.urgentClass}.`,
+    const { classList } = this.flagTarget
+    const onTheFlag = this.urgentClasses.filter((token) => classList.contains(token))
+    report(
+      this.readingTarget,
+      `${textOf(this.netNameTarget)} urgentClass ${this.urgentClass}.`,
       `urgentClasses ${JSON.stringify(this.urgentClasses)}.`,
-      `On the flag ${shown}.`
-    ].join(" ")
+      `On the flag ${listOr(onTheFlag, "none", " ")}.`
+    )
   }
 }

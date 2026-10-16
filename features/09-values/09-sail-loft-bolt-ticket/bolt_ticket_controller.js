@@ -9,6 +9,7 @@
  * hasMeshSizeValue false.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf, listOr } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["boltName", "reading"]
@@ -22,16 +23,15 @@ export default class extends Controller {
   }
 
   readTicket() {
-    const names = [...this.element.attributes]
-      .map((attribute) => attribute.name)
-      .filter((name) => name.startsWith("data-bolt-ticket-"))
-    const boltName = this.boltNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${boltName} mesh ${JSON.stringify(this.meshSizeValue)}.`,
+    const prefix = `data-${this.identifier}-`
+    const names = Array.from(this.element.attributes, ({ name }) => name).filter((name) => name.startsWith(prefix))
+    report(
+      this.readingTarget,
+      `${textOf(this.boltNameTarget)} mesh ${JSON.stringify(this.meshSizeValue)}.`,
       `hasMeshSizeValue ${this.hasMeshSizeValue}.`,
       `Cloth ${JSON.stringify(this.clothNameValue)}.`,
       `hasClothNameValue ${this.hasClothNameValue}.`,
-      `Attributes ${names.join(" ") || "none"}.`
-    ].join(" ")
+      `Attributes ${listOr(names, "none", " ")}.`
+    )
   }
 }

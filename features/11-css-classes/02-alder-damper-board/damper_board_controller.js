@@ -7,6 +7,7 @@
  * controller element. The CSS class strings stay in the markup.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report, textOf } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static classes = ["drawnOpen", "banked", "shut"]
@@ -17,37 +18,48 @@ export default class extends Controller {
   }
 
   draw() {
-    this.use(this.drawnOpenClass)
+    this.#use("drawing")
   }
 
   bank() {
-    this.use(this.bankedClass)
+    this.#use("banked")
   }
 
   shutDamper() {
-    this.use(this.shutClass)
+    this.#use("shut")
   }
 
-  use(token) {
-    this.element.classList.remove(this.drawnOpenClass, this.bankedClass, this.shutClass)
-    this.element.classList.add(token)
+  // Rebuilt on each read: the class getters read the attribute live,
+  // so a cached Map would miss a token changed in the markup.
+  get #tokens() {
+    return new Map([
+      ["drawing", this.drawnOpenClass],
+      ["banked", this.bankedClass],
+      ["shut", this.shutClass]
+    ])
+  }
+
+  get showing() {
+    for (const [state, token] of this.#tokens) {
+      if (this.element.classList.contains(token)) return state
+    }
+    return "none"
+  }
+
+  #use(chosen) {
+    for (const [state, token] of this.#tokens) {
+      this.element.classList.toggle(token, state === chosen)
+    }
     this.render()
   }
 
   render() {
-    const roomName = this.roomNameTarget.textContent.trim()
-    this.readingTarget.textContent = [
-      `${roomName} drawnOpenClass ${this.drawnOpenClass}.`,
+    report(
+      this.readingTarget,
+      `${textOf(this.roomNameTarget)} drawnOpenClass ${this.drawnOpenClass}.`,
       `bankedClass ${this.bankedClass}.`,
       `shutClass ${this.shutClass}.`,
-      `Showing ${this.showing()}.`
-    ].join(" ")
-  }
-
-  showing() {
-    if (this.element.classList.contains(this.drawnOpenClass)) return "drawing"
-    if (this.element.classList.contains(this.bankedClass)) return "banked"
-    if (this.element.classList.contains(this.shutClass)) return "shut"
-    return "none"
+      `Showing ${this.showing}.`
+    )
   }
 }

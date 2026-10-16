@@ -11,44 +11,52 @@
  * the order.
  */
 import { Controller } from "@hotwired/stimulus"
+import { report } from "../../../assets/readout.js"
 
 export default class extends Controller {
   static targets = ["plot", "roster", "status", "callbackLog", "plotName"]
 
-  initialize() {
-    this.plotsSeenAtConnect = []
-    this.callbackNotes = []
-  }
+  // Class fields exist before Stimulus calls any callback, so
+  // plotTargetConnected can push before connect() has run.
+  #snapshotAtConnect = []
+  #callbackNames = []
 
   connect() {
-    this.plotsSeenAtConnect = this.plotTargets.map((plot) => plot.dataset.plotName)
-    const names = this.plotsSeenAtConnect.join(", ")
-    this.statusTarget.textContent = `Live plots: ${names}. Snapshot from connect: ${names}.`
+    this.#snapshotAtConnect = this.livePlotNames
+    this.#writeStatus()
   }
 
-  plotTargetConnected(plot) {
-    this.callbackNotes.push(plot.dataset.plotName)
-    this.callbackLogTarget.textContent = `Callbacks so far: ${this.callbackNotes.join(", ")}.`
+  get livePlotNames() {
+    return this.plotTargets.map(({ dataset }) => dataset.plotName)
+  }
+
+  plotTargetConnected({ dataset: { plotName } }) {
+    this.#callbackNames.push(plotName)
+    this.callbackLogTarget.textContent = `Callbacks so far: ${this.#callbackNames.join(", ")}.`
   }
 
   addPlot() {
     const plotName = this.plotNameTarget.value.trim()
     if (!plotName) return
-    const plot = document.createElement("li")
+    const plot = Object.assign(document.createElement("li"), { textContent: plotName })
     plot.dataset.plotName = plotName
-    plot.textContent = plotName
-    plot.setAttribute("data-work-day-target", "plot")
+    plot.dataset.workDayTarget = "plot"
     this.rosterTarget.append(plot)
-    const live = this.plotTargets.map((listed) => listed.dataset.plotName)
-    const callbackAlready = this.callbackNotes.includes(plotName) ? "yes" : "no"
-    this.statusTarget.textContent = `Live plots: ${live.join(", ")}. Snapshot from connect: ${this.plotsSeenAtConnect.join(", ")}. Callback had run for ${plotName}: ${callbackAlready}.`
+    const callbackAlready = this.#callbackNames.includes(plotName) ? "yes" : "no"
+    this.#writeStatus(`Callback had run for ${plotName}: ${callbackAlready}.`)
   }
 
-  sendHome(event) {
-    const plotName = event.currentTarget.dataset.plotName
-    const plot = this.plotTargets.find((listed) => listed.dataset.plotName === plotName)
-    if (plot) plot.remove()
-    const live = this.plotTargets.map((listed) => listed.dataset.plotName)
-    this.statusTarget.textContent = `Live plots: ${live.join(", ")}. Snapshot from connect: ${this.plotsSeenAtConnect.join(", ")}.`
+  sendHome({ currentTarget: { dataset: { plotName } } }) {
+    this.plotTargets.find((plot) => plot.dataset.plotName === plotName)?.remove()
+    this.#writeStatus()
+  }
+
+  #writeStatus(...notes) {
+    report(
+      this.statusTarget,
+      `Live plots: ${this.livePlotNames.join(", ")}.`,
+      `Snapshot from connect: ${this.#snapshotAtConnect.join(", ")}.`,
+      notes
+    )
   }
 }
